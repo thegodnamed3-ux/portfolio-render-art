@@ -41,7 +41,7 @@ function useViewport() {
   return vp;
 }
 
-function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void }) {
+export function Viewer({ items, index: start, title, onClose, onBack, embedded }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean }) {
   const [index, setIndex] = useState(start);
   const [dir, setDir] = useState<1 | -1>(1);
   const [panel, setPanel] = useState(false);
@@ -64,22 +64,23 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
 
   // Lock background scroll; the page stays mounted underneath, so its scroll position is kept.
   useEffect(() => {
+    if (embedded) return;
     const html = document.documentElement;
     const prev = [html.style.overflow, document.body.style.overflow];
     html.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     return () => { html.style.overflow = prev[0]!; document.body.style.overflow = prev[1]!; };
-  }, []);
+  }, [embedded]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { if (panel) setPanel(false); else onClose(); }
+      if (e.key === "Escape") { if (panel) setPanel(false); else (onBack ?? onClose)(); }
       else if (!panel && e.key === "ArrowRight") go(1);
       else if (!panel && e.key === "ArrowLeft") go(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, onClose, panel]);
+  }, [go, onClose, onBack, panel]);
 
   // Preload the next two photographs only.
   useEffect(() => {
@@ -88,8 +89,8 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
 
   // Fit every card into the same stage, preserving its native aspect ratio.
   const mobile = vp.w < 768;
-  const stageW = vp.w * (mobile ? 0.88 : 0.72) - OFFSET * DEPTH;
-  const stageH = vp.h * (mobile ? 0.66 : 0.74) - OFFSET * DEPTH;
+  const stageW = vp.w * (mobile ? (embedded ? 0.8 : 0.88) : 0.72) - OFFSET * DEPTH;
+  const stageH = vp.h * (mobile ? (embedded ? 0.6 : 0.66) : (embedded ? 0.66 : 0.74)) - OFFSET * DEPTH;
   const size = (it: ViewerItem) => {
     const s = Math.min(stageW / it.w, stageH / it.h);
     return { w: Math.round(it.w * s), h: Math.round(it.h * s) };
@@ -104,18 +105,21 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
       role="dialog"
       aria-modal="true"
       aria-label={title ? `${title} — photo viewer` : "Photo viewer"}
-      className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-viewer/85 backdrop-blur-2xl"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: reduce ? 0.1 : 0.3 }}
-      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+      className={embedded ? "absolute inset-0 flex flex-col overflow-hidden" : "fixed inset-0 z-[100] flex flex-col overflow-hidden bg-viewer/85 backdrop-blur-2xl"}
+      initial={embedded ? { opacity: 0, scale: 0.96 } : { opacity: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={embedded ? { opacity: 0, scale: 0.97 } : { opacity: 0 }}
+      transition={{ duration: reduce ? 0.1 : embedded ? 0.4 : 0.3, ease: [0.2, 0.8, 0.2, 1] }}
+      style={embedded ? {} : { paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
-        <span className="glass meta rounded-full px-3.5 py-1.5 text-paper/80">
+        <div className="flex min-w-0 items-center gap-2">
+        {onBack && <button onClick={onBack} aria-label="Back to projects" className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 transition-colors hover:text-paper">← Back</button>}
+        <span className="glass meta truncate rounded-full px-3.5 py-1.5 text-paper/80">
           {title && <span className="mr-2.5 text-paper">{title}</span>}
           {String(index + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
         </span>
+        </div>
         <button onClick={onClose} aria-label="Close viewer" className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 transition-colors hover:text-paper"><CloseIcon /></button>
       </div>
 

@@ -1,14 +1,11 @@
 import type { GalleryPhoto, VideoItem } from "./types";
 import { automotive, commercial, couples, portraits, videos } from "./media";
-import { toSessions, type Session } from "./sessions";
 
 export type Category = {
   slug: string;
   title: string;
   description: string;
   photos: GalleryPhoto[];
-  /** Photoshoots derived from the photos' original albums */
-  sessions: Session[];
   videos: VideoItem[];
   /** Set when the discipline lives on another site: the row links out instead of opening an in-app gallery. */
   external?: string;
@@ -19,11 +16,10 @@ const cat = (slug: string, title: string, photos: GalleryPhoto[], v: VideoItem[]
   title,
   description: `${title === "Video" ? "Video work" : `${title} photography`} by thegodnamed, Tallinn.`,
   photos,
-  sessions: toSessions(slug, photos),
   videos: v,
 });
 
-/** Order here drives the Disciplines list. */
+/** Photoshoot stacks themselves live in the database (managed at /admin). Order here drives the Disciplines list. */
 export const categories: Category[] = [
   cat("portraits", "Portraits", portraits),
   cat("couples", "Couples", couples),

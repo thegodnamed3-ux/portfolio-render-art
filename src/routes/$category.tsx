@@ -2,18 +2,20 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { SessionGrid, VideoGallery } from "@/components/Gallery";
 import { SiteNav } from "@/components/SiteNav";
 import { getCategory, internalCategories } from "@/content/categories";
+import { getPublishedSessions } from "@/lib/portfolio.functions";
 
 export const Route = createFileRoute("/$category")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const c = getCategory(params.category);
     if (!c) throw notFound();
-    return { slug: c.slug };
+    const sessions = c.videos.length ? [] : await getPublishedSessions({ data: { category: c.slug } });
+    return { slug: c.slug, sessions };
   },
   head: ({ loaderData }) => {
     const c = loaderData ? getCategory(loaderData.slug) : undefined;
     if (!c) return { meta: [{ title: "Not found — thegodnamed" }, { name: "robots", content: "noindex" }] };
     const title = `${c.title} — thegodnamed`;
-    const image = c.photos[0]?.src ?? (c.videos[0] ? `https://i.ytimg.com/vi/${c.videos[0].id}/hqdefault.jpg` : undefined);
+    const image = loaderData?.sessions[0]?.cover.src ?? (c.videos[0] ? `https://i.ytimg.com/vi/${c.videos[0].id}/hqdefault.jpg` : undefined);
     return {
       meta: [
         { title },
@@ -30,12 +32,12 @@ export const Route = createFileRoute("/$category")({
 });
 
 function CategoryPage() {
-  const { slug } = Route.useLoaderData();
+  const { slug, sessions } = Route.useLoaderData();
   const i = internalCategories.findIndex((c) => c.slug === slug);
   const c = internalCategories[i]!;
   const prev = internalCategories[(i - 1 + internalCategories.length) % internalCategories.length]!;
   const next = internalCategories[(i + 1) % internalCategories.length]!;
-  const count = c.sessions.length || c.videos.length;
+  const count = sessions.length || c.videos.length;
 
   return (
     <main>
@@ -51,7 +53,7 @@ function CategoryPage() {
       </section>
 
       <section className="px-5 pb-24 md:px-10 md:pb-40">
-        {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : <SessionGrid sessions={c.sessions} />}
+        {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : sessions.length ? <SessionGrid sessions={sessions} /> : <p className="meta py-24 text-center text-muted-foreground">—</p>}
       </section>
 
       <nav aria-label="Categories" className="grid grid-cols-2 border-t border-border">

@@ -199,7 +199,7 @@ function ShootsTab({ cat, setCat, shoots, links, media, selected, setSelected, r
 
   const create = async () => {
     const { data, error } = await supabase.from("photoshoots").insert({ category: cat, title: "Untitled session", status: "draft", sort_order: list.length }).select("id").single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     refresh();
     setSelected(data.id);
   };

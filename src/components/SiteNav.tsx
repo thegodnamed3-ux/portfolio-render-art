@@ -56,7 +56,7 @@ export function SiteNav() {
             aria-expanded={menu}
             aria-controls="mobile-menu"
             aria-label={menu ? "Close menu" : "Open menu"}
-            className={`hit glass -my-1 inline-flex size-8 shrink-0 items-center justify-center self-center rounded-full md:hidden ${light ? "glass-ink" : ""}`}
+            className={`hit -my-1 inline-flex size-8 shrink-0 items-center justify-center self-center rounded-full md:hidden ${light ? "glass-ink" : "glass"}`}
           >
             <span aria-hidden className="relative block h-2 w-3.5">
               <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${menu ? "top-1 rotate-45" : "top-0"}`} />

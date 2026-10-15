@@ -42,11 +42,15 @@ export function ContactLinks({ tone = "light", className }: Props) {
           <span aria-hidden className="text-xs transition-transform duration-300 group-hover:translate-x-0.5">→</span>
         </a>
       ))}
-      {contact.instagram && (
-        <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}><InstagramIcon /></a>
-      )}
-      {contact.behance && (
-        <a href={contact.behance} target="_blank" rel="noopener noreferrer" aria-label="Behance" className={icon}><BehanceIcon /></a>
+      {(contact.instagram || contact.behance) && (
+        <div className="flex w-full items-center gap-2.5 md:w-auto">
+          {contact.instagram && (
+            <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}><InstagramIcon /></a>
+          )}
+          {contact.behance && (
+            <a href={contact.behance} target="_blank" rel="noopener noreferrer" aria-label="Behance" className={icon}><BehanceIcon /></a>
+          )}
+        </div>
       )}
     </div>
   );

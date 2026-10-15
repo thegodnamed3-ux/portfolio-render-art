@@ -141,21 +141,21 @@ function Index_Disciplines() {
 }
 
 function About({ image }: { image: HomeImage }) {
-  const { open } = useLightbox();
-  const portrait = image;
   return (
-    <section id="about" className="px-5 py-20 md:px-10 md:py-32">
-      <div className="grid items-end gap-10 md:grid-cols-12 md:gap-10">
-        <p className="meta text-muted-foreground md:col-span-3 md:self-start">About</p>
-        <div className="md:col-span-5">
-          <p className="display text-3xl md:text-5xl">Gor Arsakjan.</p>
-          <p className="meta mt-5 text-muted-foreground">Photographer &amp; filmmaker · Tallinn</p>
-        </div>
-        <Frame
-          onOpen={() => open([{ src: portrait.src, w: portrait.w, h: portrait.h }], 0)}
-          photo={portrait}
-          className="w-full md:col-span-4 md:col-start-9"
-        />
+    <section id="about" className="relative isolate flex min-h-[100svh] flex-col justify-between overflow-hidden px-5 py-20 md:min-h-[90vh] md:px-10 md:py-28">
+      <img
+        src={image.src}
+        alt="Portrait of Gor Arsakjan"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 -z-10 h-full w-full max-w-none object-cover"
+        style={{ objectPosition: image.pos ?? "50% 50%" }}
+      />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-background/90 via-background/30 to-background/50" />
+      <p className="meta text-paper/75">About</p>
+      <div>
+        <p className="display text-4xl text-paper md:text-6xl">Gor Arsakjan.</p>
+        <p className="meta mt-5 text-paper/75">Photographer &amp; filmmaker · Tallinn</p>
       </div>
     </section>
   );

@@ -74,7 +74,7 @@ function Nav() {
         }`}
       >
         <div className="flex items-baseline justify-between gap-4">
-          <a href="#top" className="whitespace-nowrap tracking-[0.22em] transition-opacity hover:opacity-60 md:tracking-[0.3em]">
+          <a href="#top" className="wordmark whitespace-nowrap transition-opacity hover:opacity-60">
             thegodnamed
           </a>
           <div className="flex gap-3 text-[0.625rem] md:gap-8 md:text-[0.6875rem]">
@@ -243,7 +243,7 @@ function Contact() {
         Book a <em>session</em>
       </a>
       <div className="meta mt-24 flex flex-col gap-3 border-t border-ink/15 pt-6 text-ink-muted md:flex-row md:justify-between">
-        <span>thegodnamed — Tallinn</span>
+        <span className="flex items-baseline gap-3"><span className="wordmark">thegodnamed</span><span>— Tallinn</span></span>
         <span>© {new Date().getFullYear()}</span>
       </div>
     </section>

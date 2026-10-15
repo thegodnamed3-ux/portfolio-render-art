@@ -1,0 +1,4 @@
+ALTER TABLE public.media ADD COLUMN IF NOT EXISTS source_piece_id text, ADD COLUMN IF NOT EXISTS source_url text;
+CREATE UNIQUE INDEX IF NOT EXISTS media_source_piece_id_key ON public.media(source_piece_id) WHERE source_piece_id IS NOT NULL;
+ALTER TABLE public.photoshoots ADD COLUMN IF NOT EXISTS source_url text, ADD COLUMN IF NOT EXISTS source_album text, ADD COLUMN IF NOT EXISTS import_batch text, ADD COLUMN IF NOT EXISTS review_status text;
+ALTER TABLE public.photoshoots ADD CONSTRAINT photoshoots_review_status_check CHECK (review_status IS NULL OR review_status IN ('pending','approved','rejected'));

@@ -1,7 +1,76 @@
 import { useState } from "react";
 import type { GalleryPhoto, VideoItem } from "@/content/types";
+import type { Session } from "@/content/sessions";
 import { Frame } from "./Frame";
 import { useLightbox } from "./Lightbox";
+
+const stackSpans = [
+  "md:col-span-5",
+  "md:col-span-4 md:col-start-8 md:mt-40",
+  "md:col-span-4 md:col-start-2",
+  "md:col-span-5 md:col-start-7 md:mt-24",
+  "md:col-span-6",
+  "md:col-span-3 md:col-start-9 md:mt-56",
+];
+
+/** One photoshoot as a perfectly straight stack of prints (translation only, 0° rotation). */
+function SessionStack({ s, n }: { s: Session; n: number }) {
+  const { open } = useLightbox();
+  const under = s.images.slice(1, 3);
+  const items = s.images.map((p) => ({ src: p.full, w: p.w, h: p.h, alt: s.title }));
+  return (
+    <figure className="group">
+      <button
+        type="button"
+        onClick={() => open(items, 0, s.title)}
+        aria-label={`Open ${s.title} — ${s.count} frames`}
+        className="relative block w-full cursor-pointer pb-[10px] pr-[10px] text-left"
+      >
+        <div className="relative" style={{ aspectRatio: `${s.cover.w} / ${s.cover.h}` }}>
+          {under.map((p, k) => (
+            <div
+              key={k}
+              aria-hidden
+              className="absolute inset-0 overflow-hidden bg-charcoal shadow-[0_10px_30px_-15px_oklch(0_0_0/0.8)] transition-transform duration-500 ease-out"
+              style={{ transform: `translate(${(under.length - k) * 5}px, ${(under.length - k) * 5}px)`, zIndex: k }}
+            >
+              <img src={p.sm} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover brightness-[0.55]" />
+            </div>
+          )).reverse()}
+          <div className="absolute inset-0 z-10 overflow-hidden bg-charcoal shadow-[0_18px_40px_-18px_oklch(0_0_0/0.9)] transition-transform duration-500 ease-out group-hover:-translate-x-1 group-hover:-translate-y-1">
+            <img
+              src={s.cover.src}
+              srcSet={`${s.cover.sm} 600w, ${s.cover.src} 1240w`}
+              sizes="(min-width: 768px) 40vw, 90vw"
+              alt={s.title}
+              width={s.cover.w}
+              height={s.cover.h}
+              loading={n < 2 ? "eager" : "lazy"}
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+      </button>
+      <figcaption className="meta mt-4 flex justify-between text-muted-foreground">
+        <span className="text-paper">{s.title}</span>
+        <span>{String(s.count).padStart(2, "0")} frames</span>
+      </figcaption>
+    </figure>
+  );
+}
+
+export function SessionGrid({ sessions }: { sessions: Session[] }) {
+  return (
+    <div className="grid gap-16 md:grid-cols-12 md:gap-x-10 md:gap-y-28">
+      {sessions.map((s, i) => (
+        <div key={s.id} className={stackSpans[i % stackSpans.length]}>
+          <SessionStack s={s} n={i} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 type Row = { kind: "wide"; i: number } | { kind: "pair"; a: number; b?: number };
 

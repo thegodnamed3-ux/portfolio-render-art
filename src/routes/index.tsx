@@ -13,9 +13,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "thegodnamed — Photography & film in Tallinn" },
-      { name: "description", content: "Photography, film & visual storytelling. An editorial archive made in Tallinn." },
+      { name: "description", content: "Photography, film & visual storytelling. Made in Tallinn." },
       { property: "og:title", content: "thegodnamed — Photography & film in Tallinn" },
-      { property: "og:description", content: "Photography, film & visual storytelling. An editorial archive made in Tallinn." },
+      { property: "og:description", content: "Photography, film & visual storytelling. Made in Tallinn." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: photos[10]!.src },
@@ -27,17 +27,6 @@ export const Route = createFileRoute("/")({
 
 const p = (n: number) => photos[n - 1]!;
 const num = (n: number) => String(n).padStart(2, "0");
-
-// Every photo on the homepage, in reading order, for the fullscreen viewer.
-const workOrder = [3, 10, 13, 8, 26, 17, 16, 32, 5, 22];
-const archiveOrder = [1, 2, 4, 6, 7, 9, 12, 14, 15, 18, 19, 20, 21, 23, 24, 25, 27, 28, 29, 30, 31, 33, 34, 35];
-const homeOrder = [...workOrder, ...archiveOrder];
-const viewerItems = homeOrder.map((n) => ({ src: p(n).src, w: p(n).w, h: p(n).h }));
-
-function useOpen() {
-  const { open } = useLightbox();
-  return (n: number) => () => open(viewerItems, homeOrder.indexOf(n));
-}
 
 function Hero() {
   const hero = p(11);
@@ -65,7 +54,7 @@ function Hero() {
         </h1>
         <div className="meta mt-10 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-5 text-paper/70 md:mt-14">
           <span>Tallinn, Estonia</span>
-          <span className="hidden md:inline">Archive · {photos.length} frames</span>
+          <span className="hidden md:inline">Photography · Film</span>
           <a href="#work" className="transition-colors hover:text-paper">Scroll ↓</a>
         </div>
       </div>
@@ -75,39 +64,24 @@ function Hero() {
 
 function Work() {
   return (
-    <section id="work" className="px-5 py-24 md:px-10 md:py-40">
-      <div className="mb-14 grid gap-6 md:mb-24 md:grid-cols-12">
+    <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
+      <div className="mb-12 grid gap-6 md:mb-20 md:grid-cols-12">
         <p className="meta text-muted-foreground md:col-span-3">Selected work</p>
         <h2 className="display text-5xl md:col-span-8 md:text-7xl">
           Portraits by the sea, in studios, <em className="text-muted-foreground">and in between.</em>
         </h2>
       </div>
 
-      {/* Composition 1: large + small offset */}
       <div className="grid gap-5 md:grid-cols-12 md:gap-9">
         <Frame static photo={p(3)} caption="Coastline" index={num(1)} className="md:col-span-8" />
-        <Frame static photo={p(10)} caption="Study" index={num(2)} className="w-2/3 justify-self-end md:col-span-3 md:col-start-10 md:mt-56 md:w-full" />
+        <Frame static photo={p(13)} caption="Red room" index={num(2)} className="w-2/3 justify-self-end md:col-span-3 md:col-start-10 md:mt-48 md:w-full" />
       </div>
 
-      {/* Composition 2: small left, medium right */}
-      <div className="mt-[4.5rem] grid gap-5 md:mt-36 md:grid-cols-12 md:gap-9">
-        <Frame static photo={p(13)} caption="Red room" index={num(3)} className="md:col-span-5 md:col-start-2" />
-        <Frame static photo={p(8)} caption="Blue hour" index={num(4)} className="md:col-span-5 md:col-start-8 md:mt-32" />
-      </div>
+      <Frame static photo={p(26)} caption="Edge of the cliff" index={num(3)} className="-mx-5 mt-14 md:-mx-10 md:mt-28 [&_figcaption]:px-5 md:[&_figcaption]:px-10" />
 
-      {/* Full bleed */}
-      <Frame static photo={p(26)} caption="Edge of the cliff" index={num(5)} className="-mx-5 mt-[4.5rem] md:-mx-10 md:mt-36 [&_figcaption]:px-5 md:[&_figcaption]:px-10" />
-
-      {/* Composition 3: tall vertical + two */}
-      <div className="mt-[4.5rem] grid items-end gap-5 md:mt-36 md:grid-cols-12 md:gap-9">
-        <Frame static photo={p(17)} caption="White" index={num(6)} className="w-3/5 md:col-span-3 md:w-full" />
-        <Frame static photo={p(16)} caption="Glasshouse" index={num(7)} className="md:col-span-5" />
-        <Frame static photo={p(32)} caption="Kneel" index={num(8)} className="w-1/2 justify-self-end md:col-span-3 md:w-full" />
-      </div>
-
-      <div className="mt-[4.5rem] grid gap-5 md:mt-36 md:grid-cols-12 md:gap-9">
-        <Frame static photo={p(5)} caption="Couples — sunset" index={num(9)} className="md:col-span-7" />
-        <Frame static photo={p(22)} caption="Monochrome" index={num(10)} className="md:col-span-4 md:col-start-9 md:-mt-0 md:self-end" />
+      <div className="mt-14 grid items-end gap-5 md:mt-28 md:grid-cols-12 md:gap-9">
+        <Frame static photo={p(8)} caption="Blue hour" index={num(4)} className="md:col-span-4 md:col-start-2" />
+        <Frame static photo={p(5)} caption="Couples — sunset" index={num(5)} className="md:col-span-6 md:col-start-7" />
       </div>
     </section>
   );
@@ -152,8 +126,8 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
 
 function Index_Disciplines() {
   return (
-    <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
-      <div className="grid gap-12 md:grid-cols-12">
+    <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-20 text-ink md:px-10 md:py-32">
+      <div className="grid gap-10 md:grid-cols-12">
         <h2 className="display text-3xl md:col-span-3 md:text-4xl">Disciplines.</h2>
         <ol className="md:col-span-9">
           {categories.map((c, i) => (
@@ -167,40 +141,22 @@ function Index_Disciplines() {
   );
 }
 
-function Archive() {
-  const rest = archiveOrder;
-  const o = useOpen();
-  return (
-    <section className="px-5 py-24 md:px-10 md:py-40">
-      <div className="mb-12 flex items-baseline justify-between md:mb-20">
-        <h2 className="display text-5xl md:text-7xl">Archive</h2>
-        <p className="meta text-muted-foreground">{rest.length} frames</p>
-      </div>
-      <div className="columns-2 gap-3 md:columns-4 md:gap-6">
-        {rest.map((n) => (
-          <Frame key={n} onOpen={o(n)} photo={p(n)} className="mb-3 break-inside-avoid md:mb-6" />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function About() {
-  const o = useOpen();
+  const { open } = useLightbox();
+  const portrait = p(7);
   return (
-    <section id="about" className="border-t border-border px-5 py-24 md:px-10 md:py-40">
-      <div className="grid gap-12 md:grid-cols-12 md:gap-10">
-        <p className="meta text-muted-foreground md:col-span-3">About</p>
+    <section id="about" className="px-5 py-20 md:px-10 md:py-32">
+      <div className="grid items-end gap-10 md:grid-cols-12 md:gap-10">
+        <p className="meta text-muted-foreground md:col-span-3 md:self-start">About</p>
         <div className="md:col-span-5">
-          <p className="display text-4xl md:text-5xl">
-            Photographing people where the light is honest — on the Baltic shore, in quiet rooms, at the edge of the day.
-          </p>
-          {/* Placeholder copy — replace with the photographer's own words. */}
-          <p className="mt-8 max-w-md text-sm leading-relaxed text-muted-foreground">
-            Based in Tallinn. Portraits, couples and commissioned work. Replace this paragraph with your own biography.
-          </p>
+          <p className="display text-3xl md:text-5xl">Gor Arsakjan.</p>
+          <p className="meta mt-5 text-muted-foreground">Photographer &amp; filmmaker · Tallinn</p>
         </div>
-        <Frame onOpen={o(7)} photo={p(7)} className="md:col-span-3 md:col-start-10" />
+        <Frame
+          onOpen={() => open([{ src: portrait.src, w: portrait.w, h: portrait.h }], 0)}
+          photo={portrait}
+          className="w-1/2 md:col-span-3 md:col-start-10 md:w-full"
+        />
       </div>
     </section>
   );
@@ -208,13 +164,13 @@ function About() {
 
 function Contact() {
   return (
-    <section id="contact" data-nav-light className="bg-paper px-5 pb-10 pt-24 text-ink md:px-10 md:pt-40">
+    <section id="contact" data-nav-light className="bg-paper px-5 pb-10 pt-20 text-ink md:px-10 md:pt-32">
       <p className="meta text-ink-muted">Contact</p>
       <h2 className="display mt-6 text-[15vw] md:text-[9vw]">
         Book a <em>session.</em>
       </h2>
       <ContactLinks tone="light" className="mt-8 md:mt-12" />
-      <footer className="meta mt-20 border-t border-ink/15 pt-5 text-ink-muted md:mt-28">
+      <footer className="meta mt-16 border-t border-ink/15 pt-5 text-ink-muted md:mt-24">
         <div className="flex items-baseline justify-between gap-4">
           <span className="wordmark text-ink">thegodnamed</span>
           <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">
@@ -234,7 +190,6 @@ function Index() {
       <Hero />
       <Work />
       <Index_Disciplines />
-      <Archive />
       <About />
       <Contact />
     </main>

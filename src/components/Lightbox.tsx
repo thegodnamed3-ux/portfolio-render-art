@@ -110,7 +110,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
       animate={{ opacity: 1, scale: 1 }}
       exit={embedded ? { opacity: 0, scale: 0.97 } : { opacity: 0 }}
       transition={{ duration: reduce ? 0.1 : embedded ? 0.4 : 0.3, ease: [0.2, 0.8, 0.2, 1] }}
-      style={embedded ? undefined : { paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+      style={embedded ? {} : { paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
         <div className="flex min-w-0 items-center gap-2">

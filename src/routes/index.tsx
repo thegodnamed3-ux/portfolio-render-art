@@ -64,7 +64,7 @@ function Hero() {
       />
       <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
       <div className="relative flex min-h-[100svh] flex-col justify-end px-5 pb-8 md:px-10 md:pb-12">
-        <p className="meta reveal mb-6 text-[0.5rem] text-paper/65 md:mb-9 md:text-[0.6875rem]">
+        <p className="meta reveal mb-8 text-[0.5rem] text-paper/65 md:mb-10 md:text-[0.6875rem]">
           Photography, film &amp; visual storytelling.
         </p>
         <h1

@@ -14,42 +14,44 @@ const BehanceIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden className="h-[18px] w-[18px] fill-current"><path d="M8.2 11.3c.9-.4 1.4-1.1 1.4-2.1 0-2-1.5-2.7-3.4-2.7H1v11h5.4c2 0 3.9-1 3.9-3.2 0-1.4-.7-2.5-2.1-3zM3.4 8.4h2.3c.9 0 1.6.2 1.6 1.2s-.6 1.2-1.4 1.2H3.4zm2.5 7.2H3.4v-3h2.6c1 0 1.7.4 1.7 1.5s-.8 1.5-1.8 1.5zM15 7h5.4v1.3H15zm2.8 2.4c-2.6 0-4.3 1.9-4.3 4.4 0 2.6 1.6 4.4 4.3 4.4 2 0 3.3-.9 4-2.9h-2c-.2.7-1.1 1.1-1.9 1.1-1.3 0-2-.8-2-2h6c.2-2.6-1.2-5-4.1-5zm-1.9 3.6c.1-1 .8-1.7 1.9-1.7s1.6.6 1.7 1.7z" /></svg>
 );
 
-type Props = { tone?: "light" | "dark"; className?: string };
+type Props = { tone?: "light" | "dark" | "glass"; className?: string };
 
-/** Primary messaging buttons (Telegram / WhatsApp) + secondary social icons. */
+/** Compact elongated pills (Telegram / WhatsApp) + small standalone social icons. */
 export function ContactLinks({ tone = "light", className }: Props) {
   const light = tone === "light";
   const primary = cn(
-    "group flex w-full items-center justify-between gap-4 border px-5 py-4 transition-colors duration-300 md:px-6 md:py-5",
-    light ? "border-ink/20 text-ink hover:border-ink hover:bg-ink hover:text-paper" : "border-paper/20 text-paper hover:border-paper hover:bg-paper hover:text-ink"
+    "group inline-flex min-w-40 items-center justify-between gap-4 rounded-full border px-5 py-3 transition-colors duration-300",
+    light && "border-ink/20 text-ink hover:border-ink hover:bg-ink hover:text-paper",
+    tone === "dark" && "border-paper/20 text-paper hover:border-paper hover:bg-paper hover:text-ink",
+    tone === "glass" && "glass text-paper hover:bg-paper hover:text-ink"
   );
-  const icon = cn("transition-colors duration-300", light ? "text-ink-muted hover:text-ink" : "text-paper/55 hover:text-paper");
+  const icon = cn(
+    "inline-flex size-10 items-center justify-center rounded-full transition-colors duration-300",
+    light ? "text-ink-muted hover:text-ink" : "text-paper/60 hover:text-paper",
+    tone === "glass" && "glass"
+  );
   const messaging = [
     contact.telegram && { href: contact.telegram, label: "Telegram", Icon: TelegramIcon },
     contact.whatsapp && { href: contact.whatsapp, label: "WhatsApp", Icon: WhatsAppIcon },
   ].filter(Boolean) as { href: string; label: string; Icon: () => React.JSX.Element }[];
 
   return (
-    <div className={className}>
-      <div className={cn("grid gap-3", messaging.length > 1 && "md:grid-cols-2")}>
-        {messaging.map(({ href, label, Icon }) => (
-          <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={primary}>
-            <span className="flex items-center gap-3">
-              <Icon />
-              <span className="meta">{label}</span>
-            </span>
-            <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-          </a>
-        ))}
-      </div>
-      <div className="mt-6 flex items-center gap-5">
-        {contact.instagram && (
-          <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}><InstagramIcon /></a>
-        )}
-        {contact.behance && (
-          <a href={contact.behance} target="_blank" rel="noopener noreferrer" aria-label="Behance" className={icon}><BehanceIcon /></a>
-        )}
-      </div>
+    <div className={cn("flex flex-wrap items-center gap-3", className)}>
+      {messaging.map(({ href, label, Icon }) => (
+        <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={primary}>
+          <span className="flex items-center gap-3">
+            <Icon />
+            <span className="meta">{label}</span>
+          </span>
+          <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+        </a>
+      ))}
+      {contact.instagram && (
+        <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}><InstagramIcon /></a>
+      )}
+      {contact.behance && (
+        <a href={contact.behance} target="_blank" rel="noopener noreferrer" aria-label="Behance" className={icon}><BehanceIcon /></a>
+      )}
     </div>
   );
 }

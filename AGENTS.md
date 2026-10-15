@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Apply the shared `wordmark` utility to every visible brand name; keep its font isolated from display and body tokens so identity updates never change other typography.

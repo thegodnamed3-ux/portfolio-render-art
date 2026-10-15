@@ -7,6 +7,7 @@ import { DndContext, PointerSensor, TouchSensor, closestCenter, useSensor, useSe
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
+import { discoverWfolioAlbums, importWfolioAlbum, IMPORT_BATCH, type AlbumResult } from "@/lib/wfolio-import.functions";
 import { importWfolio, type HomeImage } from "@/lib/portfolio.functions";
 import { defaultHero, defaultAbout } from "@/content/home";
 import { useLightbox } from "@/components/Lightbox";
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 type Media = { id: string; sm: string; src: string; full_src: string; w: number; h: number; album: string | null; origin_category: string | null; storage_path: string | null };
-type Shoot = { id: string; category: string; title: string; album: string | null; cover_media_id: string | null; status: string; sort_order: number };
+type Shoot = { id: string; category: string; title: string; album: string | null; cover_media_id: string | null; status: string; sort_order: number; source_url: string | null; source_album: string | null; import_batch: string | null; review_status: string | null };
 type Link_ = { photoshoot_id: string; media_id: string; position: number };
 
 const photoCats = categories.filter((c) => !c.external && c.videos.length === 0);
@@ -44,14 +45,25 @@ const btn = "meta inline-flex items-center justify-center gap-2 rounded-full bor
 const btnPrimary = "meta inline-flex items-center justify-center gap-2 rounded-full bg-paper px-4 py-2 text-ink transition-opacity hover:opacity-90 disabled:opacity-40";
 const input = "w-full rounded-full border border-border bg-transparent px-4 py-2.5 text-sm text-paper outline-none focus:border-paper/60";
 
+/** Reads every row past the 1000-row API page limit. */
+async function all(page: (a: number, b: number) => PromiseLike<{ data: any[] | null; error: any }>) {
+  const out: any[] = [];
+  for (let a = 0; ; a += 1000) {
+    const { data, error } = await page(a, a + 999);
+    if (error) return { data: null, error };
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) return { data: out, error: null };
+  }
+}
+
 function useData() {
   return useQuery({
     queryKey: ["admin", "portfolio"],
     queryFn: async () => {
       const [m, s, l] = await Promise.all([
-        supabase.from("media").select("*").order("created_at"),
+        all((a, b) => supabase.from("media").select("*").order("created_at").order("id").range(a, b)),
         supabase.from("photoshoots").select("*").order("sort_order"),
-        supabase.from("photoshoot_images").select("*").order("position"),
+        all((a, b) => supabase.from("photoshoot_images").select("*").order("photoshoot_id").order("position").range(a, b)),
       ]);
       const err = m.error ?? s.error ?? l.error;
       if (err) throw err;
@@ -133,7 +145,7 @@ function Studio() {
   const q = useData();
   const qc = useQueryClient();
   const runImport = useServerFn(importWfolio);
-  const [tab, setTab] = useState<"shoots" | "library" | "home">("shoots");
+  const [tab, setTab] = useState<"shoots" | "library" | "home" | "review">("shoots");
   const [cat, setCat] = useState(photoCats[0]!.slug);
   const [selected, setSelected] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "portfolio"] });
@@ -153,9 +165,9 @@ function Studio() {
     <div>
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <div className="glass flex rounded-full p-1">
-          {(["shoots", "library", "home"] as const).map((t) => (
+          {(["shoots", "review", "library", "home"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={cn("meta rounded-full px-4 py-2", tab === t ? "bg-paper text-ink" : "text-paper/75")}>
-              {t === "shoots" ? "Photoshoots" : t === "library" ? "Media library" : "Homepage"}
+              {t === "shoots" ? "Photoshoots" : t === "review" ? "Import review" : t === "library" ? "Media library" : "Homepage"}
             </button>
           ))}
         </div>
@@ -167,7 +179,9 @@ function Studio() {
       </div>
 
       <WhatsAppSetting />
-      {tab === "home" ? (
+      {tab === "review" ? (
+        <ReviewTab shoots={shoots} links={links} media={media} refresh={refresh} onEdit={(sh) => { setTab("shoots"); setCat(sh.category); setSelected(sh.id); }} />
+      ) : tab === "home" ? (
         <HomeTab media={media} refresh={refresh} />
       ) : tab === "shoots" ? (
         <ShootsTab
@@ -204,6 +218,117 @@ function WhatsAppSetting() {
         className="min-w-0 flex-1 rounded-full border border-border bg-transparent px-4 py-2 text-sm text-paper placeholder:text-muted-foreground sm:max-w-sm" />
       <button className={btn} disabled={save.isPending}>{save.isPending ? "Saving…" : "Save"}</button>
     </form>
+  );
+}
+
+/* ---------------- Import review ---------------- */
+
+function ReviewTab({ shoots, links, media, refresh, onEdit }: { shoots: Shoot[]; links: Link_[]; media: Media[]; refresh: () => void; onEdit: (s: Shoot) => void }) {
+  const discover = useServerFn(discoverWfolioAlbums);
+  const importOne = useServerFn(importWfolioAlbum);
+  const [running, setRunning] = useState<{ done: number; total: number } | null>(null);
+  const [report, setReport] = useState<{ results: AlbumResult[]; failedPages: string[] } | null>(null);
+  const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+  const byId = useMemo(() => new Map(media.map((m) => [m.id, m])), [media]);
+  const batch = shoots.filter((s) => s.import_batch === IMPORT_BATCH);
+  const usage = useMemo(() => {
+    const u = new Map<string, number>();
+    links.forEach((l) => u.set(l.media_id, (u.get(l.media_id) ?? 0) + 1));
+    return u;
+  }, [links]);
+  const list = batch.filter((s) => filter === "all" || (s.review_status ?? "pending") === filter).sort((a, b) => a.sort_order - b.sort_order);
+
+  const run = async () => {
+    try {
+      const { albums, failedPages } = await discover();
+      setRunning({ done: 0, total: albums.length });
+      const results: AlbumResult[] = [];
+      let i = 0;
+      const worker = async () => {
+        while (i < albums.length) {
+          const a = albums[i++]!;
+          try { results.push(await importOne({ data: a })); }
+          catch (e) { results.push({ slug: a.slug, url: `https://thegodnamed.wfolio.pro/${a.slug}`, title: a.slug, status: "failed", photos: 0, newMedia: 0, reused: 0, error: (e as Error).message }); }
+          setRunning((r) => r && { ...r, done: r.done + 1 });
+        }
+      };
+      await Promise.all([worker(), worker(), worker()]);
+      setReport({ results, failedPages });
+      refresh();
+    } catch (e) { toast.error((e as Error).message); }
+    setRunning(null);
+  };
+
+  const setStatus = async (id: string, review_status: string) => {
+    const { error } = await supabase.from("photoshoots").update({ review_status }).eq("id", id);
+    if (error) toast.error(error.message); else refresh();
+  };
+
+  const counts = { pending: 0, approved: 0, rejected: 0 } as Record<string, number>;
+  batch.forEach((s) => { counts[s.review_status ?? "pending"] = (counts[s.review_status ?? "pending"] ?? 0) + 1; });
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-center gap-3">
+        <button className={btnPrimary} disabled={!!running} onClick={run}>
+          {running ? `Importing ${running.done} / ${running.total}…` : batch.length ? "Check Wfolio for missing albums" : "Import albums from Wfolio"}
+        </button>
+        <p className="meta text-muted-foreground">One original album = one draft photoshoot. Nothing is published automatically.</p>
+      </div>
+
+      {report && (
+        <div className="rounded-2xl border border-border p-4 text-sm text-paper/80">
+          <p className="meta mb-2 text-paper">Last run</p>
+          <p>
+            {report.results.filter((r) => r.status === "imported").length} imported ·{" "}
+            {report.results.filter((r) => r.status === "exists").length} already imported ·{" "}
+            {report.results.reduce((n, r) => n + r.newMedia, 0)} new photos ·{" "}
+            {report.results.reduce((n, r) => n + r.reused, 0)} photos already in library (reused, not copied)
+          </p>
+          {[...report.results.filter((r) => r.status === "failed" || r.status === "empty")].map((r) => (
+            <p key={r.slug} className="text-destructive">{r.slug}: {r.status}{r.error ? ` — ${r.error}` : ""}</p>
+          ))}
+          {report.failedPages.map((p) => <p key={p} className="text-destructive">Category page unavailable: {p}</p>)}
+        </div>
+      )}
+
+      <div className="glass inline-flex rounded-full p-1">
+        {(["pending", "approved", "rejected", "all"] as const).map((f) => (
+          <button key={f} onClick={() => setFilter(f)} className={cn("meta rounded-full px-3 py-1.5", filter === f ? "bg-paper text-ink" : "text-paper/75")}>
+            {f}{f !== "all" ? ` ${counts[f] ?? 0}` : ` ${batch.length}`}
+          </button>
+        ))}
+      </div>
+
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {list.map((s) => {
+          const ids = links.filter((l) => l.photoshoot_id === s.id).map((l) => l.media_id);
+          const dupes = ids.filter((id) => (usage.get(id) ?? 0) > 1).length;
+          const cover = byId.get(s.cover_media_id ?? ids[0] ?? "");
+          const st = s.review_status ?? "pending";
+          return (
+            <li key={s.id} className="flex gap-3 rounded-2xl border border-border p-3">
+              <div className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-charcoal">
+                {cover && <img src={cover.sm} alt="" loading="lazy" className="h-full w-full object-cover" />}
+              </div>
+              <div className="min-w-0 flex-1 space-y-1 text-sm">
+                <p className="truncate text-paper">{s.source_album ?? s.title}{s.title !== s.source_album && <span className="text-muted-foreground"> → {s.title}</span>}</p>
+                <p className="meta text-muted-foreground">{catTitle(s.category)} · {ids.length} photos · {st} · {s.status}</p>
+                {s.source_url && <a href={s.source_url} target="_blank" rel="noopener noreferrer" className="meta block truncate text-muted-foreground underline">{s.source_url.replace("https://", "")}</a>}
+                {dupes > 0 && <p className="meta text-destructive">{dupes} photos also in other stacks</p>}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {st !== "approved" && <button className={btn} onClick={() => setStatus(s.id, "approved")}>Approve</button>}
+                  {st !== "rejected" && <button className={btn} onClick={() => setStatus(s.id, "rejected")}>Reject</button>}
+                  {st !== "pending" && <button className={btn} onClick={() => setStatus(s.id, "pending")}>Reset</button>}
+                  <button className={btn} onClick={() => onEdit(s)}>Edit</button>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {!list.length && <p className="meta text-muted-foreground">Nothing here.</p>}
+    </div>
   );
 }
 

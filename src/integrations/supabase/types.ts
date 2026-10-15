@@ -130,6 +130,24 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          id: number
+          updated_at: string
+          whatsapp_url: string | null
+        }
+        Insert: {
+          id?: number
+          updated_at?: string
+          whatsapp_url?: string | null
+        }
+        Update: {
+          id?: number
+          updated_at?: string
+          whatsapp_url?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

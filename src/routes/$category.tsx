@@ -1,7 +1,7 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { PhotoGallery, VideoGallery } from "@/components/Gallery";
 import { SiteNav } from "@/components/SiteNav";
-import { categories, getCategory } from "@/content/categories";
+import { getCategory, internalCategories } from "@/content/categories";
 
 export const Route = createFileRoute("/$category")({
   loader: ({ params }) => {
@@ -31,12 +31,11 @@ export const Route = createFileRoute("/$category")({
 
 function CategoryPage() {
   const { slug } = Route.useLoaderData();
-  const i = categories.findIndex((c) => c.slug === slug);
-  const c = categories[i]!;
-  const prev = categories[(i - 1 + categories.length) % categories.length]!;
-  const next = categories[(i + 1) % categories.length]!;
+  const i = internalCategories.findIndex((c) => c.slug === slug);
+  const c = internalCategories[i]!;
+  const prev = internalCategories[(i - 1 + internalCategories.length) % internalCategories.length]!;
+  const next = internalCategories[(i + 1) % internalCategories.length]!;
   const count = c.photos.length || c.videos.length;
-  const empty = count === 0;
 
   return (
     <main>
@@ -45,16 +44,14 @@ function CategoryPage() {
         <div className="flex items-end justify-between gap-6 border-b border-border pb-6">
           <h1 className="display reveal text-[clamp(3.2rem,12vw,9rem)] text-paper">{c.title}.</h1>
           <p className="meta shrink-0 pb-2 text-muted-foreground">
-            {String(i + 1).padStart(2, "0")} / {String(categories.length).padStart(2, "0")}
-            {!empty && <span className="hidden md:inline"> · {count} {c.videos.length ? "films" : "frames"}</span>}
+            {String(i + 1).padStart(2, "0")} / {String(internalCategories.length).padStart(2, "0")}
+            {count > 0 && <span className="hidden md:inline"> · {count} {c.videos.length ? "films" : "frames"}</span>}
           </p>
         </div>
       </section>
 
       <section className="px-5 pb-24 md:px-10 md:pb-40">
-        {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : empty ? (
-          <p className="meta py-24 text-muted-foreground">In preparation</p>
-        ) : <PhotoGallery photos={c.photos} />}
+        {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : <PhotoGallery photos={c.photos} />}
       </section>
 
       <nav aria-label="Categories" className="grid grid-cols-2 border-t border-border">

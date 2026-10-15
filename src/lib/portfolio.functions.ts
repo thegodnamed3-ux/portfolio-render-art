@@ -91,3 +91,13 @@ export const getSiteSettings = createServerFn({ method: "GET" }).handler(async (
   const { data } = await publicClient().from("site_settings").select("whatsapp_url").eq("id", 1).maybeSingle();
   return { whatsapp: data?.whatsapp_url?.trim() || null };
 });
+
+export type HomeImage = { src: string; w: number; h: number; pos?: string };
+
+/** Homepage hero slides and About portrait chosen in the studio (null = site defaults). */
+export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () => {
+  const { data } = await publicClient().from("site_settings").select("hero_slides, about_image").eq("id", 1).maybeSingle();
+  const hero = Array.isArray(data?.hero_slides) && data.hero_slides.length ? (data.hero_slides as unknown as HomeImage[]) : null;
+  const about = data?.about_image && typeof data.about_image === "object" ? (data.about_image as unknown as HomeImage) : null;
+  return { hero, about };
+});

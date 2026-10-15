@@ -8,6 +8,9 @@ import { SiteNav } from "@/components/SiteNav";
 import { categories } from "@/content/categories";
 import type { Category } from "@/content/categories";
 import { photos } from "@/lib/photos";
+import { getHomeMedia, type HomeImage } from "@/lib/portfolio.functions";
+import { defaultHero, defaultAbout } from "@/content/home";
+import { HeroSlideshow } from "@/components/HeroSlideshow";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,25 +25,21 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: photos[10]!.src },
     ],
   }),
+  loader: () => getHomeMedia(),
   component: Index,
 });
 
 const p = (n: number) => photos[n - 1]!;
 const num = (n: number) => String(n).padStart(2, "0");
 
-function Hero() {
-  const hero = p(11);
+
+function Hero({ slides }: { slides: HomeImage[] }) {
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden">
-      <img
-        src={hero.src}
-        alt="Woman standing in the sea at dusk"
-        className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
-        loading="eager"
-      />
+      <HeroSlideshow slides={slides} controlsClassName="absolute bottom-[4.75rem] right-5 z-10 md:bottom-[6.25rem] md:right-10" />
       <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
-      <div className="relative flex min-h-[100svh] flex-col justify-end px-5 pb-8 md:px-10 md:pb-12">
-        <p className="meta reveal mb-6 text-[0.5rem] text-paper/65 md:mb-8 md:text-[0.6875rem]">
+      <div className="pointer-events-none relative flex min-h-[100svh] flex-col justify-end px-5 pb-8 md:px-10 md:pb-12">
+        <p className="meta reveal mb-4 text-[0.5rem] text-paper/65 md:mb-6 md:text-[0.6875rem]">
           Photography, film &amp; visual storytelling.
         </p>
         <h1
@@ -55,7 +54,7 @@ function Hero() {
         <div className="meta mt-10 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-5 text-paper/70 md:mt-14">
           <span>Tallinn, Estonia</span>
           <span className="hidden md:inline">Photography · Film</span>
-          <a href="#work" className="transition-colors hover:text-paper">Scroll ↓</a>
+          <a href="#work" className="pointer-events-auto transition-colors hover:text-paper">Scroll ↓</a>
         </div>
       </div>
     </section>
@@ -141,9 +140,9 @@ function Index_Disciplines() {
   );
 }
 
-function About() {
+function About({ image }: { image: HomeImage }) {
   const { open } = useLightbox();
-  const portrait = p(7);
+  const portrait = image;
   return (
     <section id="about" className="px-5 py-20 md:px-10 md:py-32">
       <div className="grid items-end gap-10 md:grid-cols-12 md:gap-10">
@@ -155,7 +154,7 @@ function About() {
         <Frame
           onOpen={() => open([{ src: portrait.src, w: portrait.w, h: portrait.h }], 0)}
           photo={portrait}
-          className="w-1/2 md:col-span-3 md:col-start-10 md:w-full"
+          className="w-full md:col-span-4 md:col-start-9"
         />
       </div>
     </section>
@@ -184,13 +183,14 @@ function Contact() {
 }
 
 function Index() {
+  const { hero, about } = Route.useLoaderData();
   return (
     <main>
       <SiteNav />
-      <Hero />
+      <Hero slides={hero ?? defaultHero} />
       <Work />
       <Index_Disciplines />
-      <About />
+      <About image={about ?? defaultAbout} />
       <Contact />
     </main>
   );

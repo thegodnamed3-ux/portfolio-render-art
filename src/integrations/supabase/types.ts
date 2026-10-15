@@ -132,16 +132,22 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          about_image: Json | null
+          hero_slides: Json | null
           id: number
           updated_at: string
           whatsapp_url: string | null
         }
         Insert: {
+          about_image?: Json | null
+          hero_slides?: Json | null
           id?: number
           updated_at?: string
           whatsapp_url?: string | null
         }
         Update: {
+          about_image?: Json | null
+          hero_slides?: Json | null
           id?: number
           updated_at?: string
           whatsapp_url?: string | null

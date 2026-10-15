@@ -7,7 +7,8 @@ import { DndContext, PointerSensor, TouchSensor, closestCenter, useSensor, useSe
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
-import { importWfolio } from "@/lib/portfolio.functions";
+import { importWfolio, type HomeImage } from "@/lib/portfolio.functions";
+import { defaultHero, defaultAbout } from "@/content/home";
 import { useLightbox } from "@/components/Lightbox";
 import { SessionStack } from "@/components/Gallery";
 import { categories } from "@/content/categories";
@@ -132,7 +133,7 @@ function Studio() {
   const q = useData();
   const qc = useQueryClient();
   const runImport = useServerFn(importWfolio);
-  const [tab, setTab] = useState<"shoots" | "library">("shoots");
+  const [tab, setTab] = useState<"shoots" | "library" | "home">("shoots");
   const [cat, setCat] = useState(photoCats[0]!.slug);
   const [selected, setSelected] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "portfolio"] });
@@ -152,9 +153,9 @@ function Studio() {
     <div>
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <div className="glass flex rounded-full p-1">
-          {(["shoots", "library"] as const).map((t) => (
+          {(["shoots", "library", "home"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={cn("meta rounded-full px-4 py-2", tab === t ? "bg-paper text-ink" : "text-paper/75")}>
-              {t === "shoots" ? "Photoshoots" : "Media library"}
+              {t === "shoots" ? "Photoshoots" : t === "library" ? "Media library" : "Homepage"}
             </button>
           ))}
         </div>
@@ -166,7 +167,9 @@ function Studio() {
       </div>
 
       <WhatsAppSetting />
-      {tab === "shoots" ? (
+      {tab === "home" ? (
+        <HomeTab media={media} refresh={refresh} />
+      ) : tab === "shoots" ? (
         <ShootsTab
           cat={cat} setCat={(c) => { setCat(c); setSelected(null); }}
           shoots={shoots} links={links} media={media}
@@ -607,6 +610,177 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+/* ---------------- Homepage hero & About ---------------- */
+
+const toImg = (m: Media): HomeImage => ({ src: m.src, w: m.w, h: m.h });
+
+function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["admin", "home"],
+    queryFn: async () => (await supabase.from("site_settings").select("hero_slides, about_image").eq("id", 1).maybeSingle()).data,
+  });
+  const [slides, setSlides] = useState<HomeImage[] | null>(null);
+  const [about, setAbout] = useState<HomeImage | null>(null);
+  const [sel, setSel] = useState<"about" | number>(0);
+  const [picker, setPicker] = useState<"hero" | "about" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }));
+
+  if (q.isLoading) return <p className="meta text-muted-foreground">Loading…</p>;
+  const savedHero = Array.isArray(q.data?.hero_slides) && q.data.hero_slides.length ? (q.data.hero_slides as unknown as HomeImage[]) : defaultHero;
+  const savedAbout = (q.data?.about_image as unknown as HomeImage | null) ?? defaultAbout;
+  const list = slides ?? savedHero;
+  const portrait = about ?? savedAbout;
+  const dirty = slides !== null || about !== null;
+  const ids = list.map((s, i) => `${i}|${s.src}`);
+  const current = sel === "about" ? portrait : list[Math.min(sel, list.length - 1)];
+
+  const setPos = (pos: string) => {
+    if (sel === "about") setAbout({ ...portrait, pos });
+    else setSlides(list.map((s, i) => (i === sel ? { ...s, pos } : s)));
+  };
+  const onDragEnd = (e: DragEndEvent) => {
+    if (!e.over || e.active.id === e.over.id) return;
+    const from = ids.indexOf(String(e.active.id)), to = ids.indexOf(String(e.over.id));
+    setSlides(arrayMove(list, from, to)); setSel(to);
+  };
+  const add = (imgs: HomeImage[]) => {
+    if (picker === "about") { setAbout(imgs[0]!); setSel("about"); }
+    else { setSlides([...list, ...imgs]); setSel(list.length); }
+    setPicker(null);
+  };
+  const upload = (files: FileList | null, target: "hero" | "about") => {
+    if (!files?.length) return;
+    setBusy(true);
+    uploadFiles(target === "about" ? [files[0]!] : [...files])
+      .then((rows) => { const imgs = rows.map(toImg); if (target === "about") { setAbout(imgs[0]!); setSel("about"); } else { setSlides([...list, ...imgs]); setSel(list.length); } refresh(); toast.success("Uploaded — remember to save"); })
+      .catch((e) => toast.error(e.message)).finally(() => setBusy(false));
+  };
+  const save = async () => {
+    if (!list.length) { toast.error("Add at least one hero photo"); return; }
+    setBusy(true);
+    const { error } = await supabase.from("site_settings").upsert({ id: 1, hero_slides: list as never, about_image: portrait as never, updated_at: new Date().toISOString() });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Homepage published");
+    setSlides(null); setAbout(null);
+    qc.invalidateQueries({ queryKey: ["admin", "home"] });
+  };
+
+  return (
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-center gap-3">
+        <button className={btnPrimary} disabled={!dirty || busy} onClick={save}>{busy ? "Saving…" : "Save & publish"}</button>
+        {dirty && <button className={btn} onClick={() => { setSlides(null); setAbout(null); }}>Discard changes</button>}
+        <Link to="/" target="_blank" className={btn}>Open homepage</Link>
+      </div>
+
+      <section>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <h2 className="display text-3xl text-paper">Homepage hero</h2>
+          <span className="meta text-muted-foreground">{list.length} slides · drag to reorder · first is shown first</span>
+        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={ids} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-8">
+              {list.map((s, i) => (
+                <SortableThumb key={ids[i]} id={ids[i]!}>
+                  <div className={cn("relative aspect-square overflow-hidden rounded-lg bg-charcoal ring-2", sel === i ? "ring-paper" : "ring-transparent")}>
+                    <button type="button" onClick={() => setSel(i)} className="absolute inset-0" aria-label={`Edit slide ${i + 1}`}>
+                      <img src={s.src} alt="" loading="lazy" className="h-full w-full object-cover" style={{ objectPosition: s.pos }} />
+                    </button>
+                    <span className="meta pointer-events-none absolute left-1 top-1 rounded-full bg-viewer/70 px-1.5 text-[0.55rem] text-paper">{i === 0 ? "First" : String(i + 1).padStart(2, "0")}</span>
+                    <div className="absolute inset-x-1 bottom-1 flex justify-between gap-1">
+                      {i > 0 && <button type="button" onClick={() => { setSlides([s, ...list.filter((_, k) => k !== i)]); setSel(0); }} className="meta rounded-full bg-viewer/75 px-1.5 py-0.5 text-[0.55rem] text-paper">Make first</button>}
+                      <button type="button" onClick={() => { setSlides(list.filter((_, k) => k !== i)); setSel(0); }} className="meta ml-auto rounded-full bg-viewer/75 px-1.5 py-0.5 text-[0.55rem] text-paper" aria-label="Remove slide">✕</button>
+                    </div>
+                  </div>
+                </SortableThumb>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <label className={cn(btn, "cursor-pointer", busy && "opacity-50")}>+ Upload<input type="file" accept="image/*" multiple className="hidden" disabled={busy} onChange={(e) => { upload(e.target.files, "hero"); e.target.value = ""; }} /></label>
+          <button className={btn} onClick={() => setPicker("hero")}>Add from library</button>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="display mb-4 text-3xl text-paper">About section photo</h2>
+        <div className="flex flex-wrap items-end gap-3">
+          <button type="button" onClick={() => setSel("about")} className={cn("w-28 overflow-hidden rounded-lg ring-2", sel === "about" ? "ring-paper" : "ring-transparent")}>
+            <img src={portrait.src} alt="About" className="aspect-[4/5] w-full object-cover" style={{ objectPosition: portrait.pos }} />
+          </button>
+          <label className={cn(btn, "cursor-pointer", busy && "opacity-50")}>Upload new<input type="file" accept="image/*" className="hidden" disabled={busy} onChange={(e) => { upload(e.target.files, "about"); e.target.value = ""; }} /></label>
+          <button className={btn} onClick={() => setPicker("about")}>Choose from library</button>
+        </div>
+      </section>
+
+      {current && (
+        <section>
+          <h2 className="meta mb-2 text-muted-foreground">Focal point — {sel === "about" ? "About photo" : `slide ${(sel as number) + 1}`}</h2>
+          <p className="mb-4 text-sm text-muted-foreground">Tap the subject in the photo. Previews show phone and desktop crops.</p>
+          <FocalEditor img={current} onPick={setPos} about={sel === "about"} />
+        </section>
+      )}
+
+      {picker && <LibraryPicker media={media} single={picker === "about"} onPick={add} onClose={() => setPicker(null)} />}
+    </div>
+  );
+}
+
+function FocalEditor({ img, onPick, about }: { img: HomeImage; onPick: (pos: string) => void; about: boolean }) {
+  const pos = img.pos ?? "50% 50%";
+  const [x, y] = pos.split(" ").map((v) => parseFloat(v));
+  return (
+    <div className="flex flex-wrap items-start gap-6">
+      <div className="relative w-full max-w-md cursor-crosshair select-none" onClick={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const px = Math.round(((e.clientX - r.left) / r.width) * 100), py = Math.round(((e.clientY - r.top) / r.height) * 100);
+        onPick(`${Math.min(100, Math.max(0, px))}% ${Math.min(100, Math.max(0, py))}%`);
+      }}>
+        <img src={img.src} alt="" className="block w-full rounded-lg" draggable={false} />
+        <span className="pointer-events-none absolute size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-paper shadow" style={{ left: `${x}%`, top: `${y}%` }} />
+      </div>
+      <div className="flex items-end gap-4">
+        <figure>
+          <div className={cn("overflow-hidden rounded-md bg-charcoal", about ? "aspect-[4/5] w-28" : "aspect-[9/19] w-24")}>
+            <img src={img.src} alt="" className="h-full w-full object-cover" style={{ objectPosition: pos }} />
+          </div>
+          <figcaption className="meta mt-1 text-[0.55rem] text-muted-foreground">Phone</figcaption>
+        </figure>
+        <figure>
+          <div className={cn("overflow-hidden rounded-md bg-charcoal", about ? "aspect-[4/5] w-40" : "aspect-[16/9] w-64")}>
+            <img src={img.src} alt="" className="h-full w-full object-cover" style={{ objectPosition: pos }} />
+          </div>
+          <figcaption className="meta mt-1 text-[0.55rem] text-muted-foreground">Desktop</figcaption>
+        </figure>
+      </div>
+    </div>
+  );
+}
+
+function LibraryPicker({ media, single, onPick, onClose }: { media: Media[]; single: boolean; onPick: (imgs: HomeImage[]) => void; onClose: () => void }) {
+  const [picked, setPicked] = useState<string[]>([]);
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 p-4 md:p-10" role="dialog" aria-label="Choose photos">
+      <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-2 bg-background/90 py-2">
+        <span className="meta text-muted-foreground">{single ? "Choose one photo" : `${picked.length} selected`}</span>
+        <button className={btnPrimary} disabled={!picked.length} onClick={() => onPick(picked.map((id) => toImg(media.find((m) => m.id === id)!)))}>Add</button>
+        <button className={btn} onClick={onClose}>Cancel</button>
+      </div>
+      {media.length === 0 && <p className="text-sm text-muted-foreground">The media library is empty — upload instead.</p>}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-8">
+        {media.map((m) => (
+          <Thumb key={m.id} m={m} picked={picked.includes(m.id)} onToggle={() => setPicked((p) => single ? [m.id] : p.includes(m.id) ? p.filter((x) => x !== m.id) : [...p, m.id])} />
+        ))}
+      </div>
     </div>
   );
 }

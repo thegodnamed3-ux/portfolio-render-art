@@ -4,8 +4,8 @@
  */
 export const contact = {
   telegram: "https://t.me/thehorus" as string | null,
-  /** e.g. "https://wa.me/3725xxxxxxx" — number not yet provided */
-  whatsapp: null as string | null,
+  /** Fallback; the live value is set in the studio (site settings). */
+  whatsapp: "https://wa.me/37258000729" as string | null,
   instagram: "https://instagram.com/thegodnamed" as string | null,
   behance: "https://www.behance.net/gorarsakjan2" as string | null,
 };

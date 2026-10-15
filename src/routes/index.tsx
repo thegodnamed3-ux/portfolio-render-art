@@ -51,7 +51,7 @@ function Hero() {
       />
       <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
       <div className="relative flex min-h-[100svh] flex-col justify-end px-5 pb-8 md:px-10 md:pb-12">
-        <p className="meta reveal mb-8 text-[0.5rem] text-paper/65 md:mb-10 md:text-[0.6875rem]">
+        <p className="meta reveal mb-6 text-[0.5rem] text-paper/65 md:mb-8 md:text-[0.6875rem]">
           Photography, film &amp; visual storytelling.
         </p>
         <h1
@@ -77,7 +77,7 @@ function Work() {
   const o = useOpen();
   return (
     <section id="work" className="px-5 py-24 md:px-10 md:py-40">
-      <div className="mb-16 grid gap-6 md:mb-28 md:grid-cols-12">
+      <div className="mb-14 grid gap-6 md:mb-24 md:grid-cols-12">
         <p className="meta text-muted-foreground md:col-span-3">Selected work</p>
         <h2 className="display text-5xl md:col-span-8 md:text-7xl">
           Portraits by the sea, in studios, <em className="text-muted-foreground">and in between.</em>
@@ -85,28 +85,28 @@ function Work() {
       </div>
 
       {/* Composition 1: large + small offset */}
-      <div className="grid gap-6 md:grid-cols-12 md:gap-10">
+      <div className="grid gap-5 md:grid-cols-12 md:gap-9">
         <Frame onOpen={o(3)} photo={p(3)} caption="Coastline" index={num(1)} className="md:col-span-8" />
         <Frame onOpen={o(10)} photo={p(10)} caption="Study" index={num(2)} className="w-2/3 justify-self-end md:col-span-3 md:col-start-10 md:mt-56 md:w-full" />
       </div>
 
       {/* Composition 2: small left, medium right */}
-      <div className="mt-20 grid gap-6 md:mt-40 md:grid-cols-12 md:gap-10">
+      <div className="mt-[4.5rem] grid gap-5 md:mt-36 md:grid-cols-12 md:gap-9">
         <Frame onOpen={o(13)} photo={p(13)} caption="Red room" index={num(3)} className="md:col-span-5 md:col-start-2" />
         <Frame onOpen={o(8)} photo={p(8)} caption="Blue hour" index={num(4)} className="md:col-span-5 md:col-start-8 md:mt-32" />
       </div>
 
       {/* Full bleed */}
-      <Frame onOpen={o(26)} photo={p(26)} caption="Edge of the cliff" index={num(5)} className="-mx-5 mt-20 md:-mx-10 md:mt-40 [&_figcaption]:px-5 md:[&_figcaption]:px-10" />
+      <Frame onOpen={o(26)} photo={p(26)} caption="Edge of the cliff" index={num(5)} className="-mx-5 mt-[4.5rem] md:-mx-10 md:mt-36 [&_figcaption]:px-5 md:[&_figcaption]:px-10" />
 
       {/* Composition 3: tall vertical + two */}
-      <div className="mt-20 grid items-end gap-6 md:mt-40 md:grid-cols-12 md:gap-10">
+      <div className="mt-[4.5rem] grid items-end gap-5 md:mt-36 md:grid-cols-12 md:gap-9">
         <Frame onOpen={o(17)} photo={p(17)} caption="White" index={num(6)} className="w-3/5 md:col-span-3 md:w-full" />
         <Frame onOpen={o(16)} photo={p(16)} caption="Glasshouse" index={num(7)} className="md:col-span-5" />
         <Frame onOpen={o(32)} photo={p(32)} caption="Kneel" index={num(8)} className="w-1/2 justify-self-end md:col-span-3 md:w-full" />
       </div>
 
-      <div className="mt-20 grid gap-6 md:mt-40 md:grid-cols-12 md:gap-10">
+      <div className="mt-[4.5rem] grid gap-5 md:mt-36 md:grid-cols-12 md:gap-9">
         <Frame onOpen={o(5)} photo={p(5)} caption="Couples — sunset" index={num(9)} className="md:col-span-7" />
         <Frame onOpen={o(22)} photo={p(22)} caption="Monochrome" index={num(10)} className="md:col-span-4 md:col-start-9 md:-mt-0 md:self-end" />
       </div>
@@ -218,9 +218,9 @@ function Contact() {
       <footer className="meta mt-20 border-t border-ink/15 pt-5 text-ink-muted md:mt-28">
         <div className="flex items-baseline justify-between gap-4">
           <span className="wordmark text-ink">thegodnamed</span>
-          <span className="meta flex items-baseline gap-2 whitespace-nowrap text-ink-muted/65">
-            <span className="text-lg md:text-xl">Tallinn</span>
-            <span className="text-sm md:text-base">&copy; {new Date().getFullYear()}</span>
+          <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">
+            <span>Tallinn</span>
+            <span>&copy; {new Date().getFullYear()}</span>
           </span>
         </div>
       </footer>

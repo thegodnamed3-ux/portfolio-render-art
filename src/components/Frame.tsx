@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export type FramePhoto = { src: string; w: number; h: number; sm?: string };
+export type FramePhoto = { src: string; w: number; h: number; sm?: string; pos?: string };
 
 type Props = {
   photo: FramePhoto;
@@ -27,6 +27,7 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen, 
         height={photo.h}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
+        style={photo.pos ? { objectPosition: photo.pos } : undefined}
         className={cn(
           "h-full w-full object-cover",
           !isStatic && "transition-transform duration-700 ease-out group-hover:scale-[1.025]",

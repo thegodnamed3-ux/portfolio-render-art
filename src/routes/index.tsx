@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Frame } from "@/components/Frame";
 import { photos } from "@/lib/photos";
 
@@ -31,9 +32,47 @@ const disciplines = [
 ];
 
 function Nav() {
+  const [overLight, setOverLight] = useState(false);
+
+  useEffect(() => {
+    const bands = Array.from(document.querySelectorAll<HTMLElement>("[data-nav-light]"));
+    const update = () => {
+      const band = 112;
+      setOverLight(
+        bands.some((el) => {
+          const r = el.getBoundingClientRect();
+          return r.top < band && r.bottom > 0;
+        })
+      );
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50 mix-blend-difference">
-      <nav className="meta px-5 py-4 text-paper md:px-10 md:py-6">
+    <header className="fixed inset-x-0 top-0 z-50">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-56 md:h-80">
+        <div
+          className={`absolute inset-0 bg-gradient-to-b from-background via-background to-transparent via-40% transition-opacity duration-500 md:via-30% ${
+            overLight ? "opacity-0" : "opacity-100"
+          }`}
+        />
+        <div
+          className={`absolute inset-0 bg-gradient-to-b from-paper via-paper to-transparent via-40% transition-opacity duration-500 md:via-30% ${
+            overLight ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      </div>
+      <nav
+        className={`meta relative px-5 py-4 transition-colors duration-500 md:px-10 md:py-6 ${
+          overLight ? "text-ink" : "text-paper"
+        }`}
+      >
         <div className="flex items-baseline justify-between gap-4">
           <a href="#top" className="whitespace-nowrap tracking-[0.22em] transition-opacity hover:opacity-60 md:tracking-[0.3em]">
             thegodnamed
@@ -44,7 +83,11 @@ function Nav() {
             <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
           </div>
         </div>
-        <p className="mt-1.5 whitespace-nowrap text-[0.5rem] tracking-[0.3em] text-paper/55 md:text-[0.5625rem]">
+        <p
+          className={`mt-1.5 whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:text-[0.5625rem] ${
+            overLight ? "text-ink/75" : "text-paper/85"
+          }`}
+        >
           PHOTOGRAPHY · FILM
         </p>
       </nav>
@@ -128,7 +171,7 @@ function Work() {
 
 function Index_Disciplines() {
   return (
-    <section className="bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
+    <section data-nav-light className="bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
       <div className="grid gap-12 md:grid-cols-12">
         <p className="meta text-ink-muted md:col-span-3">Index</p>
         <ol className="md:col-span-9">
@@ -188,7 +231,7 @@ function About() {
 
 function Contact() {
   return (
-    <section id="contact" className="bg-paper px-5 pb-10 pt-24 text-ink md:px-10 md:pt-40">
+    <section id="contact" data-nav-light className="bg-paper px-5 pb-10 pt-24 text-ink md:px-10 md:pt-40">
       <p className="meta text-ink-muted">Contact</p>
       <a
         href="mailto:hello@example.com"

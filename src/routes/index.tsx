@@ -157,6 +157,7 @@ function Archive() {
 }
 
 function About() {
+  const o = useOpen();
   return (
     <section id="about" className="border-t border-border px-5 py-24 md:px-10 md:py-40">
       <div className="grid gap-12 md:grid-cols-12 md:gap-10">
@@ -170,7 +171,7 @@ function About() {
             Based in Tallinn. Portraits, couples and commissioned work. Replace this paragraph with your own biography.
           </p>
         </div>
-        <Frame photo={p(7)} className="md:col-span-3 md:col-start-10" />
+        <Frame onOpen={o(7)} photo={p(7)} className="md:col-span-3 md:col-start-10" />
       </div>
     </section>
   );

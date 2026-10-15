@@ -10,10 +10,12 @@ type Props = {
   eager?: boolean;
   sizes?: string;
   onOpen?: () => void;
+  /** Purely visual: no click target, no hover motion, no pointer cursor. */
+  static?: boolean;
 };
 
 /** Photograph at its native aspect ratio with small editorial caption. */
-export function Frame({ photo, index, caption, className, eager, sizes, onOpen }: Props) {
+export function Frame({ photo, index, caption, className, eager, sizes, onOpen, static: isStatic }: Props) {
   const img = (
     <div className="overflow-hidden bg-charcoal" style={{ aspectRatio: `${photo.w} / ${photo.h}` }}>
       <img
@@ -25,13 +27,16 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen }
         height={photo.h}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
-        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+        className={cn(
+          "h-full w-full object-cover",
+          !isStatic && "transition-transform duration-700 ease-out group-hover:scale-[1.025]",
+        )}
       />
     </div>
   );
   return (
-    <figure className={cn("group", className)}>
-      {onOpen ? (
+    <figure className={cn(!isStatic && "group", className)}>
+      {onOpen && !isStatic ? (
         <button type="button" onClick={onOpen} aria-label={`Open ${caption ?? "photograph"} fullscreen`} className="block w-full cursor-zoom-in">
           {img}
         </button>

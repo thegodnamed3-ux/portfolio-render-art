@@ -20,13 +20,13 @@ type Props = { tone?: "light" | "dark" | "glass"; className?: string };
 export function ContactLinks({ tone = "light", className }: Props) {
   const light = tone === "light";
   const primary = cn(
-    "group inline-flex min-w-40 items-center justify-between gap-4 rounded-full border px-5 py-3 transition-colors duration-300",
-    light && "border-ink/20 text-ink hover:border-ink hover:bg-ink hover:text-paper",
-    tone === "dark" && "border-paper/20 text-paper hover:border-paper hover:bg-paper hover:text-ink",
+    "group inline-flex min-w-28 items-center justify-between gap-3 rounded-full border px-3.5 py-2 transition-colors duration-300",
+    light && "border-ink/15 text-ink hover:border-ink hover:bg-ink hover:text-paper",
+    tone === "dark" && "border-paper/15 text-paper hover:border-paper hover:bg-paper hover:text-ink",
     tone === "glass" && "glass text-paper hover:bg-paper hover:text-ink"
   );
   const icon = cn(
-    "inline-flex size-10 items-center justify-center rounded-full transition-colors duration-300",
+    "hit inline-flex size-8 items-center justify-center rounded-full transition-colors duration-300",
     light ? "text-ink-muted hover:text-ink" : "text-paper/60 hover:text-paper",
     tone === "glass" && "glass"
   );

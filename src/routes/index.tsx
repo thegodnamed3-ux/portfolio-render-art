@@ -5,10 +5,10 @@ import { photos } from "@/lib/photos";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "thegodnamed — Portrait photographer in Tallinn" },
-      { name: "description", content: "An editorial archive of portrait and couple photography, made in Tallinn." },
-      { property: "og:title", content: "thegodnamed — Portrait photographer in Tallinn" },
-      { property: "og:description", content: "An editorial archive of portrait and couple photography, made in Tallinn." },
+      { title: "thegodnamed — Photography & film in Tallinn" },
+      { name: "description", content: "Photography, film & visual storytelling. An editorial archive made in Tallinn." },
+      { property: "og:title", content: "thegodnamed — Photography & film in Tallinn" },
+      { property: "og:description", content: "Photography, film & visual storytelling. An editorial archive made in Tallinn." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: photos[10]!.src },
@@ -33,13 +33,20 @@ const disciplines = [
 function Nav() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 mix-blend-difference">
-      <nav className="meta flex items-center justify-between px-5 py-5 text-paper md:px-10">
-        <a href="#top" className="tracking-[0.3em]">thegodnamed</a>
-        <div className="flex gap-5 md:gap-8">
-          <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
-          <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
-          <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
+      <nav className="meta px-5 py-4 text-paper md:px-10 md:py-6">
+        <div className="flex items-baseline justify-between gap-4">
+          <a href="#top" className="whitespace-nowrap tracking-[0.22em] transition-opacity hover:opacity-60 md:tracking-[0.3em]">
+            thegodnamed
+          </a>
+          <div className="flex gap-3 text-[0.625rem] md:gap-8 md:text-[0.6875rem]">
+            <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
+            <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
+            <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
+          </div>
         </div>
+        <p className="mt-1.5 whitespace-nowrap text-[0.5rem] tracking-[0.3em] text-paper/55 md:text-[0.5625rem]">
+          PHOTOGRAPHY · FILM
+        </p>
       </nav>
     </header>
   );
@@ -55,17 +62,24 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
         loading="eager"
       />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/90 to-transparent" />
-      <div className="relative flex min-h-[100svh] flex-col justify-end px-5 pb-10 md:px-10 md:pb-14">
-        <p className="meta reveal mb-5 text-paper/80">Portrait photographer — Tallinn, Estonia</p>
-        <h1 className="display reveal text-[18vw] text-paper md:text-[11vw]">
-          Light, <em>held</em>
-          <br />
-          still.
+      <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
+      <div className="relative flex min-h-[100svh] flex-col justify-end px-5 pb-8 md:px-10 md:pb-12">
+        <p className="meta reveal mb-8 text-[0.5rem] text-paper/65 md:mb-10 md:text-[0.6875rem]">
+          Photography, film &amp; visual storytelling.
+        </p>
+        <h1
+          className="display reveal text-[clamp(3.4rem,15.5vw,11.5rem)] text-paper"
+          style={{ animationDelay: "0.14s" }}
+        >
+          <span className="block">Seen</span>
+          <span className="block md:pl-[0.6em]">
+            <em>differently.</em>
+          </span>
         </h1>
-        <div className="meta mt-8 flex justify-between text-paper/70">
-          <span>Archive · {photos.length} frames</span>
-          <a href="#work" className="hover:text-paper">Scroll ↓</a>
+        <div className="meta mt-10 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-5 text-paper/70 md:mt-14">
+          <span>Tallinn, Estonia</span>
+          <span className="hidden md:inline">Archive · {photos.length} frames</span>
+          <a href="#work" className="transition-colors hover:text-paper">Scroll ↓</a>
         </div>
       </div>
     </section>

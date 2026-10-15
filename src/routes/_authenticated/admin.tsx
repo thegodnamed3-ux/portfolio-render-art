@@ -662,11 +662,11 @@ function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
       .catch((e) => toast.error(e.message)).finally(() => setBusy(false));
   };
   const save = async () => {
-    if (!list.length) return toast.error("Add at least one hero photo");
+    if (!list.length) { toast.error("Add at least one hero photo"); return; }
     setBusy(true);
     const { error } = await supabase.from("site_settings").upsert({ id: 1, hero_slides: list as never, about_image: portrait as never, updated_at: new Date().toISOString() });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Homepage published");
     setSlides(null); setAbout(null);
     qc.invalidateQueries({ queryKey: ["admin", "home"] });

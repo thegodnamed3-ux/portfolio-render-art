@@ -21,7 +21,7 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
 }
 
 const CloseIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 stroke-current" strokeWidth="1.5" fill="none"><path d="M5 5l14 14M19 5 5 19" /></svg>
+  <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 stroke-current" strokeWidth="1.5" fill="none"><path d="M5 5l14 14M19 5 5 19" /></svg>
 );
 
 /** Stack geometry: depth offsets are pure translation — never rotation. */
@@ -112,11 +112,11 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
       style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
-        <span className="glass meta rounded-full px-4 py-2 text-paper/80">
-          {title && <span className="mr-3 text-paper">{title}</span>}
+        <span className="glass meta rounded-full px-3.5 py-1.5 text-paper/80">
+          {title && <span className="mr-2.5 text-paper">{title}</span>}
           {String(index + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
         </span>
-        <button onClick={onClose} aria-label="Close viewer" className="glass inline-flex size-10 items-center justify-center rounded-full text-paper/80 transition-colors hover:text-paper"><CloseIcon /></button>
+        <button onClick={onClose} aria-label="Close viewer" className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 transition-colors hover:text-paper"><CloseIcon /></button>
       </div>
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -149,16 +149,16 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
 
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
         <div className="glass flex items-center rounded-full">
-          <button onClick={() => go(-1)} disabled={index === 0} aria-label="Previous photo" className="meta px-4 py-2.5 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">←</button>
-          <span className="h-4 w-px bg-paper/15" />
-          <button onClick={() => go(1)} disabled={atEnd} aria-label="Next photo" className="meta px-4 py-2.5 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">→</button>
+          <button onClick={() => go(-1)} disabled={index === 0} aria-label="Previous photo" className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">←</button>
+          <span className="h-3.5 w-px bg-paper/15" />
+          <button onClick={() => go(1)} disabled={atEnd} aria-label="Next photo" className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">→</button>
         </div>
         <AnimatePresence>
           {atEnd && n > 1 && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">End of session</motion.span>
           )}
         </AnimatePresence>
-        <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass meta rounded-full px-5 py-2.5 text-paper transition-colors hover:bg-paper hover:text-ink">Book</button>
+        <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper transition-colors hover:bg-paper hover:text-ink">Book</button>
       </div>
 
       <AnimatePresence>
@@ -177,7 +177,7 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="glass absolute right-4 rounded-[22px] p-3 md:right-8"
+              className="glass absolute right-4 rounded-[18px] p-2 md:right-8"
               style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
             >
               <ContactLinks tone="glass" />

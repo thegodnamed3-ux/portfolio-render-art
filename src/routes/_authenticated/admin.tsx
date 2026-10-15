@@ -288,7 +288,7 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
     setBusy(false);
     refresh();
   };
-  const check = <T,>(r: { error: { message: string } | null; data?: T }) => { if (r.error) throw new Error(r.error.message); return r.data as T; };
+  const check = <T,>(r: { error: { message: string } | null; data?: T | null }) => { if (r.error) throw new Error(r.error.message); return r.data as T; };
 
   const save = (status?: string) => act(async () => {
     const patch: Partial<Shoot> = { title: title.trim() || "Untitled session", album: album.trim() || null };

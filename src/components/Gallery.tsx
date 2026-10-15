@@ -14,7 +14,7 @@ const stackSpans = [
 ];
 
 /** One photoshoot as a perfectly straight stack of prints (translation only, 0° rotation). */
-function SessionStack({ s, n }: { s: Session; n: number }) {
+export function SessionStack({ s, n }: { s: Session; n: number }) {
   const { open } = useLightbox();
   const under = s.images.slice(1, 3);
   const items = s.images.map((p) => ({ src: p.full, w: p.w, h: p.h, alt: s.title }));

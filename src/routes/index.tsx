@@ -33,18 +33,20 @@ const disciplines = [
 function Nav() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 mix-blend-difference">
-      <nav className="meta flex items-start justify-between px-5 py-5 text-paper md:px-10 md:py-7">
-        <a href="#top" className="group block">
-          <span className="block tracking-[0.3em]">thegodnamed</span>
-          <span className="mt-1.5 block text-[0.5rem] tracking-[0.32em] text-paper/55 transition-opacity duration-300 group-hover:text-paper">
-            PHOTOGRAPHY · FILM
-          </span>
-        </a>
-        <div className="flex gap-5 md:gap-8">
-          <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
-          <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
-          <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
+      <nav className="meta px-5 py-4 text-paper md:px-10 md:py-6">
+        <div className="flex items-baseline justify-between gap-4">
+          <a href="#top" className="whitespace-nowrap tracking-[0.22em] transition-opacity hover:opacity-60 md:tracking-[0.3em]">
+            thegodnamed
+          </a>
+          <div className="flex gap-3 text-[0.625rem] md:gap-8 md:text-[0.6875rem]">
+            <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
+            <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
+            <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
+          </div>
         </div>
+        <p className="mt-1.5 whitespace-nowrap text-[0.5rem] tracking-[0.3em] text-paper/55 md:text-[0.5625rem]">
+          PHOTOGRAPHY · FILM
+        </p>
       </nav>
     </header>
   );
@@ -60,9 +62,9 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
         loading="eager"
       />
-      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-background via-background/55 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
       <div className="relative flex min-h-[100svh] flex-col justify-end px-5 pb-8 md:px-10 md:pb-12">
-        <p className="meta reveal mb-6 text-paper/65 md:mb-9">
+        <p className="meta reveal mb-6 text-[0.5rem] text-paper/65 md:mb-9 md:text-[0.6875rem]">
           Photography, film &amp; visual storytelling.
         </p>
         <h1
@@ -74,9 +76,9 @@ function Hero() {
             <em>differently.</em>
           </span>
         </h1>
-        <div className="meta mt-10 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-paper/25 pt-5 text-paper/70 md:mt-14">
+        <div className="meta mt-10 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-5 text-paper/70 md:mt-14">
           <span>Tallinn, Estonia</span>
-          <span>Archive · {photos.length} frames</span>
+          <span className="hidden md:inline">Archive · {photos.length} frames</span>
           <a href="#work" className="transition-colors hover:text-paper">Scroll ↓</a>
         </div>
       </div>

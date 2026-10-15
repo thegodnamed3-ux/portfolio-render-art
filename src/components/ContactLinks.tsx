@@ -1,3 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getSiteSettings } from "@/lib/portfolio.functions";
 import { contact } from "@/content/contact";
 import { cn } from "@/lib/utils";
 
@@ -16,51 +19,35 @@ const BehanceIcon = () => (
 
 type Props = { tone?: "light" | "dark" | "glass"; className?: string };
 
-/** Homepage: full-width editorial rows. Viewer ("glass"): compact pills. */
+/** Compact Liquid Glass pills (Telegram / WhatsApp) + small icon buttons. */
 export function ContactLinks({ tone = "light", className }: Props) {
-  const light = tone === "light";
-  const glass = tone === "glass";
-  const primary = glass
-    ? "group inline-flex min-w-28 items-center justify-between gap-3 rounded-full glass px-3.5 py-2 text-paper transition-colors duration-300 hover:bg-paper hover:text-ink"
-    : cn(
-        "group flex w-full items-center justify-between gap-4 border px-5 py-4 transition-colors duration-300 md:px-6 md:py-5",
-        light ? "border-ink/20 text-ink hover:border-ink hover:bg-ink hover:text-paper" : "border-paper/20 text-paper hover:border-paper hover:bg-paper hover:text-ink"
-      );
-  const icon = glass
-    ? "hit glass inline-flex size-8 items-center justify-center rounded-full text-paper/60 transition-colors duration-300 hover:text-paper"
-    : cn("transition-colors duration-300", light ? "text-ink-muted hover:text-ink" : "text-paper/55 hover:text-paper");
+  const glass = tone !== "light";
+  const fetchSettings = useServerFn(getSiteSettings);
+  const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
+  const whatsapp = data?.whatsapp ?? contact.whatsapp;
+  const surface = glass ? "glass text-paper hover:bg-paper hover:text-ink" : "glass-ink text-ink hover:bg-ink hover:text-paper";
+  const primary = cn("hit group inline-flex items-center gap-2.5 rounded-full px-3.5 py-2 transition-colors duration-300", surface);
+  const icon = cn("hit inline-flex size-8 items-center justify-center rounded-full transition-colors duration-300", surface);
   const messaging = [
     contact.telegram && { href: contact.telegram, label: "Telegram", Icon: TelegramIcon },
-    contact.whatsapp && { href: contact.whatsapp, label: "WhatsApp", Icon: WhatsAppIcon },
+    whatsapp && { href: whatsapp, label: "WhatsApp", Icon: WhatsAppIcon },
   ].filter(Boolean) as { href: string; label: string; Icon: () => React.JSX.Element }[];
 
-  const pills = messaging.map(({ href, label, Icon }) => (
-    <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={primary}>
-      <span className="flex items-center gap-3">
-        <Icon />
-        <span className="meta">{label}</span>
-      </span>
-      <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-    </a>
-  ));
-  const socials = (
-    <>
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2.5", className)}>
+      {messaging.map(({ href, label, Icon }) => (
+        <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={primary}>
+          <Icon />
+          <span className="meta text-[0.625rem]">{label}</span>
+          <span aria-hidden className="text-xs transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+        </a>
+      ))}
       {contact.instagram && (
         <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}><InstagramIcon /></a>
       )}
       {contact.behance && (
         <a href={contact.behance} target="_blank" rel="noopener noreferrer" aria-label="Behance" className={icon}><BehanceIcon /></a>
       )}
-    </>
-  );
-
-  if (glass) {
-    return <div className={cn("flex flex-wrap items-center gap-3", className)}>{pills}{socials}</div>;
-  }
-  return (
-    <div className={className}>
-      <div className={cn("grid gap-3", messaging.length > 1 && "md:grid-cols-2")}>{pills}</div>
-      <div className="mt-6 flex items-center gap-5">{socials}</div>
     </div>
   );
 }

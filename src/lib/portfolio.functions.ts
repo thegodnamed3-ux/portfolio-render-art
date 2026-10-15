@@ -85,3 +85,9 @@ export const importWfolio = createServerFn({ method: "POST" })
     }
     return { imported, sessions, skipped: false };
   });
+
+/** Public site settings (e.g. WhatsApp link set in the studio). */
+export const getSiteSettings = createServerFn({ method: "GET" }).handler(async () => {
+  const { data } = await publicClient().from("site_settings").select("whatsapp_url").eq("id", 1).maybeSingle();
+  return { whatsapp: data?.whatsapp_url?.trim() || null };
+});

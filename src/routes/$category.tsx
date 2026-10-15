@@ -1,5 +1,6 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { SessionGrid, VideoGallery } from "@/components/Gallery";
+import { ProjectExplorer } from "@/components/ProjectExplorer";
 import { SiteNav } from "@/components/SiteNav";
 import { getCategory, internalCategories } from "@/content/categories";
 import { getPublishedSessions } from "@/lib/portfolio.functions";
@@ -35,8 +36,6 @@ function CategoryPage() {
   const { slug, sessions } = Route.useLoaderData();
   const i = internalCategories.findIndex((c) => c.slug === slug);
   const c = internalCategories[i]!;
-  const prev = internalCategories[(i - 1 + internalCategories.length) % internalCategories.length]!;
-  const next = internalCategories[(i + 1) % internalCategories.length]!;
   const count = sessions.length || c.videos.length;
 
   return (
@@ -52,23 +51,14 @@ function CategoryPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-24 md:px-10 md:pb-40">
+      <section className="px-5 pb-16 md:px-10 md:pb-24">
         {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : sessions.length ? <SessionGrid sessions={sessions} /> : <p className="meta py-24 text-center text-muted-foreground">—</p>}
       </section>
 
-      <nav aria-label="Categories" className="grid grid-cols-2 border-t border-border">
-        <Link to="/$category" params={{ category: prev.slug }} className="group border-r border-border px-5 py-10 md:px-10 md:py-16">
-          <span className="meta text-muted-foreground">← Previous</span>
-          <span className="display mt-3 block text-3xl text-paper transition-transform duration-300 group-hover:-translate-x-1 md:text-6xl">{prev.title}</span>
-        </Link>
-        <Link to="/$category" params={{ category: next.slug }} className="group px-5 py-10 text-right md:px-10 md:py-16">
-          <span className="meta text-muted-foreground">Next →</span>
-          <span className="display mt-3 block text-3xl text-paper transition-transform duration-300 group-hover:translate-x-1 md:text-6xl">{next.title}</span>
-        </Link>
-      </nav>
+      <ProjectExplorer current={c.slug} />
 
-      <footer className="meta flex justify-between border-t border-border px-5 py-6 text-muted-foreground md:px-10">
-        <span className="flex items-baseline gap-3"><Link to="/" className="wordmark text-paper">thegodnamed</Link><span>— Tallinn</span></span>
+      <footer className="meta flex items-center justify-between border-t border-border px-5 py-6 text-muted-foreground md:px-10">
+        <Link to="/" className="wordmark text-paper">thegodnamed</Link>
         <Link to="/" hash="contact" className="hover:text-paper">Book a session</Link>
       </footer>
     </main>

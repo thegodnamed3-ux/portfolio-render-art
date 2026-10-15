@@ -9,7 +9,7 @@ const LightboxContext = createContext<Ctx>({ open: () => {} });
 export const useLightbox = () => useContext(LightboxContext);
 
 export function LightboxProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string } | null>(null);
+  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string | undefined } | null>(null);
   const open = useCallback((items: ViewerItem[], index: number, title?: string) => setState({ items, index, title }), []);
   const close = useCallback(() => setState(null), []);
   return (
@@ -122,7 +122,7 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
           key={bump}
           className="relative"
           style={{ width: stageW + OFFSET * DEPTH, height: stageH + OFFSET * DEPTH }}
-          animate={bump && !reduce ? { x: [0, -6, 4, 0] } : undefined}
+          animate={bump && !reduce ? { x: [0, -6, 4, 0] } : { x: 0 }}
           transition={{ duration: 0.35 }}
         >
           <AnimatePresence initial={false} custom={dir}>
@@ -211,13 +211,13 @@ function Card({ item, size, depth, stage, dir, exitTarget, transition, onNext, o
   const left = (stage.w - size.w) / 2 + depth * OFFSET;
   const topPx = (stage.h - size.h) / 2 + depth * OFFSET;
 
-  const onPan = (_: unknown, info: PanInfo) => {
+  const onPan = (_: PointerEvent, info: PanInfo) => {
     const s = (info.offset.x + info.offset.y) / 2;
     moved.current = true;
     x.set(s);
     y.set(s * 0.72);
   };
-  const onPanEnd = (_: unknown, info: PanInfo) => {
+  const onPanEnd = (_: PointerEvent, info: PanInfo) => {
     const s = (info.offset.x + info.offset.y) / 2;
     const v = (info.velocity.x + info.velocity.y) / 2;
     if ((s < -THRESHOLD || v < -600) && canNext) { onNext(); return; }
@@ -238,8 +238,7 @@ function Card({ item, size, depth, stage, dir, exitTarget, transition, onNext, o
       initial="enter"
       animate={{ left, top: topPx, x: 0, y: 0, opacity: depth > DEPTH - 1 ? 0 : 1, rotate: 0, transition }}
       exit="exit"
-      onPan={top ? onPan : undefined}
-      onPanEnd={top ? onPanEnd : undefined}
+      {...(top ? { onPan, onPanEnd } : {})}
     >
       <motion.img
         src={item.src}

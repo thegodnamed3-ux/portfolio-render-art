@@ -79,6 +79,7 @@ function Nav() {
           </a>
           <div className="flex gap-3 text-[0.625rem] md:gap-8 md:text-[0.6875rem]">
             <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
+            <a href="#disciplines" className="hover:opacity-60 transition-opacity">Explore</a>
             <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
             <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
           </div>
@@ -114,9 +115,9 @@ function Hero() {
           className="display reveal text-[clamp(3.4rem,15.5vw,11.5rem)] text-paper"
           style={{ animationDelay: "0.14s" }}
         >
-          <span className="block">Seen</span>
+          <span className="block">Beyond</span>
           <span className="block md:pl-[0.6em]">
-            <em>differently.</em>
+            the <em>obvious.</em>
           </span>
         </h1>
         <div className="meta mt-10 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-5 text-paper/70 md:mt-14">
@@ -171,19 +172,21 @@ function Work() {
 
 function Index_Disciplines() {
   return (
-    <section data-nav-light className="bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
+    <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
       <div className="grid gap-12 md:grid-cols-12">
-        <p className="meta text-ink-muted md:col-span-3">Index</p>
+        <h2 className="display text-3xl md:col-span-3 md:text-4xl">Disciplines.</h2>
         <ol className="md:col-span-9">
           {disciplines.map((d, i) => (
-            <li
-              key={d}
-              className="group flex items-baseline justify-between border-t border-ink/15 py-5 last:border-b md:py-7"
+            <li key={d} className="border-t border-ink/15 last:border-b">
+              <a
+              href="#work"
+              className="group flex items-baseline justify-between py-5 md:py-7"
             >
               <span className="display text-4xl transition-transform duration-300 group-hover:translate-x-2 md:text-6xl">
                 {d}
               </span>
               <span className="meta text-ink-muted">{num(i + 1)}</span>
+              </a>
             </li>
           ))}
         </ol>

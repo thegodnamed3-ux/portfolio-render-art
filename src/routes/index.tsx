@@ -142,7 +142,7 @@ function Index_Disciplines() {
 
 function About({ image }: { image: HomeImage }) {
   return (
-    <section id="about" className="relative isolate flex min-h-[100svh] flex-col justify-between overflow-hidden px-5 py-20 md:min-h-[90vh] md:px-10 md:py-28">
+    <section id="about" className="relative isolate flex min-h-[68svh] flex-col justify-between overflow-hidden px-5 py-14 md:min-h-[70vh] md:px-10 md:py-20">
       <img
         src={image.src}
         alt="Portrait of Gor Arsakjan"

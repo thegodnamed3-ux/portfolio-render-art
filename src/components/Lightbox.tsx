@@ -41,7 +41,7 @@ function useViewport() {
   return vp;
 }
 
-function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; index: number; title?: string; onClose: () => void }) {
+function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void }) {
   const [index, setIndex] = useState(start);
   const [dir, setDir] = useState<1 | -1>(1);
   const [panel, setPanel] = useState(false);

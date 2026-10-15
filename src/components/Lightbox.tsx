@@ -97,6 +97,9 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
   };
 
   const visible = items.slice(index, index + DEPTH + 1);
+  // Every print in the stack shares the front print's footprint, so a portrait never
+  // peeks out above or below a landscape card — the stack stays one straight pile.
+  const topBox = size(items[index] ?? { src: "", w: stageW, h: stageH });
   const t = reduce ? { duration: 0.15 } : spring;
   const exitX = vp.w * 0.9;
 
@@ -136,7 +139,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
               <Card
                 key={index + d}
                 item={it}
-                size={size(it)}
+                size={topBox}
                 depth={d}
                 stage={{ w: stageW, h: stageH }}
                 dir={dir}
@@ -242,7 +245,7 @@ function Card({ item, size, depth, stage, dir, exitX, transition, onNext, onPrev
         exit: (c: { dir: number; y: number }) => (c.dir === 1 ? { x: -exitX, y: c.y, opacity: 0, transition } : { left: left + OFFSET * 2, top: topPx + OFFSET * 2, opacity: 0, transition }),
       }}
       initial="enter"
-      animate={{ left, top: topPx, x: 0, y: 0, opacity: depth > DEPTH - 1 ? 0 : 1, rotate: 0, transition }}
+      animate={{ left, top: topPx, width: size.w, height: size.h, x: 0, y: 0, opacity: depth > DEPTH - 1 ? 0 : 1, rotate: 0, transition }}
       exit="exit"
       {...(top ? { onPan, onPanEnd } : {})}
     >

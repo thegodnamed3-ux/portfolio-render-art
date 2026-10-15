@@ -158,3 +158,11 @@
   from { opacity: 0; transform: translateY(18px); }
   to { opacity: 1; transform: none; }
 }
+
+/* Liquid glass: for controls only, never over photographs. */
+@utility glass {
+  background: color-mix(in oklab, var(--paper) 9%, transparent);
+  backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid color-mix(in oklab, var(--paper) 16%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--paper) 22%, transparent), 0 10px 30px -12px oklch(0 0 0 / 60%);
+}

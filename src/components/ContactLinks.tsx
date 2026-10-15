@@ -16,42 +16,51 @@ const BehanceIcon = () => (
 
 type Props = { tone?: "light" | "dark" | "glass"; className?: string };
 
-/** Compact elongated pills (Telegram / WhatsApp) + small standalone social icons. */
+/** Homepage: full-width editorial rows. Viewer ("glass"): compact pills. */
 export function ContactLinks({ tone = "light", className }: Props) {
   const light = tone === "light";
-  const primary = cn(
-    "group inline-flex min-w-28 items-center justify-between gap-3 rounded-full border px-3.5 py-2 transition-colors duration-300",
-    light && "border-ink/15 text-ink hover:border-ink hover:bg-ink hover:text-paper",
-    tone === "dark" && "border-paper/15 text-paper hover:border-paper hover:bg-paper hover:text-ink",
-    tone === "glass" && "glass text-paper hover:bg-paper hover:text-ink"
-  );
-  const icon = cn(
-    "hit inline-flex size-8 items-center justify-center rounded-full transition-colors duration-300",
-    light ? "text-ink-muted hover:text-ink" : "text-paper/60 hover:text-paper",
-    tone === "glass" && "glass"
-  );
+  const glass = tone === "glass";
+  const primary = glass
+    ? "group inline-flex min-w-28 items-center justify-between gap-3 rounded-full glass px-3.5 py-2 text-paper transition-colors duration-300 hover:bg-paper hover:text-ink"
+    : cn(
+        "group flex w-full items-center justify-between gap-4 border px-5 py-4 transition-colors duration-300 md:px-6 md:py-5",
+        light ? "border-ink/20 text-ink hover:border-ink hover:bg-ink hover:text-paper" : "border-paper/20 text-paper hover:border-paper hover:bg-paper hover:text-ink"
+      );
+  const icon = glass
+    ? "hit glass inline-flex size-8 items-center justify-center rounded-full text-paper/60 transition-colors duration-300 hover:text-paper"
+    : cn("transition-colors duration-300", light ? "text-ink-muted hover:text-ink" : "text-paper/55 hover:text-paper");
   const messaging = [
     contact.telegram && { href: contact.telegram, label: "Telegram", Icon: TelegramIcon },
     contact.whatsapp && { href: contact.whatsapp, label: "WhatsApp", Icon: WhatsAppIcon },
   ].filter(Boolean) as { href: string; label: string; Icon: () => React.JSX.Element }[];
 
-  return (
-    <div className={cn("flex flex-wrap items-center gap-3", className)}>
-      {messaging.map(({ href, label, Icon }) => (
-        <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={primary}>
-          <span className="flex items-center gap-3">
-            <Icon />
-            <span className="meta">{label}</span>
-          </span>
-          <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-        </a>
-      ))}
+  const pills = messaging.map(({ href, label, Icon }) => (
+    <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={primary}>
+      <span className="flex items-center gap-3">
+        <Icon />
+        <span className="meta">{label}</span>
+      </span>
+      <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+    </a>
+  ));
+  const socials = (
+    <>
       {contact.instagram && (
         <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}><InstagramIcon /></a>
       )}
       {contact.behance && (
         <a href={contact.behance} target="_blank" rel="noopener noreferrer" aria-label="Behance" className={icon}><BehanceIcon /></a>
       )}
+    </>
+  );
+
+  if (glass) {
+    return <div className={cn("flex flex-wrap items-center gap-3", className)}>{pills}{socials}</div>;
+  }
+  return (
+    <div className={className}>
+      <div className={cn("grid gap-3", messaging.length > 1 && "md:grid-cols-2")}>{pills}</div>
+      <div className="mt-6 flex items-center gap-5">{socials}</div>
     </div>
   );
 }

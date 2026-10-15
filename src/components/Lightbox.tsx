@@ -1,54 +1,66 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "framer-motion";
 import { ContactLinks } from "./ContactLinks";
 
 export type ViewerItem = { src: string; w: number; h: number; alt?: string };
 
-type Ctx = { open: (items: ViewerItem[], index: number) => void };
+type Ctx = { open: (items: ViewerItem[], index: number, title?: string) => void };
 const LightboxContext = createContext<Ctx>({ open: () => {} });
 export const useLightbox = () => useContext(LightboxContext);
 
 export function LightboxProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ items: ViewerItem[]; index: number } | null>(null);
-  const [visible, setVisible] = useState(false);
-  const open = useCallback((items: ViewerItem[], index: number) => {
-    setState({ items, index });
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
-  const close = useCallback(() => {
-    setVisible(false);
-    setTimeout(() => setState(null), 300);
-  }, []);
+  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string } | null>(null);
+  const open = useCallback((items: ViewerItem[], index: number, title?: string) => setState({ items, index, title }), []);
+  const close = useCallback(() => setState(null), []);
   return (
     <LightboxContext.Provider value={{ open }}>
       {children}
-      {state && (
-        <Viewer
-          items={state.items}
-          index={state.index}
-          visible={visible}
-          onIndex={(index) => setState((s) => (s ? { ...s, index } : s))}
-          onClose={close}
-        />
-      )}
+      <AnimatePresence>{state && <Viewer key="viewer" {...state} onClose={close} />}</AnimatePresence>
     </LightboxContext.Provider>
   );
 }
 
 const CloseIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5 stroke-current" strokeWidth="1.4" fill="none"><path d="M5 5l14 14M19 5 5 19" /></svg>
+  <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 stroke-current" strokeWidth="1.5" fill="none"><path d="M5 5l14 14M19 5 5 19" /></svg>
 );
 
-function Viewer({ items, index, visible, onIndex, onClose }: {
-  items: ViewerItem[]; index: number; visible: boolean; onIndex: (i: number) => void; onClose: () => void;
-}) {
-  const [panel, setPanel] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const touch = useRef<{ x: number; y: number } | null>(null);
-  const item = items[index]!;
-  const n = items.length;
-  const go = useCallback((d: number) => { setLoaded(false); onIndex((index + d + n) % n); }, [index, n, onIndex]);
+/** Stack geometry: depth offsets are pure translation — never rotation. */
+const OFFSET = 7;
+const DEPTH = 3;
+const THRESHOLD = 90;
+const spring = { type: "spring", stiffness: 260, damping: 32, mass: 0.9 } as const;
 
-  // Lock background scroll; overflow lock keeps the scroll position intact.
+function useViewport() {
+  const [vp, setVp] = useState({ w: 1024, h: 768 });
+  useEffect(() => {
+    const on = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    on();
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  return vp;
+}
+
+function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; index: number; title?: string; onClose: () => void }) {
+  const [index, setIndex] = useState(start);
+  const [dir, setDir] = useState<1 | -1>(1);
+  const [panel, setPanel] = useState(false);
+  const [bump, setBump] = useState(0);
+  const reduce = useReducedMotion();
+  const vp = useViewport();
+  const n = items.length;
+  const atEnd = index === n - 1;
+
+  const go = useCallback((d: 1 | -1) => {
+    setIndex((i) => {
+      const next = i + d;
+      if (next < 0 || next >= n) { setBump((b) => b + 1); return i; }
+      setDir(d);
+      return next;
+    });
+  }, [n]);
+
+  // Lock background scroll; the page stays mounted underneath, so its scroll position is kept.
   useEffect(() => {
     const html = document.documentElement;
     const prev = [html.style.overflow, document.body.style.overflow];
@@ -67,72 +79,178 @@ function Viewer({ items, index, visible, onIndex, onClose }: {
     return () => window.removeEventListener("keydown", onKey);
   }, [go, onClose, panel]);
 
-  // Preload neighbours
+  // Preload the next two photographs only.
   useEffect(() => {
-    [1, -1].forEach((d) => { const img = new Image(); img.src = items[(index + d + n) % n]!.src; });
-  }, [index, items, n]);
+    [1, 2].forEach((d) => { const it = items[index + d]; if (it) { const img = new Image(); img.src = it.src; } });
+  }, [index, items]);
 
-  const ctrl = "meta text-paper/60 transition-colors hover:text-paper";
+  // Fit every card into the same stage, preserving its native aspect ratio.
+  const mobile = vp.w < 768;
+  const stageW = vp.w * (mobile ? 0.88 : 0.72) - OFFSET * DEPTH;
+  const stageH = vp.h * (mobile ? 0.66 : 0.74) - OFFSET * DEPTH;
+  const size = (it: ViewerItem) => {
+    const s = Math.min(stageW / it.w, stageH / it.h);
+    return { w: Math.round(it.w * s), h: Math.round(it.h * s) };
+  };
+
+  const visible = items.slice(index, index + DEPTH + 1);
+  const t = reduce ? { duration: 0.15 } : spring;
+  const exitTarget = { x: -vp.w * 0.75, y: -vp.h * 0.55 };
 
   return (
-    <div
+    <motion.div
       role="dialog"
       aria-modal="true"
-      aria-label="Photo viewer"
-      className={`fixed inset-0 z-[100] flex flex-col bg-viewer transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
-      onTouchStart={(e) => { const t = e.touches[0]!; touch.current = { x: t.clientX, y: t.clientY }; }}
-      onTouchEnd={(e) => {
-        const s = touch.current; touch.current = null;
-        if (!s || panel) return;
-        const t = e.changedTouches[0]!; const dx = t.clientX - s.x; const dy = t.clientY - s.y;
-        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
-        else if (dy > 90 && Math.abs(dy) > Math.abs(dx)) onClose();
-      }}
+      aria-label={title ? `${title} — photo viewer` : "Photo viewer"}
+      className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-viewer/85 backdrop-blur-2xl"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: reduce ? 0.1 : 0.3 }}
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="flex items-center justify-between px-5 py-4 md:px-8 md:py-6">
-        <span className="meta text-paper/45">{String(index + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</span>
-        <button onClick={onClose} aria-label="Close viewer" className="-m-2 p-2 text-paper/70 transition-colors hover:text-paper"><CloseIcon /></button>
+      <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
+        <span className="glass meta rounded-full px-4 py-2 text-paper/80">
+          {title && <span className="mr-3 text-paper">{title}</span>}
+          {String(index + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+        </span>
+        <button onClick={onClose} aria-label="Close viewer" className="glass inline-flex size-10 items-center justify-center rounded-full text-paper/80 transition-colors hover:text-paper"><CloseIcon /></button>
       </div>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center px-3 md:px-20" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-        <img
-          key={item.src}
-          src={item.src}
-          alt={item.alt ?? "Photograph"}
-          width={item.w}
-          height={item.h}
-          onLoad={() => setLoaded(true)}
-          className={`max-h-full max-w-full select-none object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
-          style={{ aspectRatio: `${item.w} / ${item.h}` }}
-          draggable={false}
-        />
-        {n > 1 && (
-          <>
-            <button onClick={() => go(-1)} aria-label="Previous photo" className="absolute inset-y-0 left-0 hidden w-20 items-center justify-center text-paper/40 transition-colors hover:text-paper md:flex">←</button>
-            <button onClick={() => go(1)} aria-label="Next photo" className="absolute inset-y-0 right-0 hidden w-20 items-center justify-center text-paper/40 transition-colors hover:text-paper md:flex">→</button>
-          </>
+      <div className="relative flex min-h-0 flex-1 items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <motion.div
+          key={bump}
+          className="relative"
+          style={{ width: stageW + OFFSET * DEPTH, height: stageH + OFFSET * DEPTH }}
+          animate={bump && !reduce ? { x: [0, -6, 4, 0] } : undefined}
+          transition={{ duration: 0.35 }}
+        >
+          <AnimatePresence initial={false} custom={dir}>
+            {visible.map((it, d) => (
+              <Card
+                key={index + d}
+                item={it}
+                size={size(it)}
+                depth={d}
+                stage={{ w: stageW, h: stageH }}
+                dir={dir}
+                exitTarget={exitTarget}
+                transition={t}
+                onNext={() => go(1)}
+                onPrev={() => go(-1)}
+                canNext={index + d < n - 1}
+              />
+            )).reverse()}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+
+      <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
+        <div className="glass flex items-center rounded-full">
+          <button onClick={() => go(-1)} disabled={index === 0} aria-label="Previous photo" className="meta px-4 py-2.5 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">←</button>
+          <span className="h-4 w-px bg-paper/15" />
+          <button onClick={() => go(1)} disabled={atEnd} aria-label="Next photo" className="meta px-4 py-2.5 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">→</button>
+        </div>
+        <AnimatePresence>
+          {atEnd && n > 1 && (
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">End of session</motion.span>
+          )}
+        </AnimatePresence>
+        <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass meta rounded-full px-5 py-2.5 text-paper transition-colors hover:bg-paper hover:text-ink">Book</button>
+      </div>
+
+      <AnimatePresence>
+        {panel && (
+          <motion.div
+            className="absolute inset-0 z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={(e) => { if (e.target === e.currentTarget) setPanel(false); }}
+          >
+            <motion.div
+              role="dialog"
+              aria-label="Book a session"
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className="glass absolute right-4 rounded-3xl p-3 md:right-8"
+              style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+            >
+              <ContactLinks tone="glass" />
+            </motion.div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
+    </motion.div>
+  );
+}
 
-      <div className="flex items-center justify-between border-t border-paper/10 px-5 py-4 md:border-0 md:px-8 md:py-6">
-        <div className="flex gap-6 md:invisible">
-          <button onClick={() => go(-1)} aria-label="Previous photo" className={ctrl}>← Prev</button>
-          <button onClick={() => go(1)} aria-label="Next photo" className={ctrl}>Next →</button>
-        </div>
-        <button onClick={() => setPanel(true)} className={`${ctrl} border-b border-paper/25 pb-0.5 hover:border-paper`}>Book a session</button>
-      </div>
+type CardProps = {
+  item: ViewerItem;
+  size: { w: number; h: number };
+  depth: number;
+  stage: { w: number; h: number };
+  dir: 1 | -1;
+  exitTarget: { x: number; y: number };
+  transition: object;
+  onNext: () => void;
+  onPrev: () => void;
+  canNext: boolean;
+};
 
-      {panel && (
-        <div className="absolute inset-0 z-10 flex items-end justify-center bg-viewer/70 md:items-center" onClick={(e) => { if (e.target === e.currentTarget) setPanel(false); }}>
-          <div role="dialog" aria-label="Book a session" className="w-full border-t border-paper/15 bg-background p-6 md:max-w-md md:border md:p-8">
-            <div className="mb-8 flex items-baseline justify-between">
-              <p className="display text-3xl text-paper">Book a session.</p>
-              <button onClick={() => setPanel(false)} aria-label="Close booking panel" className="-m-2 p-2 text-paper/70 hover:text-paper"><CloseIcon /></button>
-            </div>
-            <ContactLinks tone="dark" />
-          </div>
-        </div>
-      )}
-    </div>
+function Card({ item, size, depth, stage, dir, exitTarget, transition, onNext, onPrev, canNext }: CardProps) {
+  const top = depth === 0;
+  // Drag travel is projected onto the up-left diagonal; motion values avoid rerenders while dragging.
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const fade = useTransform(x, [-400, 0], [0.35, 1]);
+  const moved = useRef(false);
+
+  const left = (stage.w - size.w) / 2 + depth * OFFSET;
+  const topPx = (stage.h - size.h) / 2 + depth * OFFSET;
+
+  const onPan = (_: unknown, info: PanInfo) => {
+    const s = (info.offset.x + info.offset.y) / 2;
+    moved.current = true;
+    x.set(s);
+    y.set(s * 0.72);
+  };
+  const onPanEnd = (_: unknown, info: PanInfo) => {
+    const s = (info.offset.x + info.offset.y) / 2;
+    const v = (info.velocity.x + info.velocity.y) / 2;
+    if ((s < -THRESHOLD || v < -600) && canNext) { onNext(); return; }
+    if (s > THRESHOLD || v > 600) onPrev();
+    animate(x, 0, transition);
+    animate(y, 0, transition);
+  };
+
+  return (
+    <motion.div
+      custom={dir}
+      className="absolute shadow-[0_24px_60px_-20px_oklch(0_0_0/0.8)]"
+      style={{ left: 0, top: 0, width: size.w, height: size.h, x: top ? x : 0, y: top ? y : 0, rotate: 0, touchAction: "none", zIndex: 10 - depth }}
+      variants={{
+        enter: (d: number) => (d === -1 ? { ...exitTarget, left, top: topPx, opacity: 0 } : { left: left + OFFSET, top: topPx + OFFSET, opacity: 0 }),
+        exit: (d: number) => (d === 1 ? { ...exitTarget, opacity: 0, transition } : { left: left + OFFSET * 2, top: topPx + OFFSET * 2, opacity: 0, transition }),
+      }}
+      initial="enter"
+      animate={{ left, top: topPx, x: 0, y: 0, opacity: depth > DEPTH - 1 ? 0 : 1, rotate: 0, transition }}
+      exit="exit"
+      onPan={top ? onPan : undefined}
+      onPanEnd={top ? onPanEnd : undefined}
+    >
+      <motion.img
+        src={item.src}
+        alt={item.alt ?? "Photograph"}
+        width={item.w}
+        height={item.h}
+        draggable={false}
+        decoding="async"
+        className="h-full w-full select-none bg-charcoal object-cover"
+        style={{ opacity: top ? fade : 1, cursor: top ? "grab" : "default" }}
+      />
+    </motion.div>
   );
 }

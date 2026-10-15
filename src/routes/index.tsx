@@ -171,7 +171,7 @@ function Work() {
 
 function Index_Disciplines() {
   return (
-    <section className="bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
+    <section data-nav-light className="bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
       <div className="grid gap-12 md:grid-cols-12">
         <p className="meta text-ink-muted md:col-span-3">Index</p>
         <ol className="md:col-span-9">
@@ -231,7 +231,7 @@ function About() {
 
 function Contact() {
   return (
-    <section id="contact" className="bg-paper px-5 pb-10 pt-24 text-ink md:px-10 md:pt-40">
+    <section id="contact" data-nav-light className="bg-paper px-5 pb-10 pt-24 text-ink md:px-10 md:pt-40">
       <p className="meta text-ink-muted">Contact</p>
       <a
         href="mailto:hello@example.com"

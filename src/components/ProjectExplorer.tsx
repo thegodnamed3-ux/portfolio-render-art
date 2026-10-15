@@ -75,7 +75,7 @@ export function ProjectExplorer({ current }: { current: string }) {
             ))}
           </div>
 
-          <div key={cat + String(open)} className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-5 pt-1 [scrollbar-width:none]">
+          <div key={cat + String(open)} className="flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-5 pt-1 [scrollbar-width:none]">
             {isVideo
               ? c.videos.map((v, i) => (
                   <Card key={v.id} i={i} title={v.title ?? "Film"} meta="Film" img={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`} as={

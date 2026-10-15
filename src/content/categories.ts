@@ -7,17 +7,29 @@ export type Category = {
   description: string;
   photos: GalleryPhoto[];
   videos: VideoItem[];
+  /** Set when the discipline lives on another site: the row links out instead of opening an in-app gallery. */
+  external?: string;
 };
 
-/** Order here drives the Disciplines list and previous/next navigation. */
+/** Order here drives the Disciplines list. */
 export const categories: Category[] = [
   { slug: "portraits", title: "Portraits", description: "Portrait photography by thegodnamed, Tallinn.", photos: portraits, videos: [] },
   { slug: "couples", title: "Couples", description: "Couple photography by thegodnamed, Tallinn.", photos: couples, videos: [] },
   { slug: "commercial", title: "Commercial", description: "Commercial photography by thegodnamed, Tallinn.", photos: commercial, videos: [] },
   { slug: "automotive", title: "Automotive", description: "Automotive photography by thegodnamed, Tallinn.", photos: automotive, videos: [] },
   { slug: "video", title: "Video", description: "Video work by thegodnamed, Tallinn.", photos: [], videos },
-  // Real estate: no original work on the Wfolio site yet — add photos here.
-  { slug: "real-estate", title: "Real estate", description: "Real estate photography by thegodnamed, Tallinn.", photos: [], videos: [] },
+  // Real estate is presented on its own site, so the row links straight out.
+  {
+    slug: "real-estate",
+    title: "Real estate",
+    description: "Real estate photography by thegodnamed, Tallinn.",
+    photos: [],
+    videos: [],
+    external: "https://thehorastudios.wfolio.pro/",
+  },
 ];
 
-export const getCategory = (slug: string) => categories.find((c) => c.slug === slug);
+/** Disciplines with a gallery inside this site — drives the $category route and previous/next navigation. */
+export const internalCategories = categories.filter((c) => !c.external);
+
+export const getCategory = (slug: string) => internalCategories.find((c) => c.slug === slug);

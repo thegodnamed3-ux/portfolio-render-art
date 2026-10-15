@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
-import { PhotoGallery, VideoGallery } from "@/components/Gallery";
+import { SessionGrid, VideoGallery } from "@/components/Gallery";
 import { SiteNav } from "@/components/SiteNav";
 import { getCategory, internalCategories } from "@/content/categories";
 
@@ -35,7 +35,7 @@ function CategoryPage() {
   const c = internalCategories[i]!;
   const prev = internalCategories[(i - 1 + internalCategories.length) % internalCategories.length]!;
   const next = internalCategories[(i + 1) % internalCategories.length]!;
-  const count = c.photos.length || c.videos.length;
+  const count = c.sessions.length || c.videos.length;
 
   return (
     <main>
@@ -51,7 +51,7 @@ function CategoryPage() {
       </section>
 
       <section className="px-5 pb-24 md:px-10 md:pb-40">
-        {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : <PhotoGallery photos={c.photos} />}
+        {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : <SessionGrid sessions={c.sessions} />}
       </section>
 
       <nav aria-label="Categories" className="grid grid-cols-2 border-t border-border">

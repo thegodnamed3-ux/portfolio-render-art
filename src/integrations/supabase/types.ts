@@ -23,6 +23,8 @@ export type Database = {
           id: string
           origin_category: string | null
           sm: string
+          source_piece_id: string | null
+          source_url: string | null
           src: string
           storage_path: string | null
           w: number
@@ -35,6 +37,8 @@ export type Database = {
           id?: string
           origin_category?: string | null
           sm: string
+          source_piece_id?: string | null
+          source_url?: string | null
           src: string
           storage_path?: string | null
           w: number
@@ -47,6 +51,8 @@ export type Database = {
           id?: string
           origin_category?: string | null
           sm?: string
+          source_piece_id?: string | null
+          source_url?: string | null
           src?: string
           storage_path?: string | null
           w?: number
@@ -93,7 +99,11 @@ export type Database = {
           cover_media_id: string | null
           created_at: string
           id: string
+          import_batch: string | null
+          review_status: string | null
           sort_order: number
+          source_album: string | null
+          source_url: string | null
           status: string
           title: string
           updated_at: string
@@ -104,7 +114,11 @@ export type Database = {
           cover_media_id?: string | null
           created_at?: string
           id?: string
+          import_batch?: string | null
+          review_status?: string | null
           sort_order?: number
+          source_album?: string | null
+          source_url?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -115,7 +129,11 @@ export type Database = {
           cover_media_id?: string | null
           created_at?: string
           id?: string
+          import_batch?: string | null
+          review_status?: string | null
           sort_order?: number
+          source_album?: string | null
+          source_url?: string | null
           status?: string
           title?: string
           updated_at?: string

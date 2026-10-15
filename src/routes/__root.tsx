@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { LightboxProvider } from "../components/Lightbox";
+import { Toaster } from "../components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -127,6 +128,7 @@ function RootComponent() {
       <LightboxProvider>
         <Outlet />
       </LightboxProvider>
+      <Toaster position="bottom-center" />
     </QueryClientProvider>
   );
 }

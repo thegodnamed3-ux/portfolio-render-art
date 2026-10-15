@@ -46,12 +46,14 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
   const [dir, setDir] = useState<1 | -1>(1);
   const [panel, setPanel] = useState(false);
   const [bump, setBump] = useState(0);
+  const exitY = useRef(0);
   const reduce = useReducedMotion();
   const vp = useViewport();
   const n = items.length;
   const atEnd = index === n - 1;
 
-  const go = useCallback((d: 1 | -1) => {
+  const go = useCallback((d: 1 | -1, y = 0) => {
+    exitY.current = y;
     setIndex((i) => {
       const next = i + d;
       if (next < 0 || next >= n) { setBump((b) => b + 1); return i; }
@@ -95,7 +97,7 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
 
   const visible = items.slice(index, index + DEPTH + 1);
   const t = reduce ? { duration: 0.15 } : spring;
-  const exitTarget = { x: -vp.w * 0.75, y: -vp.h * 0.55 };
+  const exitX = vp.w * 0.9;
 
   return (
     <motion.div
@@ -125,7 +127,7 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
           animate={bump && !reduce ? { x: [0, -6, 4, 0] } : { x: 0 }}
           transition={{ duration: 0.35 }}
         >
-          <AnimatePresence initial={false} custom={dir}>
+          <AnimatePresence initial={false} custom={{ dir, y: exitY.current }}>
             {visible.map((it, d) => (
               <Card
                 key={index + d}
@@ -134,10 +136,10 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
                 depth={d}
                 stage={{ w: stageW, h: stageH }}
                 dir={dir}
-                exitTarget={exitTarget}
+                exitX={exitX}
                 transition={t}
-                onNext={() => go(1)}
-                onPrev={() => go(-1)}
+                onNext={(y) => go(1, y)}
+                onPrev={(y) => go(-1, y)}
                 canNext={index + d < n - 1}
               />
             )).reverse()}
@@ -193,47 +195,47 @@ type CardProps = {
   depth: number;
   stage: { w: number; h: number };
   dir: 1 | -1;
-  exitTarget: { x: number; y: number };
+  exitX: number;
   transition: object;
-  onNext: () => void;
-  onPrev: () => void;
+  onNext: (y: number) => void;
+  onPrev: (y: number) => void;
   canNext: boolean;
 };
 
-function Card({ item, size, depth, stage, dir, exitTarget, transition, onNext, onPrev, canNext }: CardProps) {
+function Card({ item, size, depth, stage, dir, exitX, transition, onNext, onPrev, canNext }: CardProps) {
   const top = depth === 0;
-  // Drag travel is projected onto the up-left diagonal; motion values avoid rerenders while dragging.
+  // Free 2D drag; horizontal travel and velocity decide navigation. Motion values avoid rerenders while dragging.
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const fade = useTransform(x, [-420, -160], [0.4, 1]);
-  const moved = useRef(false);
+  const fade = useTransform(x, [-480, -200, 0, 200, 480], [0.4, 1, 1, 1, 0.4]);
 
   const left = (stage.w - size.w) / 2 + depth * OFFSET;
   const topPx = (stage.h - size.h) / 2 + depth * OFFSET;
 
   const onPan = (_: PointerEvent, info: PanInfo) => {
-    const s = (info.offset.x + info.offset.y) / 2;
-    moved.current = true;
-    x.set(s);
-    y.set(s * 0.72);
+    x.set(info.offset.x);
+    y.set(info.offset.y * 0.6);
   };
   const onPanEnd = (_: PointerEvent, info: PanInfo) => {
-    const s = (info.offset.x + info.offset.y) / 2;
-    const v = (info.velocity.x + info.velocity.y) / 2;
-    if ((s < -THRESHOLD || v < -600) && canNext) { onNext(); return; }
-    if (s > THRESHOLD || v > 600) onPrev();
+    const dx = info.offset.x;
+    const vx = info.velocity.x;
+    const keepY = y.get() * 1.6;
+    if ((dx < -THRESHOLD || vx < -500) && canNext) { onNext(keepY); return; }
+    if (dx > THRESHOLD || vx > 500) onPrev(keepY);
     animate(x, 0, transition);
     animate(y, 0, transition);
   };
 
   return (
     <motion.div
-      custom={dir}
+      custom={{ dir, y: 0 }}
       className="absolute shadow-[0_24px_60px_-20px_oklch(0_0_0/0.8)]"
       style={{ left: 0, top: 0, width: size.w, height: size.h, x: top ? x : 0, y: top ? y : 0, rotate: 0, touchAction: "none", zIndex: 10 - depth }}
       variants={{
-        enter: (d: number) => (d === -1 ? { ...exitTarget, left, top: topPx, opacity: 0 } : { left: left + OFFSET, top: topPx + OFFSET, opacity: 0 }),
-        exit: (d: number) => (d === 1 ? { ...exitTarget, opacity: 0, transition } : { left: left + OFFSET * 2, top: topPx + OFFSET * 2, opacity: 0, transition }),
+        // Backward: the previous print returns from the left onto the front of the stack.
+        enter: (c: { dir: number; y: number }) => (c.dir === -1 ? { x: -exitX, y: c.y, left, top: topPx, opacity: 0 } : { left: left + OFFSET, top: topPx + OFFSET, opacity: 0 }),
+        // Forward: the top print leaves to the left, keeping some of the finger's vertical drift.
+        exit: (c: { dir: number; y: number }) => (c.dir === 1 ? { x: -exitX, y: c.y, opacity: 0, transition } : { left: left + OFFSET * 2, top: topPx + OFFSET * 2, opacity: 0, transition }),
       }}
       initial="enter"
       animate={{ left, top: topPx, x: 0, y: 0, opacity: depth > DEPTH - 1 ? 0 : 1, rotate: 0, transition }}

@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
+import { ArrowUpRight } from "lucide-react";
 import { Frame } from "@/components/Frame";
 import { ContactLinks } from "@/components/ContactLinks";
 import { useLightbox } from "@/components/Lightbox";
 import { SiteNav } from "@/components/SiteNav";
 import { categories } from "@/content/categories";
+import type { Category } from "@/content/categories";
 import { photos } from "@/lib/photos";
 
 export const Route = createFileRoute("/")({
@@ -112,6 +114,43 @@ function Work() {
   );
 }
 
+function DisciplineRow({ c, n }: { c: Category; n: string }) {
+  const inner = (
+    <>
+      <span className="flex items-center gap-3 md:gap-5">
+        <span className="display text-4xl transition-transform duration-300 group-hover:translate-x-2 md:text-6xl">
+          {c.title}
+        </span>
+        {c.external && (
+          <ArrowUpRight
+            strokeWidth={1.25}
+            aria-hidden
+            className="size-4 shrink-0 text-ink-muted transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 md:size-7"
+          />
+        )}
+      </span>
+      <span className="meta text-ink-muted">{n}</span>
+    </>
+  );
+  const cls = "group flex items-baseline justify-between py-5 md:py-7";
+
+  return c.external ? (
+    <a
+      href={c.external}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cls}
+      aria-label={`${c.title} — opens in a new tab`}
+    >
+      {inner}
+    </a>
+  ) : (
+    <Link to="/$category" params={{ category: c.slug }} className={cls}>
+      {inner}
+    </Link>
+  );
+}
+
 function Index_Disciplines() {
   return (
     <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-24 text-ink md:px-10 md:py-36">
@@ -120,16 +159,7 @@ function Index_Disciplines() {
         <ol className="md:col-span-9">
           {categories.map((c, i) => (
             <li key={c.slug} className="border-t border-ink/15 last:border-b">
-              <Link
-              to="/$category"
-              params={{ category: c.slug }}
-              className="group flex items-baseline justify-between py-5 md:py-7"
-            >
-              <span className="display text-4xl transition-transform duration-300 group-hover:translate-x-2 md:text-6xl">
-                {c.title}
-              </span>
-              <span className="meta text-ink-muted">{num(i + 1)}</span>
-              </Link>
+              <DisciplineRow c={c} n={num(i + 1)} />
             </li>
           ))}
         </ol>

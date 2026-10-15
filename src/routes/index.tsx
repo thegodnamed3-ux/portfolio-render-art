@@ -9,6 +9,7 @@ import { categories } from "@/content/categories";
 import type { Category } from "@/content/categories";
 import { photos } from "@/lib/photos";
 import { getHomeMedia, type HomeImage } from "@/lib/portfolio.functions";
+import { defaultHero, defaultAbout } from "@/content/home";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 
 export const Route = createFileRoute("/")({
@@ -31,7 +32,6 @@ export const Route = createFileRoute("/")({
 const p = (n: number) => photos[n - 1]!;
 const num = (n: number) => String(n).padStart(2, "0");
 
-const defaultHero: HomeImage[] = [{ ...p(11), pos: "60% 50%" }, { ...p(26) }, { ...p(3) }, { ...p(5) }];
 
 function Hero({ slides }: { slides: HomeImage[] }) {
   return (
@@ -190,7 +190,7 @@ function Index() {
       <Hero slides={hero ?? defaultHero} />
       <Work />
       <Index_Disciplines />
-      <About image={about ?? p(7)} />
+      <About image={about ?? defaultAbout} />
       <Contact />
     </main>
   );

@@ -56,14 +56,14 @@ function Nav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-32">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-36">
         <div
-          className={`absolute inset-0 bg-gradient-to-b from-background/90 via-background/50 to-transparent transition-opacity duration-500 ${
+          className={`absolute inset-0 bg-gradient-to-b from-background from-35% via-background/85 via-55% to-transparent transition-opacity duration-500 ${
             overLight ? "opacity-0" : "opacity-100"
           }`}
         />
         <div
-          className={`absolute inset-0 bg-gradient-to-b from-paper/95 via-paper/60 to-transparent transition-opacity duration-500 ${
+          className={`absolute inset-0 bg-gradient-to-b from-paper from-35% via-paper/85 via-55% to-transparent transition-opacity duration-500 ${
             overLight ? "opacity-100" : "opacity-0"
           }`}
         />

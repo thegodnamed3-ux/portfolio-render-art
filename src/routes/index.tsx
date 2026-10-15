@@ -214,11 +214,14 @@ function Contact() {
       <h2 className="display mt-6 text-[15vw] md:text-[9vw]">
         Book a <em>session.</em>
       </h2>
-      <ContactLinks tone="light" className="mt-12 max-w-3xl md:mt-16" />
-      <div className="meta mt-24 flex flex-col gap-3 border-t border-ink/15 pt-6 text-ink-muted md:flex-row md:justify-between">
-        <span className="flex items-baseline gap-3"><span className="wordmark">thegodnamed</span><span>— Tallinn</span></span>
-        <span>© {new Date().getFullYear()}</span>
-      </div>
+      <ContactLinks tone="light" className="mt-8 md:mt-12" />
+      <footer className="meta mt-20 border-t border-ink/15 pt-5 text-ink-muted md:mt-28">
+        <div className="flex items-baseline justify-between gap-4">
+          <span className="wordmark text-ink">thegodnamed</span>
+          <span>Tallinn</span>
+        </div>
+        <p className="mt-3 text-[0.625rem]">© {new Date().getFullYear()}</p>
+      </footer>
     </section>
   );
 }

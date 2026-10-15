@@ -41,7 +41,7 @@ export function SiteNav() {
         <div className={`absolute inset-0 bg-gradient-to-b from-paper via-paper via-40% to-transparent transition-opacity duration-500 md:via-30% ${light ? "opacity-100" : "opacity-0"}`} />
       </div>
       <nav className={`meta relative px-5 py-4 transition-colors duration-500 md:px-10 md:py-6 ${light ? "text-ink" : "text-paper"}`}>
-        <div className="flex items-baseline justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 md:items-baseline">
           <Link to="/" hash="top" onClick={() => setMenu(false)} className="wordmark whitespace-nowrap transition-opacity hover:opacity-60">
             thegodnamed
           </Link>
@@ -55,9 +55,13 @@ export function SiteNav() {
             onClick={() => setMenu((m) => !m)}
             aria-expanded={menu}
             aria-controls="mobile-menu"
-            className="-my-2 py-2 text-[0.6875rem] md:hidden"
+            aria-label={menu ? "Close menu" : "Open menu"}
+            className={`hit -my-1 inline-flex size-8 shrink-0 items-center justify-center self-center rounded-full md:hidden ${light ? "glass-ink" : "glass"}`}
           >
-            {menu ? "Close" : "Menu"}
+            <span aria-hidden className="relative block h-2 w-3.5">
+              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${menu ? "top-1 rotate-45" : "top-0"}`} />
+              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${menu ? "top-1 -rotate-45" : "top-2"}`} />
+            </span>
           </button>
         </div>
         <p className={`mt-1.5 whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}>

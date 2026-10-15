@@ -165,6 +165,7 @@ function Studio() {
         )}
       </div>
 
+      <WhatsAppSetting />
       {tab === "shoots" ? (
         <ShootsTab
           cat={cat} setCat={(c) => { setCat(c); setSelected(null); }}
@@ -175,6 +176,31 @@ function Studio() {
         <LibraryTab shoots={shoots} links={links} media={media} refresh={refresh} />
       )}
     </div>
+  );
+}
+
+function WhatsAppSetting() {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["admin", "settings"], queryFn: async () => (await supabase.from("site_settings").select("whatsapp_url").eq("id", 1).maybeSingle()).data });
+  const [val, setVal] = useState<string | null>(null);
+  const value = val ?? q.data?.whatsapp_url ?? "";
+  const save = useMutation({
+    mutationFn: async () => {
+      const v = value.trim();
+      if (v && !/^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(v)) throw new Error("Use a link like https://wa.me/372…");
+      const { error } = await supabase.from("site_settings").upsert({ id: 1, whatsapp_url: v || null, updated_at: new Date().toISOString() });
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("WhatsApp link saved"); qc.invalidateQueries({ queryKey: ["site-settings"] }); qc.invalidateQueries({ queryKey: ["admin", "settings"] }); },
+    onError: (e) => toast.error(e.message),
+  });
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="mb-8 flex flex-wrap items-center gap-3">
+      <label htmlFor="wa" className="meta text-muted-foreground">WhatsApp link</label>
+      <input id="wa" value={value} onChange={(e) => setVal(e.target.value)} placeholder="https://wa.me/372…" maxLength={200}
+        className="min-w-0 flex-1 rounded-full border border-border bg-transparent px-4 py-2 text-sm text-paper placeholder:text-muted-foreground sm:max-w-sm" />
+      <button className={btn} disabled={save.isPending}>{save.isPending ? "Saving…" : "Save"}</button>
+    </form>
   );
 }
 

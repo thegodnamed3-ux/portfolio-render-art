@@ -52,7 +52,8 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
   const n = items.length;
   const atEnd = index === n - 1;
 
-  const go = useCallback((d: 1 | -1) => {
+  const go = useCallback((d: 1 | -1, y = 0) => {
+    exitY.current = y;
     setIndex((i) => {
       const next = i + d;
       if (next < 0 || next >= n) { setBump((b) => b + 1); return i; }
@@ -137,8 +138,8 @@ function Viewer({ items, index: start, title, onClose }: { items: ViewerItem[]; 
                 dir={dir}
                 exitX={exitX}
                 transition={t}
-                onNext={(y) => { exitY.current = y; go(1); }}
-                onPrev={(y) => { exitY.current = y; go(-1); }}
+                onNext={(y) => go(1, y)}
+                onPrev={(y) => go(-1, y)}
                 canNext={index + d < n - 1}
               />
             )).reverse()}
@@ -220,15 +221,14 @@ function Card({ item, size, depth, stage, dir, exitX, transition, onNext, onPrev
     const vx = info.velocity.x;
     const keepY = y.get() * 1.6;
     if ((dx < -THRESHOLD || vx < -500) && canNext) { onNext(keepY); return; }
-    if ((dx > THRESHOLD || vx > 500) && onPrev) {
-      onPrev(keepY);
-    }
+    if (dx > THRESHOLD || vx > 500) onPrev(keepY);
     animate(x, 0, transition);
     animate(y, 0, transition);
   };
 
   return (
     <motion.div
+      custom={{ dir, y: 0 }}
       className="absolute shadow-[0_24px_60px_-20px_oklch(0_0_0/0.8)]"
       style={{ left: 0, top: 0, width: size.w, height: size.h, x: top ? x : 0, y: top ? y : 0, rotate: 0, touchAction: "none", zIndex: 10 - depth }}
       variants={{

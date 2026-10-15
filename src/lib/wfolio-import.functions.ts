@@ -107,7 +107,7 @@ export const importWfolioAlbum = createServerFn({ method: "POST" })
     const ids = pieces.map((p) => idByPid.get(p.pid)!).filter(Boolean);
     const { data: shoot, error: e2 } = await sb
       .from("photoshoots")
-      .insert({ category: data.category, title, album: title, cover_media_id: ids[0], status: "draft", sort_order: 1000 + data.order, source_url: url, source_album: title, import_batch: IMPORT_BATCH, review_status: "pending" })
+      .insert({ category: data.category, title, album: title, cover_media_id: ids[0] ?? null, status: "draft", sort_order: 1000 + data.order, source_url: url, source_album: title, import_batch: IMPORT_BATCH, review_status: "pending" })
       .select("id")
       .single();
     if (e2) return { ...base, title, status: "failed", error: e2.message };

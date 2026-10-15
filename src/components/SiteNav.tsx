@@ -42,8 +42,19 @@ export function SiteNav() {
       </div>
       <nav className={`meta relative px-5 py-4 transition-colors duration-500 md:px-10 md:py-6 ${light ? "text-ink" : "text-paper"}`}>
         <div className="flex items-center justify-between gap-4 md:items-baseline">
-          <Link to="/" hash="top" onClick={() => setMenu(false)} className="wordmark whitespace-nowrap transition-opacity hover:opacity-60">
-            thegodnamed
+          <Link
+            to="/"
+            hash="top"
+            onClick={() => setMenu(false)}
+            aria-label="thegodnamed"
+            className="inline-flex flex-col items-center whitespace-nowrap transition-opacity hover:opacity-60"
+          >
+            <span className="wordmark">thegodnamed</span>
+            <span
+              className={`-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
+            >
+              PHOTOGRAPHY · FILM
+            </span>
           </Link>
           <div className="hidden gap-8 text-[0.6875rem] md:flex">
             {links.map((l) => (
@@ -64,9 +75,6 @@ export function SiteNav() {
             </span>
           </button>
         </div>
-        <p className={`mt-1.5 whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}>
-          PHOTOGRAPHY · FILM
-        </p>
       </nav>
 
       <div

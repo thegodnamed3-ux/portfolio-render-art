@@ -218,7 +218,7 @@ function Contact() {
       <footer className="meta mt-20 border-t border-ink/15 pt-5 text-ink-muted md:mt-28">
         <div className="flex items-baseline justify-between gap-4">
           <span className="wordmark text-ink">thegodnamed</span>
-          <span className="display flex items-baseline gap-2 whitespace-nowrap normal-case">
+          <span className="display flex items-baseline gap-2 whitespace-nowrap normal-case text-ink-muted/65">
             <span className="text-lg md:text-xl">Tallinn</span>
             <span className="text-sm md:text-base">&copy; {new Date().getFullYear()}</span>
           </span>

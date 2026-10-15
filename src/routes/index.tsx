@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import { Frame } from "@/components/Frame";
+import { usePortfolio } from "@/components/PortfolioOverlay";
 import { ContactLinks } from "@/components/ContactLinks";
 import { useLightbox } from "@/components/Lightbox";
 import { SiteNav } from "@/components/SiteNav";
@@ -104,6 +105,7 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
       <span className="meta text-ink-muted">{n}</span>
     </>
   );
+  const { openPortfolio } = usePortfolio();
   const cls = "group flex items-baseline justify-between py-5 md:py-7";
 
   return c.external ? (
@@ -117,9 +119,9 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
       {inner}
     </a>
   ) : (
-    <Link to="/$category" params={{ category: c.slug }} className={cls}>
+    <a href={`/${c.slug}`} onClick={(e) => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openPortfolio(c.slug); }} className={cls}>
       {inner}
-    </Link>
+    </a>
   );
 }
 

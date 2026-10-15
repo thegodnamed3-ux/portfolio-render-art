@@ -1,6 +1,7 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { SessionGrid, VideoGallery } from "@/components/Gallery";
-import { ProjectExplorer } from "@/components/ProjectExplorer";
+import { useEffect } from "react";
+import { usePortfolio } from "@/components/PortfolioOverlay";
 import { SiteNav } from "@/components/SiteNav";
 import { getCategory, internalCategories } from "@/content/categories";
 import { getPublishedSessions } from "@/lib/portfolio.functions";
@@ -36,6 +37,9 @@ function CategoryPage() {
   const { slug, sessions } = Route.useLoaderData();
   const i = internalCategories.findIndex((c) => c.slug === slug);
   const c = internalCategories[i]!;
+  const { openPortfolio } = usePortfolio();
+  // Direct URLs initialise the same fullscreen explorer; the page stays underneath.
+  useEffect(() => { openPortfolio(slug); }, [slug, openPortfolio]);
   const count = sessions.length || c.videos.length;
 
   return (
@@ -54,8 +58,6 @@ function CategoryPage() {
       <section className="px-5 pb-16 md:px-10 md:pb-24">
         {c.videos.length > 0 ? <VideoGallery videos={c.videos} /> : sessions.length ? <SessionGrid sessions={sessions} /> : <p className="meta py-24 text-center text-muted-foreground">—</p>}
       </section>
-
-      <ProjectExplorer current={c.slug} />
 
       <footer className="meta flex items-center justify-between border-t border-border px-5 py-6 text-muted-foreground md:px-10">
         <Link to="/" className="wordmark text-paper">thegodnamed</Link>

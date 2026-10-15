@@ -15,6 +15,13 @@
       "when": 1792073464370,
       "tag": "0001_site_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792093102084,
+      "tag": "0002_hero_about_settings",
+      "breakpoints": true
     }
   ]
 }

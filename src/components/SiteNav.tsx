@@ -51,7 +51,7 @@ export function SiteNav() {
           >
             <span className="wordmark">thegodnamed</span>
             <span
-              className={`-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
+              className={`-mr-[0.275em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
             >
               PHOTOGRAPHY · FILM
             </span>

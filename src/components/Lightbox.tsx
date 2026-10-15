@@ -99,7 +99,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
   const visible = items.slice(index, index + DEPTH + 1);
   // Every print in the stack shares the front print's footprint, so a portrait never
   // peeks out above or below a landscape card — the stack stays one straight pile.
-  const topBox = size(items[index]);
+  const topBox = size(items[index] ?? { src: "", w: stageW, h: stageH });
   const t = reduce ? { duration: 0.15 } : spring;
   const exitX = vp.w * 0.9;
 

@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const p = (n: number) => photos[n - 1];
+const p = (n: number) => photos[n - 1]!;
 const num = (n: number) => String(n).padStart(2, "0");
 
 const disciplines = [

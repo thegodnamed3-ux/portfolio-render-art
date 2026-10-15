@@ -85,7 +85,7 @@ function Nav() {
         </div>
         <p
           className={`mt-1.5 whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:text-[0.5625rem] ${
-            overLight ? "text-ink/70" : "text-paper/80"
+            overLight ? "text-ink/75" : "text-paper/85"
           }`}
         >
           PHOTOGRAPHY · FILM

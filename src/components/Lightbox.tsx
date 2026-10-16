@@ -51,6 +51,16 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
   const vp = useViewport();
   const n = items.length;
   const atEnd = index === n - 1;
+  const [hint, setHint] = useState(false);
+  useEffect(() => {
+    if (n < 2) return;
+    try { if (!localStorage.getItem("tgn-swipe-seen")) setHint(true); } catch { /* storage unavailable */ }
+  }, [n]);
+  useEffect(() => {
+    if (!hint || index === start) return;
+    setHint(false);
+    try { localStorage.setItem("tgn-swipe-seen", "1"); } catch { /* ignore */ }
+  }, [index, start, hint]);
 
   const go = useCallback((d: 1 | -1, y = 0) => {
     exitY.current = y;
@@ -148,6 +158,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
                 onNext={(y) => go(1, y)}
                 onPrev={(y) => go(-1, y)}
                 canNext={index + d < n - 1}
+                demo={hint && !reduce && d === 0 && index === start}
               />
             )).reverse()}
           </AnimatePresence>
@@ -161,6 +172,9 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
           <button onClick={() => go(1)} disabled={atEnd} aria-label="Next photo" className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">→</button>
         </div>
         <AnimatePresence>
+          {hint && !atEnd && (
+            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute left-1/2 -translate-x-1/2 text-[0.625rem] tracking-[0.28em] text-paper/60">← Swipe →</motion.span>
+          )}
           {atEnd && n > 1 && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">End of session</motion.span>
           )}
@@ -207,14 +221,22 @@ type CardProps = {
   onNext: (y: number) => void;
   onPrev: (y: number) => void;
   canNext: boolean;
+  demo?: boolean;
 };
 
-function Card({ item, size, depth, stage, dir, exitX, transition, onNext, onPrev, canNext }: CardProps) {
+function Card({ item, size, depth, stage, dir, exitX, transition, onNext, onPrev, canNext, demo }: CardProps) {
   const top = depth === 0;
   // Free 2D drag; horizontal travel and velocity decide navigation. Motion values avoid rerenders while dragging.
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const fade = useTransform(x, [-480, -200, 0, 200, 480], [0.4, 1, 1, 1, 0.4]);
+
+  // One-time gesture demonstration: nudge the top print left and let it return.
+  useEffect(() => {
+    if (!demo) return;
+    const t = setTimeout(() => { animate(x, [0, -18, 0], { duration: 0.8, ease: "easeOut" }); }, 700);
+    return () => clearTimeout(t);
+  }, [demo, x]);
 
   const left = (stage.w - size.w) / 2 + depth * OFFSET;
   const topPx = (stage.h - size.h) / 2 + depth * OFFSET;

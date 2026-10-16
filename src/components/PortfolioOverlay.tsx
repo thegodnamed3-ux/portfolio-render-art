@@ -64,6 +64,27 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
 
   const pick = (slug: string) => { setCat(slug); scroller.current?.scrollTo({ top: 0 }); };
 
+  // Cues: scroll hint fades on first scroll; gesture guide shows once per visitor; stack demo once per opening.
+  const [scrolled, setScrolled] = useState(false);
+  const [guide, setGuide] = useState(false);
+  const [demo, setDemo] = useState(false);
+  const demoed = useRef(false);
+  useEffect(() => {
+    try { if (!localStorage.getItem("tgn-guide-seen")) setGuide(true); } catch { /* storage unavailable */ }
+  }, []);
+  const dismissGuide = useCallback(() => {
+    setGuide(false);
+    try { localStorage.setItem("tgn-guide-seen", "1"); } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    if (reduce || demoed.current || isVideo || !sessions?.length) return;
+    const t = setTimeout(() => { if (!scrolled && !selected) { demoed.current = true; setDemo(true); } }, 900);
+    return () => clearTimeout(t);
+  }, [reduce, isVideo, sessions, scrolled, selected]);
+  const onScroll = () => {
+    if ((scroller.current?.scrollTop ?? 0) > 16 && !scrolled) { setScrolled(true); setDemo(false); if (guide) dismissGuide(); }
+  };
+
   return (
     <motion.div
       className="fixed inset-0 z-[90] bg-viewer/70 backdrop-blur-md"
@@ -110,7 +131,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
           </div>
           <div className="mx-4 h-px bg-paper/10 md:mx-8" />
 
-          <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-6 md:px-8">
+          <div ref={scroller} onScroll={onScroll} onPointerDown={() => guide && dismissGuide()} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-6 md:px-8">
             <div key={cat} className="grid gap-10 md:grid-cols-3 md:gap-x-8 md:gap-y-14">
               {isVideo
                 ? c.videos.map((v, i) => (
@@ -121,14 +142,41 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
                     </Cover>
                   ))
                 : sessions?.map((s, i) => (
-                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} frames`} onSelect={() => setSelected({ kind: "shoot", s })}>
-                      <StackPreview s={s} eager={i < 2} />
+                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} frames`} onSelect={() => { if (guide) dismissGuide(); setSelected({ kind: "shoot", s }); }}>
+                      <StackPreview s={s} eager={i < 2} demo={demo && i === 0} />
                     </Cover>
                   ))}
             </div>
             {!isVideo && sessions && sessions.length === 0 && <p className="meta py-24 text-center text-paper/40">No published sessions yet</p>}
             {!isVideo && !sessions && <p className="meta py-24 text-center text-paper/40">Loading…</p>}
           </div>
+
+          <AnimatePresence>
+            {!scrolled && !guide && !isVideo && (sessions?.length ?? 0) > 1 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-viewer/70 to-transparent pb-4 pt-10">
+                <span className="meta text-[0.625rem] tracking-[0.28em] text-paper/60">Scroll to explore ↓</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {guide && !selected && (
+              <motion.div
+                role="note"
+                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: reduce ? 0.1 : 0.4, delay: reduce ? 0 : 0.5 }}
+                className="glass absolute bottom-4 left-1/2 z-10 w-[min(88%,320px)] -translate-x-1/2 rounded-[16px] p-3.5 pr-10"
+              >
+                <button onClick={dismissGuide} aria-label="Dismiss hint" className="hit absolute right-2.5 top-2.5 inline-flex size-6 items-center justify-center rounded-full text-paper/60 hover:text-paper"><CloseIcon /></button>
+                <p className="meta text-[0.625rem] text-paper">↕ Scroll vertically</p>
+                <p className="mt-0.5 text-xs text-paper/55">Browse photoshoots.</p>
+                <p className="meta mt-2.5 text-[0.625rem] text-paper">↔ Swipe horizontally</p>
+                <p className="mt-0.5 text-xs text-paper/55">Explore photographs inside a selected photoshoot.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* State two — the same glass surface becomes the viewer. */}
@@ -185,28 +233,34 @@ function Cover({ i, title, meta, onSelect, children }: { i: number; title: strin
       transition={{ duration: 0.55, delay: Math.min(i, 8) * 0.06, ease: [0.2, 0.8, 0.2, 1] }}
     >
       {children}
-      <span className="meta mt-3 flex justify-between gap-3 text-paper/55">
-        <span className="truncate text-paper">{title}</span>
-        <span className="shrink-0">{meta}</span>
+      <span className="meta mt-3 flex items-center justify-between gap-3 text-paper/55">
+        <span className="min-w-0 truncate text-paper">{title}</span>
+        <span className="inline-flex shrink-0 items-center gap-1.5">{meta}<span aria-hidden className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">↗</span></span>
       </span>
     </motion.button>
   );
 }
 
 /** Straight stack preview: depth via translation only, never rotation. */
-function StackPreview({ s, eager }: { s: Session; eager: boolean }) {
+function StackPreview({ s, eager, demo }: { s: Session; eager: boolean; demo: boolean }) {
   const under = s.images.slice(1, 3);
   return (
-    <div className="pb-[10px] pr-[10px]">
+    <div className="pb-[12px] pr-[12px]">
       <div className="relative" style={{ aspectRatio: `${s.cover.w} / ${s.cover.h}` }}>
         {under.map((p, k) => (
-          <div key={k} aria-hidden className="absolute inset-0 overflow-hidden rounded-[12px] bg-charcoal" style={{ transform: `translate(${(under.length - k) * 5}px, ${(under.length - k) * 5}px)`, zIndex: k }}>
-            <img src={p.sm} alt="" loading="lazy" className="h-full w-full object-cover brightness-[0.55]" />
+          <div key={k} aria-hidden className="absolute inset-0 overflow-hidden rounded-[12px] bg-charcoal" style={{ transform: `translate(${(under.length - k) * 6}px, ${(under.length - k) * 6}px)`, zIndex: k }}>
+            <img src={p.sm} alt="" loading="lazy" className={`h-full w-full object-cover transition-[filter] duration-500 ${demo ? "brightness-[0.85]" : "brightness-[0.55]"}`} />
           </div>
         )).reverse()}
-        <div className="absolute inset-0 z-10 overflow-hidden rounded-[12px] bg-charcoal shadow-[0_18px_40px_-18px_oklch(0_0_0/0.9)] transition-transform duration-500 group-hover:-translate-x-1 group-hover:-translate-y-1">
+        <motion.div
+          className="absolute inset-0 z-10"
+          animate={demo ? { x: [0, 18, 0] } : { x: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", times: [0, 0.45, 1] }}
+        >
+        <div className="absolute inset-0 overflow-hidden rounded-[12px] bg-charcoal shadow-[0_18px_40px_-18px_oklch(0_0_0/0.9)] transition-transform duration-500 group-hover:-translate-x-1 group-hover:-translate-y-1">
           <img src={s.cover.src} srcSet={`${s.cover.sm} 600w, ${s.cover.src} 1240w`} sizes="(min-width: 768px) 30vw, 90vw" alt={s.title} loading={eager ? "eager" : "lazy"} className="h-full w-full object-cover" />
         </div>
+        </motion.div>
       </div>
     </div>
   );

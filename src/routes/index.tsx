@@ -17,7 +17,7 @@ import { WorkGrid } from "@/components/WorkGrid";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  head: ({ loaderData }) => ({
     meta: [
       { title: "thegodnamed — Photography & film in Tallinn" },
       { name: "description", content: "Photography, film & visual storytelling. Made in Tallinn." },
@@ -25,8 +25,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Photography, film & visual storytelling. Made in Tallinn." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:image", content: photos[10]!.src },
-      { name: "twitter:image", content: photos[10]!.src },
+      { property: "og:image", content: loaderData?.hero?.[0]?.src ?? photos[10]!.src },
+      { name: "twitter:image", content: loaderData?.hero?.[0]?.src ?? photos[10]!.src },
     ],
   }),
   loader: () => getHomeMedia(),

@@ -9,6 +9,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { discoverWfolioAlbums, importWfolioAlbum, IMPORT_BATCH, type AlbumResult } from "@/lib/wfolio-import.functions";
 import { importWfolio, type HomeImage } from "@/lib/portfolio.functions";
+import { migrateWfolioMedia, migrateWfolioSettings, wfolioMigrationStatus } from "@/lib/wfolio-migrate.functions";
 import { defaultHero, defaultAbout, defaultWork, defaultWorkColumns, type WorkItem } from "@/content/home";
 import { WorkGrid } from "@/components/WorkGrid";
 import { useLightbox } from "@/components/Lightbox";
@@ -696,6 +697,7 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
 
   return (
     <div>
+      <WfolioMigration refresh={refresh} />
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <select className="meta rounded-full border border-border bg-background px-4 py-2 text-paper" value={filter} onChange={(e) => { setFilter(e.target.value); setPicked(new Set()); }} aria-label="Filter">
           <option value="unassigned">Unassigned photos</option>
@@ -1033,6 +1035,70 @@ function LibraryPicker({ media, single, onPick, onClose }: { media: Media[]; sin
           <Thumb key={m.id} m={m} picked={picked.includes(m.id)} onToggle={() => setPicked((p) => single ? [m.id] : p.includes(m.id) ? p.filter((x) => x !== m.id) : [...p, m.id])} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ---------------- Move photos off Wfolio ---------------- */
+
+function WfolioMigration({ refresh }: { refresh: () => void }) {
+  const qc = useQueryClient();
+  const status = useServerFn(wfolioMigrationStatus);
+  const runMedia = useServerFn(migrateWfolioMedia);
+  const runSettings = useServerFn(migrateWfolioSettings);
+  const q = useQuery({ queryKey: ["admin", "wfolio-left"], queryFn: () => status() });
+  const [run, setRun] = useState<{ done: number; total: number; failed: { id: string; error: string }[]; step: string } | null>(null);
+
+  const start = async () => {
+    const total = q.data?.media ?? 0;
+    const failed: { id: string; error: string }[] = [];
+    let done = 0;
+    setRun({ done, total, failed, step: "Copying photos" });
+    try {
+      for (;;) {
+        const r = await runMedia({ data: { batch: 3, skip: failed.map((f) => f.id) } });
+        done += r.done;
+        failed.push(...r.failed);
+        setRun({ done, total, failed: [...failed], step: "Copying photos" });
+        if (r.done === 0 && r.failed.length === 0) break;
+      }
+      setRun({ done, total, failed: [...failed], step: "Homepage images" });
+      await runSettings();
+      toast.success(failed.length ? `Done — ${failed.length} photo(s) could not be copied` : "All photos now live in your own storage");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+    setRun((r) => r && { ...r, step: "Finished" });
+    refresh();
+    void qc.invalidateQueries({ queryKey: ["admin", "wfolio-left"] });
+    void qc.invalidateQueries({ queryKey: ["admin", "home"] });
+    void qc.invalidateQueries({ queryKey: ["admin", "work"] });
+  };
+
+  if (q.isLoading || q.error || !q.data) return null;
+  const left = q.data.media + q.data.settings;
+  const busy = !!run && run.step !== "Finished";
+  if (!left && !q.data.settingsMissing && !run) return null;
+
+  return (
+    <div className="mb-8 space-y-3 rounded-2xl border border-border p-4">
+      <p className="meta text-muted-foreground">Photos hosted on Wfolio</p>
+      <p className="text-sm text-paper/80">
+        {left
+          ? `${q.data.media} library photos and ${q.data.settings} homepage images are still loaded from Wfolio’s servers. Copy them into your own storage before cancelling Wfolio — nothing changes on the site.`
+          : "Library is moved. One last step fixes the homepage defaults."}
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <button className={btnPrimary} disabled={busy} onClick={start}>{busy ? `${run!.step}… ${run!.done} / ${run!.total}` : "Move all photos from Wfolio"}</button>
+        {run && run.total > 0 && (
+          <div className="h-1 w-48 overflow-hidden rounded-full bg-paper/10">
+            <span className="block h-full rounded-full bg-paper/70 transition-[width]" style={{ width: `${Math.min(100, ((run.done + run.failed.length) / Math.max(1, run.total)) * 100)}%` }} />
+          </div>
+        )}
+      </div>
+      {run && run.failed.length > 0 && (
+        <p className="text-xs text-destructive">{run.failed.length} could not be copied (e.g. {run.failed[0]!.error}). Run again later to retry.</p>
+      )}
     </div>
   );
 }

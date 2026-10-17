@@ -5,6 +5,7 @@ import { usePortfolio } from "@/components/PortfolioOverlay";
 import { SiteNav } from "@/components/SiteNav";
 import { getCategory, internalCategories } from "@/content/categories";
 import { getPublishedSessions } from "@/lib/portfolio.functions";
+import { FILMS, FRAMES, useCategoryTitle, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$category")({
   loader: async ({ params }) => {
@@ -38,6 +39,8 @@ function CategoryPage() {
   const i = internalCategories.findIndex((c) => c.slug === slug);
   const c = internalCategories[i]!;
   const { openPortfolio } = usePortfolio();
+  const { t, p } = useI18n();
+  const title = useCategoryTitle()(c.slug, c.title);
   // Direct URLs initialise the same fullscreen explorer; the page stays underneath.
   useEffect(() => { openPortfolio(slug); }, [slug, openPortfolio]);
   const count = sessions.length || c.videos.length;
@@ -47,10 +50,10 @@ function CategoryPage() {
       <SiteNav />
       <section className="px-5 pb-16 pt-36 md:px-10 md:pb-28 md:pt-56">
         <div className="flex items-end justify-between gap-6 border-b border-border pb-6">
-          <h1 className="display reveal text-[clamp(3.2rem,12vw,9rem)] text-paper">{c.title}.</h1>
+          <h1 className="display reveal text-[clamp(3.2rem,12vw,9rem)] text-paper">{title}.</h1>
           <p className="meta shrink-0 pb-2 text-muted-foreground">
             {String(i + 1).padStart(2, "0")} / {String(internalCategories.length).padStart(2, "0")}
-            {count > 0 && <span className="hidden md:inline"> · {count} {c.videos.length ? "films" : "frames"}</span>}
+            {count > 0 && <span className="hidden md:inline"> · {count} {p(count, c.videos.length ? FILMS : FRAMES)}</span>}
           </p>
         </div>
       </section>
@@ -61,7 +64,7 @@ function CategoryPage() {
 
       <footer className="meta flex items-center justify-between border-t border-border px-5 py-6 text-muted-foreground md:px-10">
         <Link to="/" className="wordmark text-paper">thegodnamed</Link>
-        <Link to="/" hash="contact" className="hover:text-paper">Book a session</Link>
+        <Link to="/" hash="contact" className="hover:text-paper">{t("book.l1")} {t("book.l2").replace(/\.$/, "")}</Link>
       </footer>
     </main>
   );

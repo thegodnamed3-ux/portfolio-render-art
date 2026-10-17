@@ -6,6 +6,7 @@ import { ContactLinks } from "@/components/ContactLinks";
 import { getApprovedReviews } from "@/lib/reviews.functions";
 import { ReviewsCarousel } from "@/components/ReviewsCarousel";
 import { BookingDialog } from "@/components/BookingDialog";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,6 +23,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   });
   const [view, setView] = useState<"contact" | "reviews">("contact");
   const [booking, setBooking] = useState(false);
+  const { t } = useI18n();
   const has = withReviews && reviews.length > 0;
   const onReviews = has && view === "reviews";
 
@@ -47,7 +49,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   return (
     <section ref={section} {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="display text-3xl leading-none md:text-4xl">{onReviews ? "Reviews." : "Contact."}</h2>
+        <h2 className="display text-3xl leading-none md:text-4xl">{onReviews ? t("reviews.title") : t("contact.title")}</h2>
         {has && (
           <button
             type="button"
@@ -56,9 +58,9 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             className="glass-ink hit group meta inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.625rem] text-ink"
           >
             {onReviews ? (
-              <><span aria-hidden className="transition-transform duration-300 group-hover:-translate-x-0.5">←</span>Contact</>
+              <><span aria-hidden className="transition-transform duration-300 group-hover:-translate-x-0.5">←</span>{t("contact.pill")}</>
             ) : (
-              <>Reviews<span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span></>
+              <>{t("reviews.pill")}<span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span></>
             )}
           </button>
         )}
@@ -75,7 +77,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           <div aria-hidden={onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center pr-8 transition-[visibility] duration-700", onReviews && "invisible")}>
             <div ref={panes[0]} className="pb-2 pt-10 md:pt-12">
             <p className="display text-[15vw] leading-[0.95] md:text-[9vw]">
-              Book a <em>session.</em>
+              {t("book.l1")} <em>{t("book.l2")}</em>
             </p>
             <button
               type="button"
@@ -83,7 +85,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               tabIndex={onReviews ? -1 : 0}
               className="hit group meta mt-8 inline-flex items-center gap-2.5 rounded-full bg-ink px-4 py-2.5 text-[0.625rem] text-paper transition-[opacity,scale] duration-150 hover:opacity-85 active:scale-[0.96] md:mt-12"
             >
-              Send a request
+              {t("book.send")}
               <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
             </button>
             <ContactLinks tone="light" className="mt-3" />
@@ -107,8 +109,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" hash="top" className="wordmark text-ink transition-opacity hover:opacity-60">thegodnamed</Link>
           <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">
-            <Link to="/privacy" className="transition-colors hover:text-ink">Privacy</Link>
-            <span>Tallinn</span>
+            <Link to="/privacy" className="transition-colors hover:text-ink">{t("footer.privacy")}</Link>
+            <span>{t("footer.city")}</span>
             <span>&copy; {new Date().getFullYear()}</span>
           </span>
         </div>

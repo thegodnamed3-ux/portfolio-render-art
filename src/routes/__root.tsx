@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { trackView } from "../lib/analytics.functions";
+import { I18nProvider, getLang } from "../lib/i18n";
 
 import { LightboxProvider } from "../components/Lightbox";
 import { PortfolioProvider } from "../components/PortfolioOverlay";
@@ -103,6 +104,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
+  loader: () => getLang(),
+  staleTime: Infinity,
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -125,15 +128,18 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const lang = Route.useLoaderData() ?? "en";
 
   return (
     <QueryClientProvider client={queryClient}>
+      <I18nProvider initial={lang}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <LightboxProvider><PortfolioProvider>
         <Outlet />
       </PortfolioProvider></LightboxProvider>
       <Toaster position="bottom-center" />
       <ViewTracker />
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

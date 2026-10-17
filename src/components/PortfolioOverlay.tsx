@@ -5,6 +5,7 @@ import type { Session } from "@/content/sessions";
 import type { VideoItem } from "@/content/types";
 import { getPublishedSessions } from "@/lib/portfolio.functions";
 import { Viewer } from "./Lightbox";
+import { FRAMES, useCategoryTitle, useI18n } from "@/lib/i18n";
 
 /** One fullscreen glass overlay, two states: browse photoshoots → view one. Pages stay mounted underneath. */
 type Ctx = { openPortfolio: (slug: string) => void };
@@ -29,6 +30,8 @@ const CloseIcon = () => (
 );
 
 function Overlay({ initial, onClose }: { initial: string; onClose: () => void }) {
+  const { t, p } = useI18n();
+  const catTitle = useCategoryTitle();
   const [cat, setCat] = useState(initial);
   const [cache, setCache] = useState<Record<string, Session[]>>({});
   const [selected, setSelected] = useState<Selected | null>(null);
@@ -98,7 +101,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
       <motion.div
         role="dialog"
         aria-modal="true"
-        aria-label={`${c.title} — portfolio`}
+        aria-label={catTitle(c.slug, c.title)}
         className="glass-panel relative h-full w-full overflow-hidden rounded-[24px] text-paper md:mx-auto md:max-w-[1400px] md:rounded-[28px]"
         initial={{ opacity: 0, y: 24, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -114,7 +117,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
           aria-hidden={!!selected}
         >
           <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-4 md:px-8 md:pt-6">
-            <h2 className="display text-3xl md:text-5xl">{c.title}.</h2>
+            <h2 className="display text-3xl md:text-5xl">{catTitle(c.slug, c.title)}.</h2>
             <button onClick={onClose} aria-label="Close portfolio" className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>
           </div>
           <div className="flex gap-1 overflow-x-auto px-3 pb-3 [scrollbar-width:none] md:px-7">
@@ -125,7 +128,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
                 aria-pressed={x.slug === cat}
                 className={`meta shrink-0 rounded-full px-3 py-1.5 text-[0.625rem] transition-colors ${x.slug === cat ? "bg-paper/15 text-paper" : "text-paper/55 hover:text-paper"}`}
               >
-                {x.title}
+                {catTitle(x.slug, x.title)}
               </button>
             ))}
           </div>
@@ -135,26 +138,26 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
             <div key={cat} className="grid gap-10 md:grid-cols-3 md:gap-x-8 md:gap-y-14">
               {isVideo
                 ? c.videos.map((v, i) => (
-                    <Cover key={v.id} i={i} title={v.title} meta="Film" onSelect={() => setSelected({ kind: "film", v })}>
+                    <Cover key={v.id} i={i} title={v.title} meta={t("pf.film")} onSelect={() => setSelected({ kind: "film", v })}>
                       <div className="aspect-video overflow-hidden rounded-[14px] bg-charcoal">
                         <img src={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`} alt={v.title} loading="lazy" className="h-full w-full object-cover" />
                       </div>
                     </Cover>
                   ))
                 : sessions?.map((s, i) => (
-                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} frames`} onSelect={() => setSelected({ kind: "shoot", s })}>
+                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} ${p(s.count, FRAMES)}`} onSelect={() => setSelected({ kind: "shoot", s })}>
                       <StackPreview s={s} eager={i < 2} demo={demo && i === 0} />
                     </Cover>
                   ))}
             </div>
-            {!isVideo && sessions && sessions.length === 0 && <p className="meta py-24 text-center text-paper/40">No published sessions yet</p>}
-            {!isVideo && !sessions && <p className="meta py-24 text-center text-paper/40">Loading…</p>}
+            {!isVideo && sessions && sessions.length === 0 && <p className="meta py-24 text-center text-paper/40">{t("pf.none")}</p>}
+            {!isVideo && !sessions && <p className="meta py-24 text-center text-paper/40">{t("pf.loading")}</p>}
           </div>
 
           <AnimatePresence>
             {!scrolled && guide && !isVideo && (sessions?.length ?? 0) > 1 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-4">
-                <span className="meta text-[0.625rem] tracking-[0.28em] text-paper/60">Scroll to explore ↓</span>
+                <span className="meta text-[0.625rem] tracking-[0.28em] text-paper/60">{t("pf.scroll")}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -185,7 +188,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
             >
               <div className="flex items-center justify-between gap-2 px-4 py-4 md:px-8 md:py-6">
                 <div className="flex min-w-0 items-center gap-2">
-                  <button onClick={() => setSelected(null)} aria-label="Back to projects" className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 hover:text-paper">← Back</button>
+                  <button onClick={() => setSelected(null)} aria-label="Back to projects" className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 hover:text-paper">{t("pf.back")}</button>
                   <span className="glass meta truncate rounded-full px-3.5 py-1.5 text-paper">{selected.v.title}</span>
                 </div>
                 <button onClick={onClose} aria-label="Close portfolio" className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>

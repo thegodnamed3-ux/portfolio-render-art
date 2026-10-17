@@ -9,6 +9,7 @@ import { submitReview } from "@/lib/reviews.functions";
 import { ZipWriter } from "@/lib/zip";
 import { formatSize } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { LangSwitch, PHOTOS, useI18n } from "@/lib/i18n";
 
 /** Private client page, reachable only through the link generated in the studio. */
 export const Route = createFileRoute("/g/$token")({
@@ -95,6 +96,7 @@ function DeliveryPage() {
   const initial = Route.useLoaderData();
   const { token } = Route.useParams();
   const fetchDelivery = useServerFn(getDelivery);
+  const { t } = useI18n();
   const [result, setResult] = useState<DeliveryResult>(initial);
   const [password, setPassword] = useState<string | null>(null);
   const key = `delivery-pw:${token}`;
@@ -125,16 +127,19 @@ function DeliveryPage() {
           <span className="wordmark">thegodnamed</span>
           <span className="-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] text-paper/85 md:mt-1 md:text-[0.5625rem]">PHOTOGRAPHY · VISUALS</span>
         </Link>
-        <span className="meta text-[0.6875rem] text-muted-foreground">Private gallery</span>
+        <div className="flex items-baseline gap-5">
+          <span className="meta hidden text-[0.6875rem] text-muted-foreground sm:inline">{t("g.private")}</span>
+          <LangSwitch className="meta text-[0.6875rem] text-paper" />
+        </div>
       </header>
       {result.state === "ok" ? (
         <Gallery d={result.delivery} access={{ token, password }} />
       ) : result.state === "locked" ? (
         <PasswordGate wrong={result.wrong} onSubmit={unlock} />
       ) : result.state === "expired" ? (
-        <Notice title={<>This link has <em>expired.</em></>} />
+        <Notice title={<>{t("g.expired1")} <em>{t("g.expired2")}</em></>} />
       ) : (
-        <Notice title={<>This link is <em>no longer active.</em></>} />
+        <Notice title={<>{t("g.inactive1")} <em>{t("g.inactive2")}</em></>} />
       )}
       <ContactSection reviews={false} />
     </main>
@@ -144,27 +149,28 @@ function DeliveryPage() {
 function PasswordGate({ wrong, onSubmit }: { wrong: boolean; onSubmit: (pw: string) => Promise<DeliveryResult> }) {
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
+  const { t } = useI18n();
   return (
     <section className="flex min-h-[60svh] items-center justify-center px-5 py-20">
       <form
-        onSubmit={async (e) => { e.preventDefault(); setBusy(true); await onSubmit(pw).catch(() => toast.error("Could not open the gallery")); setBusy(false); }}
+        onSubmit={async (e) => { e.preventDefault(); setBusy(true); await onSubmit(pw).catch(() => toast.error(t("g.open"))); setBusy(false); }}
         className="glass-panel w-full max-w-sm space-y-4 rounded-[28px] p-6 text-paper"
       >
-        <p className="meta text-paper/70">Private gallery</p>
-        <p className="display text-4xl">Enter the <em>password.</em></p>
+        <p className="meta text-paper/70">{t("g.private")}</p>
+        <p className="display text-4xl">{t("g.pwTitle1")} <em>{t("g.pwTitle2")}</em></p>
         <input
           type="password"
           autoFocus
           autoComplete="current-password"
           value={pw}
           onChange={(e) => setPw(e.target.value)}
-          aria-label="Password"
+          aria-label={t("g.pw")}
           className="w-full rounded-full border border-paper/15 bg-transparent px-4 py-3 text-sm text-paper outline-none placeholder:text-paper/40 focus:border-paper/50"
-          placeholder="Password"
+          placeholder={t("g.pw")}
         />
-        {wrong && <p className="text-xs text-destructive">That password doesn’t match. Try again.</p>}
+        {wrong && <p className="text-xs text-destructive">{t("g.pwWrong")}</p>}
         <button type="submit" disabled={busy || !pw} className="meta w-full rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90 disabled:opacity-50">
-          {busy ? "Opening…" : "Open gallery"}
+          {busy ? t("g.opening") : t("g.open")}
         </button>
       </form>
     </section>
@@ -173,6 +179,7 @@ function PasswordGate({ wrong, onSubmit }: { wrong: boolean; onSubmit: (pw: stri
 
 function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; defaultName: string; onClose: () => void }) {
   const send = useServerFn(submitReview);
+  const { t } = useI18n();
   const [name, setName] = useState(defaultName);
   const [body, setBody] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
@@ -190,7 +197,7 @@ function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; def
       await send({ data: { ...access, name, body } });
       setState("sent");
     } catch (err) {
-      toast.error((err as Error).message || "Could not send the review");
+      toast.error((err as Error).message || t("rv.fail"));
       setState("idle");
     }
   };
@@ -201,27 +208,27 @@ function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; def
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Leave a review"
+      aria-label={t("rv.title")}
       className="fixed inset-0 z-[110] flex items-end justify-center bg-viewer/70 p-3 backdrop-blur-md sm:items-center"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="glass-panel w-full max-w-md rounded-[28px] p-5 text-paper md:p-6">
         <div className="mb-5 flex items-center justify-between">
-          <p className="meta text-paper/70">Leave a review</p>
-          <button type="button" onClick={onClose} aria-label="Close" className="glass hit inline-flex size-8 items-center justify-center rounded-full text-paper/80 hover:text-paper">✕</button>
+          <p className="meta text-paper/70">{t("rv.title")}</p>
+          <button type="button" onClick={onClose} aria-label={t("bf.close")} className="glass hit inline-flex size-8 items-center justify-center rounded-full text-paper/80 hover:text-paper">✕</button>
         </div>
         {state === "sent" ? (
           <div className="py-6">
-            <p className="display text-4xl">Thank you.</p>
-            <p className="mt-3 text-sm text-paper/70">Your review means a lot. It will appear on the website after a quick check.</p>
-            <button type="button" onClick={onClose} className="meta mt-6 rounded-full bg-paper px-5 py-2.5 text-ink">Close</button>
+            <p className="display text-4xl">{t("rv.thanks1")}</p>
+            <p className="mt-3 text-sm text-paper/70">{t("rv.thanks2")}</p>
+            <button type="button" onClick={onClose} className="meta mt-6 rounded-full bg-paper px-5 py-2.5 text-ink">{t("bf.close")}</button>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">
-            <input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={60} required aria-label="Your name" />
-            <textarea className={cn(field, "min-h-32 resize-y")} value={body} onChange={(e) => setBody(e.target.value)} placeholder="A few words about the shoot and the photos" maxLength={1000} required aria-label="Review" />
+            <input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("bf.name")} maxLength={60} required aria-label={t("bf.name")} />
+            <textarea className={cn(field, "min-h-32 resize-y")} value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("rv.body")} maxLength={1000} required aria-label={t("rv.title")} />
             <button type="submit" disabled={state === "sending" || !name.trim() || body.trim().length < 3} className="meta w-full rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90 disabled:opacity-50">
-              {state === "sending" ? "Sending…" : "Send review"}
+              {state === "sending" ? t("bf.sending") : t("rv.send")}
             </button>
           </form>
         )}
@@ -231,11 +238,12 @@ function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; def
 }
 
 function Notice({ title }: { title: React.ReactNode }) {
+  const { t } = useI18n();
   return (
     <section className="px-5 pb-24 pt-24 md:px-10 md:pb-36 md:pt-40">
-      <p className="meta text-muted-foreground">Gallery</p>
+      <p className="meta text-muted-foreground">{t("g.gallery")}</p>
       <h1 className="display mt-6 text-5xl text-paper md:text-7xl">{title}</h1>
-      <p className="mt-6 max-w-md text-sm text-muted-foreground">If you need your photos again, just send me a message — I’ll share a fresh link.</p>
+      <p className="mt-6 max-w-md text-sm text-muted-foreground">{t("g.fresh")}</p>
     </section>
   );
 }
@@ -255,6 +263,7 @@ type Marks = Record<string, { favorite: boolean; note: string | null }>;
 
 function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
   const { open } = useLightbox();
+  const { t, p } = useI18n();
   const mark = useServerFn(markDeliveryFile);
   const log = useServerFn(logDeliveryEvent);
   const sendPicks = useServerFn(submitPicks);
@@ -264,10 +273,10 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
     try {
       const r = await sendPicks({ data: access });
       setPicksState("sent");
-      toast.success(`Sent — ${r.count} ${r.count === 1 ? "photo" : "photos"} in your selection`);
+      toast.success(`${t("g.selSentToast")} (${r.count} ${p(r.count, PHOTOS)})`);
     } catch (e) {
       setPicksState("idle");
-      toast.error((e as Error).message || "Could not send");
+      toast.error((e as Error).message || t("bf.fail"));
     }
   };
   const [progress, setProgress] = useState<number | null>(null);
@@ -295,7 +304,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
       await mark({ data: { ...access, fileId: id, ...patch } });
     } catch (e) {
       setMarks((m) => ({ ...m, [id]: before }));
-      toast.error((e as Error).message || "Could not save");
+      toast.error((e as Error).message || t("g.saveFail"));
     }
   };
 
@@ -304,22 +313,22 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
     try {
       const ok = await downloadAll(d, setProgress);
       if (ok) {
-        toast.success("Download complete");
+        toast.success(t("g.downloadDone"));
         void log({ data: { ...access, kind: "zip" } }).catch(() => {});
       }
     } catch (e) {
-      toast.error((e as Error).message || "Download failed — please try again");
+      toast.error((e as Error).message || t("g.downloadFail"));
     }
     setProgress(null);
   };
 
-  const view = (i: number) => open(shown.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { action: { label: "Leave a review", onClick: () => setReviewOpen(true) } });
+  const view = (i: number) => open(shown.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { action: { label: t("g.leaveReview"), onClick: () => setReviewOpen(true) } });
 
   return (
     <>
       <section className="px-5 pb-12 pt-16 md:px-10 md:pb-16 md:pt-28">
         <p className="meta text-muted-foreground">
-          {d.clientName ? `For ${d.clientName} · ` : ""}{n} {n === 1 ? "photo" : "photos"}{d.totalSize > 0 ? ` · ${formatSize(d.totalSize)}` : ""}
+          {d.clientName ? `${t("g.for")} ${d.clientName} · ` : ""}{n} {p(n, PHOTOS)}{d.totalSize > 0 ? ` · ${formatSize(d.totalSize)}` : ""}
         </p>
         <h1 className="display mt-5 text-[clamp(2.8rem,10vw,7.5rem)] text-paper">{d.title}</h1>
         {d.message && <p className="mt-6 max-w-xl whitespace-pre-line text-sm leading-relaxed text-paper/75 md:text-base">{d.message}</p>}
@@ -332,7 +341,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
               className="meta inline-flex items-center gap-2.5 rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               <DownloadIcon className="size-4" />
-              {progress === null ? "Download all (.zip)" : `Preparing ${progress} / ${n}…`}
+              {progress === null ? t("g.downloadAll") : `${t("g.preparing")} ${progress} / ${n}…`}
             </button>}
             <button
               type="button"
@@ -342,7 +351,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
               className={cn("glass meta inline-flex items-center gap-2 rounded-full px-4 py-3 text-paper disabled:opacity-40", onlyFavs && "!bg-paper !text-ink")}
             >
               <HeartIcon filled={favCount > 0} className="size-3.5" />
-              {onlyFavs ? "Show all" : `Favourites ${favCount}`}
+              {onlyFavs ? t("g.showAll") : `${t("g.favourites")} ${favCount}`}
             </button>
             {favCount > 0 && (
               <button
@@ -351,23 +360,23 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
                 disabled={picksState === "sending"}
                 className="glass meta inline-flex items-center gap-2 rounded-full px-4 py-3 text-paper disabled:opacity-50"
               >
-                {picksState === "sending" ? "Sending…" : picksState === "sent" ? "Selection sent · send again" : `Send my selection (${favCount})`}
+                {picksState === "sending" ? t("bf.sending") : picksState === "sent" ? t("g.selSent") : `${t("g.sendSel")} (${favCount})`}
               </button>
             )}
           </div>
         )}
         {d.watermark && n > 0 && (
-          <p className="mt-4 max-w-md text-sm text-paper/70">These are watermarked previews. Full-quality downloads open once the shoot is paid — the link stays the same.</p>
+          <p className="mt-4 max-w-md text-sm text-paper/70">{t("g.watermark")}</p>
         )}
         {n > 0 && (
-          <p className="mt-4 max-w-md text-xs text-paper/50">Tap the heart on the photos you like most and the speech bubble to leave a note, then press “Send my selection”.</p>
+          <p className="mt-4 max-w-md text-xs text-paper/50">{t("g.hint")}</p>
         )}
         <button
           type="button"
           onClick={() => setReviewOpen(true)}
           className="group mt-6 inline-flex items-center gap-2 text-sm text-paper/60 transition-colors hover:text-paper"
         >
-          Liked the photos? <span className="underline decoration-paper/30 underline-offset-4 group-hover:decoration-paper">Leave a review</span>
+          {t("g.liked")} <span className="underline decoration-paper/30 underline-offset-4 group-hover:decoration-paper">{t("g.leaveReview")}</span>
           <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
         </button>
       </section>
@@ -383,7 +392,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
 
       <section className="px-5 pb-20 md:px-10 md:pb-32">
         {n === 0 ? (
-          <p className="meta py-16 text-center text-muted-foreground">Photos are on their way — check back soon.</p>
+          <p className="meta py-16 text-center text-muted-foreground">{t("g.empty")}</p>
         ) : (
           // Row height = one landscape (3:2) cell; portraits span two rows, so two
           // landscapes stack in the space of one portrait. Dense flow fills the holes.
@@ -417,18 +426,19 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
 
 function NoteDialog({ file, initial, onClose, onSave }: { file: DeliveryFile; initial: string; onClose: () => void; onSave: (note: string) => void }) {
   const [text, setText] = useState(initial);
+  const { t } = useI18n();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
   return (
-    <div role="dialog" aria-modal="true" aria-label="Note on this photo" className="fixed inset-0 z-[110] flex items-end justify-center bg-viewer/50 p-3 backdrop-blur-md sm:items-center" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div role="dialog" aria-modal="true" aria-label={t("g.noteTitle")} className="fixed inset-0 z-[110] flex items-end justify-center bg-viewer/50 p-3 backdrop-blur-md sm:items-center" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <form onSubmit={(e) => { e.preventDefault(); onSave(text); }} className="glass-panel w-full max-w-md space-y-4 rounded-[28px] p-5 text-paper md:p-6">
         <div className="flex items-center gap-3">
           <img src={file.preview} alt="" className="size-12 shrink-0 rounded-xl object-cover" />
           <div className="min-w-0">
-            <p className="meta text-paper/70">Note on this photo</p>
+            <p className="meta text-paper/70">{t("g.noteTitle")}</p>
             <p className="truncate text-xs text-paper/50">{file.name}</p>
           </div>
         </div>
@@ -437,13 +447,13 @@ function NoteDialog({ file, initial, onClose, onSave }: { file: DeliveryFile; in
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={500}
-          placeholder="e.g. a bit warmer, crop tighter, remove the sign…"
+          placeholder={t("g.notePh")}
           aria-label="Note"
           className="min-h-28 w-full resize-y rounded-2xl border border-paper/15 bg-transparent px-4 py-3 text-sm text-paper outline-none placeholder:text-paper/40 focus:border-paper/50"
         />
         <div className="flex gap-2">
-          <button type="submit" className="meta flex-1 rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90">Save note</button>
-          {initial && <button type="button" onClick={() => onSave("")} className="glass meta rounded-full px-4 py-3 text-paper">Remove</button>}
+          <button type="submit" className="meta flex-1 rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90">{t("g.noteSave")}</button>
+          {initial && <button type="button" onClick={() => onSave("")} className="glass meta rounded-full px-4 py-3 text-paper">{t("g.noteRemove")}</button>}
         </div>
       </form>
     </div>

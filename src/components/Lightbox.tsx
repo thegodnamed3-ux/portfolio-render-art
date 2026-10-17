@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "framer-motion";
 import { ContactLinks } from "./ContactLinks";
+import { useI18n } from "@/lib/i18n";
 
 export type ViewerItem = { src: string; w: number; h: number; alt?: string };
 
@@ -44,6 +45,7 @@ function useViewport() {
 }
 
 export function Viewer({ items, index: start, title, onClose, onBack, embedded, hideBook, action }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean; hideBook?: boolean | undefined; action?: ViewerAction | undefined }) {
+  const { t } = useI18n();
   const [index, setIndex] = useState(start);
   const [dir, setDir] = useState<1 | -1>(1);
   const [panel, setPanel] = useState(false);
@@ -140,7 +142,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
     >
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
         <div className="flex min-w-0 items-center gap-2">
-        {onBack && <button onClick={onBack} aria-label="Back to projects" className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 hover:text-paper">← Back</button>}
+        {onBack && <button onClick={onBack} aria-label={t("pf.back")} className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 hover:text-paper">{t("pf.back")}</button>}
         <span className="glass meta truncate rounded-full px-3.5 py-1.5 text-paper/80">
           {title && <span className="mr-2.5 text-paper">{title}</span>}
           {String(index + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
@@ -180,19 +182,19 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
 
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
         <div className="glass flex items-center rounded-full">
-          <button onClick={() => go(-1)} disabled={index === 0} aria-label="Previous photo" className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">←</button>
+          <button onClick={() => go(-1)} disabled={index === 0} aria-label={t("lb.prev")} className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">←</button>
           <span className="h-3.5 w-px bg-paper/15" />
-          <button onClick={() => go(1)} disabled={atEnd} aria-label="Next photo" className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">→</button>
+          <button onClick={() => go(1)} disabled={atEnd} aria-label={t("lb.next")} className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">→</button>
         </div>
         <AnimatePresence>
           {hint && !atEnd && (
-            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.625rem] tracking-[0.28em] text-paper/55">← Swipe to explore →</motion.span>
+            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.625rem] tracking-[0.28em] text-paper/55">{t("lb.swipe")}</motion.span>
           )}
           {atEnd && n > 1 && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">End of session</motion.span>
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">{t("lb.end")}</motion.span>
           )}
         </AnimatePresence>
-        {action ? <button onClick={action.onClick} className="glass hit meta rounded-full px-4 py-2 text-paper">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper">Book</button>}
+        {action ? <button onClick={action.onClick} className="glass hit meta rounded-full px-4 py-2 text-paper">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper">{t("lb.book")}</button>}
       </div>
 
       <AnimatePresence>

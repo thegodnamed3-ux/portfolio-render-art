@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FRAMES, useI18n } from "@/lib/i18n";
 import type { GalleryPhoto, VideoItem } from "@/content/types";
 import type { Session } from "@/content/sessions";
 import { Frame } from "./Frame";
@@ -15,6 +16,7 @@ const stackSpans = [
 
 /** One photoshoot as a perfectly straight stack of prints (translation only, 0° rotation). */
 export function SessionStack({ s, n }: { s: Session; n: number }) {
+  const { p } = useI18n();
   const { open } = useLightbox();
   const under = s.images.slice(1, 3);
   const items = s.images.map((p) => ({ src: p.full, w: p.w, h: p.h, alt: s.title }));
@@ -23,7 +25,7 @@ export function SessionStack({ s, n }: { s: Session; n: number }) {
       <button
         type="button"
         onClick={() => open(items, 0, s.title)}
-        aria-label={`Open ${s.title} — ${s.count} frames`}
+        aria-label={`${s.title} — ${s.count} ${p(s.count, FRAMES)}`}
         className="relative block w-full cursor-pointer pb-[10px] pr-[10px] text-left"
       >
         <div className="relative" style={{ aspectRatio: `${s.cover.w} / ${s.cover.h}` }}>
@@ -54,7 +56,7 @@ export function SessionStack({ s, n }: { s: Session; n: number }) {
       </button>
       <figcaption className="meta mt-4 flex justify-between text-muted-foreground">
         <span className="text-paper">{s.title}</span>
-        <span>{String(s.count).padStart(2, "0")} frames</span>
+        <span>{String(s.count).padStart(2, "0")} {p(s.count, FRAMES)}</span>
       </figcaption>
     </figure>
   );
@@ -127,6 +129,7 @@ export function PhotoGallery({ photos }: { photos: GalleryPhoto[] }) {
 }
 
 function VideoCard({ v, n }: { v: VideoItem; n: number }) {
+  const { t } = useI18n();
   const [playing, setPlaying] = useState(false);
   return (
     <figure>
@@ -140,9 +143,9 @@ function VideoCard({ v, n }: { v: VideoItem; n: number }) {
             className="absolute inset-0 h-full w-full"
           />
         ) : (
-          <button type="button" onClick={() => setPlaying(true)} aria-label={`Play ${v.title}`} className="group absolute inset-0">
+          <button type="button" onClick={() => setPlaying(true)} aria-label={`${t("pf.play")} ${v.title}`} className="group absolute inset-0">
             <img src={`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`} alt="" loading="lazy" className="h-full w-full object-cover opacity-80 transition duration-700 group-hover:scale-[1.02] group-hover:opacity-100" />
-            <span className="meta absolute bottom-4 left-4 border border-paper/40 px-3 py-2 text-paper transition-colors group-hover:bg-paper group-hover:text-ink">▶ Play</span>
+            <span className="meta absolute bottom-4 left-4 border border-paper/40 px-3 py-2 text-paper transition-colors group-hover:bg-paper group-hover:text-ink">{t("pf.play")}</span>
           </button>
         )}
       </div>

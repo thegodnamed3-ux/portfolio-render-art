@@ -14,6 +14,7 @@ import { photos } from "@/lib/photos";
 import { getHomeMedia, type HomeImage } from "@/lib/portfolio.functions";
 import { defaultHero, defaultAbout, defaultWork, defaultWorkColumns, type WorkItem } from "@/content/home";
 import { WorkGrid } from "@/components/WorkGrid";
+import { useCategoryTitle, useI18n } from "@/lib/i18n";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 
 export const Route = createFileRoute("/")({
@@ -40,6 +41,7 @@ const num = (n: number) => String(n).padStart(2, "0");
 function Hero({ slides }: { slides: HomeImage[] }) {
   // The slide arrows are rendered into the headline row, so they share its bottom edge.
   const [arrows, setArrows] = useState<HTMLDivElement | null>(null);
+  const { t } = useI18n();
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden">
       <HeroSlideshow slides={slides} controlsContainer={arrows} />
@@ -50,17 +52,17 @@ function Hero({ slides }: { slides: HomeImage[] }) {
             className="display reveal text-[clamp(2.75rem,11vw,8rem)] leading-[0.92] text-paper"
             style={{ animationDelay: "0.14s" }}
           >
-            <span className="block">Beyond</span>
+            <span className="block">{t("hero.l1")}</span>
             <span className="block md:pl-[0.6em]">
-              the <em>obvious.</em>
+              {t("hero.l2a") && <>{t("hero.l2a")} </>}<em>{t("hero.l2b")}</em>
             </span>
           </h1>
           <div ref={setArrows} className="pointer-events-auto relative z-10 shrink-0" />
         </div>
         <div className="meta mt-5 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-8">
-          <span>Tallinn, Estonia</span>
-          <span className="hidden md:inline">Photography · Visuals</span>
-          <a href="#work" className="pointer-events-auto transition-colors hover:text-paper">Scroll ↓</a>
+          <span>{t("hero.place")}</span>
+          <span className="hidden md:inline">{t("hero.tag")}</span>
+          <a href="#work" className="pointer-events-auto transition-colors hover:text-paper">{t("hero.scroll")}</a>
         </div>
       </div>
     </section>
@@ -68,12 +70,13 @@ function Hero({ slides }: { slides: HomeImage[] }) {
 }
 
 function Work({ items, columns }: { items: WorkItem[]; columns: number }) {
+  const { t } = useI18n();
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
       <div className="mb-10 grid gap-6 md:mb-16 md:grid-cols-12">
-        <h2 className="display text-3xl md:col-span-3 md:text-4xl">Selected works.</h2>
+        <h2 className="display text-3xl md:col-span-3 md:text-4xl">{t("work.title")}</h2>
         <p className="display text-4xl md:col-span-9 md:text-6xl">
-          Portraits by the sea, in studios, <em className="text-muted-foreground">and in between.</em>
+          {t("work.lead1")} <em className="text-muted-foreground">{t("work.lead2")}</em>
         </p>
       </div>
       <WorkGrid items={items} columns={columns} />
@@ -82,11 +85,12 @@ function Work({ items, columns }: { items: WorkItem[]; columns: number }) {
 }
 
 function DisciplineRow({ c, n }: { c: Category; n: string }) {
+  const title = useCategoryTitle()(c.slug, c.title);
   const inner = (
     <>
       <span className="flex items-center gap-3 md:gap-5">
         <span className="display text-4xl transition-transform duration-300 group-hover:translate-x-2 md:text-6xl">
-          {c.title}
+          {title}
         </span>
         {c.external && (
           <ArrowUpRight
@@ -108,7 +112,7 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
       target="_blank"
       rel="noopener noreferrer"
       className={cls}
-      aria-label={`${c.title} — opens in a new tab`}
+      aria-label={`${title} ↗`}
     >
       {inner}
     </a>
@@ -120,10 +124,11 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
 }
 
 function Index_Disciplines() {
+  const { t } = useI18n();
   return (
     <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-14 text-ink md:px-10 md:py-20">
       <div className="grid gap-10 md:grid-cols-12">
-        <h2 className="display text-3xl md:col-span-3 md:text-4xl">Disciplines.</h2>
+        <h2 className="display text-3xl md:col-span-3 md:text-4xl">{t("disciplines.title")}</h2>
         <ol className="md:col-span-9">
           {categories.map((c, i) => (
             <li key={c.slug} className="border-t border-ink/15 last:border-b">
@@ -137,6 +142,7 @@ function Index_Disciplines() {
 }
 
 function About({ image }: { image: HomeImage }) {
+  const { t } = useI18n();
   return (
     <section id="about" className="relative isolate flex min-h-[68svh] flex-col justify-between overflow-hidden px-5 py-14 md:min-h-[70vh] md:px-10 md:py-20">
       <img
@@ -148,10 +154,10 @@ function About({ image }: { image: HomeImage }) {
         style={{ objectPosition: image.pos ?? "50% 50%" }}
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-background/90 via-background/30 to-background/50" />
-      <h2 className="display text-3xl text-paper md:text-4xl">About.</h2>
+      <h2 className="display text-3xl text-paper md:text-4xl">{t("about.title")}</h2>
       <div>
         <p className="display text-4xl text-paper md:text-6xl">Gor Arsakjan.</p>
-        <p className="meta mt-5 text-paper/75">Photographer &amp; filmmaker · Tallinn</p>
+        <p className="meta mt-5 text-paper/75">{t("about.role")}</p>
       </div>
     </section>
   );

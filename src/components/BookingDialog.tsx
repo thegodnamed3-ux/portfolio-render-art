@@ -4,10 +4,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SHOOT_TYPES, submitBooking } from "@/lib/booking.functions";
 import { cn } from "@/lib/utils";
+import { useI18n, type Key } from "@/lib/i18n";
 
 /** Light glass booking form; the request lands in Telegram. */
 export function BookingDialog({ onClose }: { onClose: () => void }) {
   const send = useServerFn(submitBooking);
+  const { t } = useI18n();
   const [f, setF] = useState({ name: "", contact: "", type: "Portraits", date: "", message: "", website: "" });
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
@@ -28,7 +30,7 @@ export function BookingDialog({ onClose }: { onClose: () => void }) {
       await send({ data: f });
       setState("sent");
     } catch (err) {
-      toast.error((err as Error).message || "Could not send the request");
+      toast.error((err as Error).message || t("bf.fail"));
       setState("idle");
     }
   };
@@ -45,43 +47,43 @@ export function BookingDialog({ onClose }: { onClose: () => void }) {
     >
       <div className="glass-card max-h-[92svh] w-full max-w-md overflow-y-auto rounded-[32px] !bg-white/85 p-5 text-ink md:p-7">
         <div className="mb-5 flex items-center justify-between gap-3">
-          <p className="display text-3xl leading-none">Book a <em>session.</em></p>
-          <button type="button" onClick={onClose} aria-label="Close" className="glass-ink hit grid size-9 shrink-0 place-items-center rounded-full text-ink/70 hover:text-ink">
+          <p className="display text-3xl leading-none">{t("book.l1")} <em>{t("book.l2")}</em></p>
+          <button type="button" onClick={onClose} aria-label={t("bf.close")} className="glass-ink hit grid size-9 shrink-0 place-items-center rounded-full text-ink/70 hover:text-ink">
             <svg viewBox="0 0 24 24" aria-hidden className="size-3.5 fill-none stroke-current" strokeWidth="1.6" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
         </div>
         {state === "sent" ? (
           <div className="py-4">
-            <p className="text-sm text-ink/75">Thank you — your request is on its way. I’ll get back to you shortly.</p>
-            <button type="button" onClick={onClose} className="meta mt-6 rounded-full bg-ink px-5 py-2.5 text-paper">Close</button>
+            <p className="text-sm text-ink/75">{t("bf.thanks")}</p>
+            <button type="button" onClick={onClose} className="meta mt-6 rounded-full bg-ink px-5 py-2.5 text-paper">{t("bf.close")}</button>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">
-            <input className={field} value={f.name} onChange={set("name")} placeholder="Your name" maxLength={80} required aria-label="Your name" autoComplete="name" />
-            <input className={field} value={f.contact} onChange={set("contact")} placeholder="Phone, e-mail or Telegram" maxLength={120} required aria-label="How to reach you" />
+            <input className={field} value={f.name} onChange={set("name")} placeholder={t("bf.name")} maxLength={80} required aria-label={t("bf.name")} autoComplete="name" />
+            <input className={field} value={f.contact} onChange={set("contact")} placeholder={t("bf.contact")} maxLength={120} required aria-label={t("bf.contact")} />
             <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Type of shoot">
-              {SHOOT_TYPES.map((t) => (
+              {SHOOT_TYPES.map((type) => (
                 <button
-                  key={t}
+                  key={type}
                   type="button"
                   role="radio"
-                  aria-checked={f.type === t}
-                  onClick={() => setF({ ...f, type: t })}
-                  className={cn("meta rounded-full px-3 py-1.5 text-[0.625rem]", f.type === t ? "bg-ink text-paper" : "glass-ink text-ink/80")}
+                  aria-checked={f.type === type}
+                  onClick={() => setF({ ...f, type })}
+                  className={cn("meta rounded-full px-3 py-1.5 text-[0.625rem]", f.type === type ? "bg-ink text-paper" : "glass-ink text-ink/80")}
                 >
-                  {t}
+                  {t(`cat.${type.toLowerCase().replace(" ", "-")}` as Key)}
                 </button>
               ))}
             </div>
-            <input className={field} value={f.date} onChange={set("date")} placeholder="Preferred date (optional)" maxLength={40} aria-label="Preferred date" />
-            <textarea className={cn(field, "min-h-28 resize-y")} value={f.message} onChange={set("message")} placeholder="A few words about the idea (optional)" maxLength={1500} aria-label="Message" />
+            <input className={field} value={f.date} onChange={set("date")} placeholder={t("bf.date")} maxLength={40} aria-label={t("bf.date")} />
+            <textarea className={cn(field, "min-h-28 resize-y")} value={f.message} onChange={set("message")} placeholder={t("bf.message")} maxLength={1500} aria-label={t("bf.message")} />
             {/* Honeypot — hidden from people, tempting to bots. */}
             <input tabIndex={-1} autoComplete="off" value={f.website} onChange={set("website")} className="absolute -left-[9999px] h-0 w-0 opacity-0" aria-hidden />
             <button type="submit" disabled={state === "sending"} className="meta w-full rounded-full bg-ink px-5 py-3 text-paper transition-opacity hover:opacity-90 disabled:opacity-50">
-              {state === "sending" ? "Sending…" : "Send request"}
+              {state === "sending" ? t("bf.sending") : t("bf.send")}
             </button>
             <p className="text-center text-[0.6875rem] text-ink/45">
-              Your details are used only to reply to you. <a href="/privacy" className="underline underline-offset-2">Privacy</a>
+              {t("bf.privacy")} <a href="/privacy" className="underline underline-offset-2">{t("footer.privacy")}</a>
             </p>
           </form>
         )}

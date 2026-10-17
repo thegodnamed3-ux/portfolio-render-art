@@ -1,14 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { LangSwitch, useI18n, type Key } from "@/lib/i18n";
 
-const links = [
-  { hash: "work", label: "Work" },
-  { hash: "disciplines", label: "Explore" },
-  { hash: "about", label: "About" },
-  { hash: "contact", label: "Contact" },
+const links: { hash: string; key: Key }[] = [
+  { hash: "work", key: "nav.work" },
+  { hash: "disciplines", key: "nav.explore" },
+  { hash: "about", key: "nav.about" },
+  { hash: "contact", key: "nav.contact" },
 ];
 
 export function SiteNav() {
+  const { t } = useI18n();
   const [overLight, setOverLight] = useState(false);
   const [menu, setMenu] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -56,17 +58,18 @@ export function SiteNav() {
               PHOTOGRAPHY · VISUALS
             </span>
           </Link>
-          <div className="hidden gap-8 text-[0.6875rem] md:flex">
+          <div className="hidden items-baseline gap-8 text-[0.6875rem] md:flex">
             {links.map((l) => (
-              <Link key={l.hash} to="/" hash={l.hash} className="transition-opacity hover:opacity-60">{l.label}</Link>
+              <Link key={l.hash} to="/" hash={l.hash} className="transition-opacity hover:opacity-60">{t(l.key)}</Link>
             ))}
+            <LangSwitch className="ml-2 border-l border-current/25 pl-6" />
           </div>
           <button
             type="button"
             onClick={() => setMenu((m) => !m)}
             aria-expanded={menu}
             aria-controls="mobile-menu"
-            aria-label={menu ? "Close menu" : "Open menu"}
+            aria-label={menu ? t("nav.closeMenu") : t("nav.openMenu")}
             className={`hit -my-1 inline-flex size-8 shrink-0 items-center justify-center self-center rounded-full md:hidden ${light ? "glass-ink" : "glass"}`}
           >
             <span aria-hidden className="relative block h-2 w-3.5">
@@ -85,12 +88,13 @@ export function SiteNav() {
           {links.map((l, i) => (
             <li key={l.hash} className="border-b border-border">
               <Link to="/" hash={l.hash} onClick={() => setMenu(false)} className="flex items-baseline justify-between py-5 text-paper" tabIndex={menu ? 0 : -1}>
-                <span className="display text-5xl">{l.label}</span>
+                <span className="display text-5xl">{t(l.key)}</span>
                 <span className="meta text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
               </Link>
             </li>
           ))}
         </ul>
+        <LangSwitch className="meta mt-8 text-sm text-paper" />
       </div>
     </header>
   );

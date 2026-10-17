@@ -16,7 +16,6 @@ export type Database = {
     Tables: {
       client_deliveries: {
         Row: {
-          watermark: boolean
           client_name: string | null
           created_at: string
           expires_at: string | null
@@ -29,7 +28,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          watermark?: boolean
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -42,7 +40,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          watermark?: boolean
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -97,7 +94,6 @@ export type Database = {
       }
       client_delivery_files: {
         Row: {
-          preview_wm_path: string | null
           client_note: string | null
           created_at: string
           delivery_id: string
@@ -112,7 +108,6 @@ export type Database = {
           w: number | null
         }
         Insert: {
-          preview_wm_path?: string | null
           client_note?: string | null
           created_at?: string
           delivery_id: string
@@ -127,7 +122,6 @@ export type Database = {
           w?: number | null
         }
         Update: {
-          preview_wm_path?: string | null
           client_note?: string | null
           created_at?: string
           delivery_id?: string
@@ -193,36 +187,6 @@ export type Database = {
           src?: string
           storage_path?: string | null
           w?: number
-        }
-        Relationships: []
-      }
-      page_views: {
-        Row: {
-          country: string | null
-          created_at: string
-          device: string | null
-          id: number
-          path: string
-          referrer: string | null
-          visitor: string
-        }
-        Insert: {
-          country?: string | null
-          created_at?: string
-          device?: string | null
-          id?: never
-          path: string
-          referrer?: string | null
-          visitor: string
-        }
-        Update: {
-          country?: string | null
-          created_at?: string
-          device?: string | null
-          id?: never
-          path?: string
-          referrer?: string | null
-          visitor?: string
         }
         Relationships: []
       }
@@ -361,7 +325,6 @@ export type Database = {
       }
       site_settings: {
         Row: {
-          report_week: string | null
           about_image: Json | null
           featured_columns: number | null
           featured_work: Json | null
@@ -371,7 +334,6 @@ export type Database = {
           whatsapp_url: string | null
         }
         Insert: {
-          report_week?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null
@@ -381,7 +343,6 @@ export type Database = {
           whatsapp_url?: string | null
         }
         Update: {
-          report_week?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null

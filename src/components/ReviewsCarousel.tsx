@@ -29,14 +29,14 @@ function ReviewCard({ r, onOpen }: { r: PublicReview; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="glass-card flex h-full min-w-0 snap-start flex-col gap-3 overflow-hidden rounded-[30px] px-5 py-4 text-left transition-[scale] duration-200 active:scale-[0.98]"
+      className="glass-card flex h-full min-w-0 snap-start flex-col gap-2 overflow-hidden rounded-[22px] px-4 py-3 text-left transition-[scale] duration-200 active:scale-[0.98]"
     >
-      <span className="flex w-full items-center gap-2.5">
-        <Avatar r={r} />
+      <span className="flex w-full items-center gap-2">
+        <Avatar r={r} size="size-6" />
         <span className="min-w-0 flex-1 truncate text-xs font-medium text-ink">{r.name}</span>
         {r.rating ? <Stars n={r.rating} /> : null}
       </span>
-      <span className="line-clamp-6 whitespace-pre-line text-[0.75rem] leading-snug text-ink/75">{r.body}</span>
+      <span className="line-clamp-4 text-[0.6875rem] leading-snug text-ink/75 lg:line-clamp-3">{r.body}</span>
     </button>
   );
 }
@@ -74,16 +74,16 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
   useEffect(() => { if (!active) setOpen(null); }, [active]);
 
   return (
-    <div className="glass-window relative mt-6 rounded-[36px] p-3 md:p-4">
+    <div className="glass-window relative mt-6 rounded-[28px] p-2.5 md:p-3">
       <div
         ref={scroller}
-        className="grid snap-x snap-mandatory auto-cols-[86%] grid-flow-col grid-rows-[repeat(2,11.5rem)] gap-3 overflow-x-auto overscroll-x-contain scroll-px-1 px-1 py-1 [scrollbar-width:none] sm:auto-cols-[calc((100%-1rem)/2)] sm:gap-4 lg:auto-cols-[calc((100%-3rem)/4)] lg:grid-rows-[repeat(2,12rem)] [&::-webkit-scrollbar]:hidden"
+        className="grid snap-x snap-mandatory auto-cols-[82%] grid-flow-col grid-rows-[8.25rem] gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-1 px-1 py-1 [scrollbar-width:none] sm:auto-cols-[calc((100%-0.75rem)/2)] sm:gap-3 lg:auto-cols-[calc((100%-2.25rem)/4)] lg:grid-rows-[repeat(2,7.25rem)] [&::-webkit-scrollbar]:hidden"
       >
         {reviews.map((r) => <ReviewCard key={r.id} r={r} onOpen={() => setOpen(r)} />)}
       </div>
 
       {overflow && (
-        <div className="mt-3 flex items-center gap-4 px-2 md:mt-4 md:gap-6">
+        <div className="mt-2 flex items-center gap-4 px-2 md:mt-2.5 md:gap-6">
           <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-ink/10" aria-hidden>
             <span
               className="absolute inset-y-0 rounded-full bg-ink/55 transition-[left] duration-150 ease-out"
@@ -98,7 +98,7 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
                 onClick={() => page(d)}
                 disabled={d < 0 ? bar.atStart : bar.atEnd}
                 aria-label={d < 0 ? "Previous reviews" : "Next reviews"}
-                className="glass-ink hit grid size-9 cursor-pointer place-items-center rounded-full text-ink/80 hover:text-ink disabled:cursor-default disabled:opacity-35"
+                className="glass-ink hit grid size-8 cursor-pointer place-items-center rounded-full text-ink/80 hover:text-ink disabled:cursor-default disabled:opacity-35"
               >
                 {d < 0 ? <ChevronLeft className="size-3.5" strokeWidth={1.5} /> : <ChevronRight className="size-3.5" strokeWidth={1.5} />}
               </button>
@@ -108,7 +108,7 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
       )}
 
       {open && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[36px] bg-paper/40 p-3 backdrop-blur-sm md:p-6" onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}>
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[28px] bg-paper/40 p-3 backdrop-blur-sm md:p-6" onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}>
           <figure className="glass-card flex max-h-full w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-[32px] p-6">
             <figcaption className="flex items-center gap-3">
               <Avatar r={open} size="size-10" />

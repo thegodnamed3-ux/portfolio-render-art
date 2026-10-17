@@ -23,43 +23,11 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const has = withReviews && reviews.length > 0;
   const onReviews = has && view === "reviews";
 
-  // Desktop: the band keeps one height (the taller pane's) so switching never resizes the page.
-  // Phones: it takes the height of the pane on show, so the contacts don't float in empty space.
-  const panes = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)] as const;
-  const [heights, setHeights] = useState<[number, number]>([0, 0]);
-  useEffect(() => {
-    const ro = new ResizeObserver(() => setHeights([panes[0].current?.offsetHeight ?? 0, panes[1].current?.offsetHeight ?? 0]));
-    panes.forEach((p) => p.current && ro.observe(p.current));
-    return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [has]);
-  const [wide, setWide] = useState(true);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const on = () => setWide(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  const height = wide ? Math.max(heights[0], heights[1]) : heights[onReviews ? 1 : 0];
+  // One height for both panes, on every screen: switching never resizes or scrolls the page.
+  const height = Math.max(heights[0], heights[1]);
 
-  // Switching panes brings the whole band into view, so the reviews window is never cut off.
   const section = useRef<HTMLElement>(null);
-  const toggle = () => {
-    const opening = !onReviews;
-    setView(opening ? "reviews" : "contact");
-    const el = section.current;
-    if (!el) return;
-    const behavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-    if (!opening) return;
-    // Once the reviews have slid in, make sure the whole window is on screen.
-    setTimeout(() => {
-      const win = el.querySelector<HTMLElement>("[data-reviews-window]");
-      if (!win) return;
-      const overshoot = win.getBoundingClientRect().bottom + 24 - window.innerHeight;
-      if (overshoot > 0) window.scrollBy({ top: overshoot, behavior });
-    }, 760);
-  };
+  const toggle = () => setView(onReviews ? "contact" : "reviews");
 
   return (
     <section ref={section} {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
@@ -89,7 +57,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           className="flex w-[200%] items-stretch transition-transform duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
           style={{ transform: onReviews ? "translateX(-50%)" : "translateX(0)" }}
         >
-          <div aria-hidden={onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-start pr-8 md:justify-center transition-[visibility] duration-700", onReviews && "invisible")}>
+          <div aria-hidden={onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center pr-8 transition-[visibility] duration-700", onReviews && "invisible")}>
             <div ref={panes[0]} className="pb-2 pt-10 md:pt-12">
             <p className="display text-[15vw] leading-[0.95] md:text-[9vw]">
               Book a <em>session.</em>

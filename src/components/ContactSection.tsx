@@ -91,13 +91,13 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           className="flex w-[200%] items-start transition-transform duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
           style={{ transform: onReviews ? "translateX(-50%)" : "translateX(0)" }}
         >
-          <div ref={panes[0]} aria-hidden={onReviews} className={cn("w-1/2 shrink-0 pr-4 transition-[visibility] duration-700", onReviews && "invisible")}>
+          <div ref={panes[0]} aria-hidden={onReviews} className={cn("w-1/2 shrink-0 pr-8 transition-[visibility] duration-700", onReviews && "invisible")}>
             <p className="display mt-6 text-[15vw] md:text-[9vw]">
               Book a <em>session.</em>
             </p>
             <ContactLinks tone="light" className="mt-8 md:mt-12" />
           </div>
-          <div ref={panes[1]} aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 pl-4 transition-[visibility] duration-700", !onReviews && "invisible")}>
+          <div ref={panes[1]} aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 transition-[visibility] duration-700", !onReviews && "invisible")}>
             {has && (
               <div className="glass-ink mt-6 rounded-[28px] p-2.5 md:p-3">
                 <div className="grid max-h-[70svh] grid-cols-1 gap-2 overflow-y-auto overscroll-contain sm:grid-cols-2 lg:grid-cols-4 md:gap-2.5">

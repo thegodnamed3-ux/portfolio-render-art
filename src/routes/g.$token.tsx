@@ -292,7 +292,7 @@ function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
         href={f.download}
         download={f.name}
         aria-label={`Download ${f.name}`}
-        className="glass absolute bottom-1 right-1 z-10 inline-flex size-6 items-center justify-center rounded-full text-paper transition-opacity duration-300 hover:bg-paper hover:text-ink md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+        className="glass absolute bottom-1 right-1 z-10 inline-flex size-6 items-center justify-center rounded-full text-paper md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
       >
         <DownloadIcon className="size-3" />
       </a>

@@ -25,9 +25,9 @@ export function ContactLinks({ tone = "light", className }: Props) {
   const fetchSettings = useServerFn(getSiteSettings);
   const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
   const whatsapp = data?.whatsapp ?? contact.whatsapp;
-  const surface = glass ? "glass text-paper hover:bg-paper hover:text-ink" : "glass-ink text-ink hover:bg-ink hover:text-paper";
-  const primary = cn("hit group inline-flex items-center gap-2.5 rounded-full px-3.5 py-2 transition-colors duration-300", surface);
-  const icon = cn("hit inline-flex size-8 items-center justify-center rounded-full transition-colors duration-300", surface);
+  const surface = glass ? "glass text-paper" : "glass-ink text-ink";
+  const primary = cn("hit group inline-flex items-center gap-2.5 rounded-full px-3.5 py-2", surface);
+  const icon = cn("hit inline-flex size-8 items-center justify-center rounded-full", surface);
   const messaging = [
     contact.telegram && { href: contact.telegram, label: "Telegram", Icon: TelegramIcon },
     whatsapp && { href: whatsapp, label: "WhatsApp", Icon: WhatsAppIcon },

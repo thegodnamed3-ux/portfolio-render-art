@@ -19,12 +19,12 @@ function Stars({ n }: { n: number }) {
 
 function ReviewCard({ r }: { r: PublicReview }) {
   return (
-    <figure className="glass-ink flex flex-col gap-2.5 rounded-2xl p-3 md:p-3.5">
+    <figure className="glass-card flex flex-col gap-2.5 rounded-[22px] p-3.5 md:p-4">
       <figcaption className="flex items-center gap-2">
         {r.avatar_url ? (
-          <img src={r.avatar_url} alt="" loading="lazy" decoding="async" className="size-7 shrink-0 rounded-full object-cover" />
+          <img src={r.avatar_url} alt="" loading="lazy" decoding="async" className="size-8 shrink-0 rounded-full object-cover ring-2 ring-white/80" />
         ) : (
-          <span aria-hidden className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-[Inter,sans-serif] text-[0.5625rem] font-medium tracking-[0.04em] text-paper">
+          <span aria-hidden className="inline-flex size-8 shrink-0 items-center justify-center rounded-full ring-2 ring-white/80 bg-ink font-[Inter,sans-serif] text-[0.5625rem] font-medium tracking-[0.04em] text-paper">
             {initials(r.name)}
           </span>
         )}
@@ -72,7 +72,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             type="button"
             onClick={() => setView(onReviews ? "contact" : "reviews")}
             aria-expanded={onReviews}
-            className="glass-ink hit group meta inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.625rem] text-ink transition-colors duration-300 hover:bg-ink hover:text-paper"
+            className="glass-ink hit group meta inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.625rem] text-ink"
           >
             {onReviews ? (
               <><span aria-hidden className="transition-transform duration-300 group-hover:-translate-x-0.5">←</span>Contact</>
@@ -99,8 +99,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           </div>
           <div ref={panes[1]} aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 transition-[visibility] duration-700", !onReviews && "invisible")}>
             {has && (
-              <div className="glass-ink mt-6 rounded-[28px] p-2.5 md:p-3">
-                <div className="grid max-h-[70svh] grid-cols-1 gap-2 overflow-y-auto overscroll-contain sm:grid-cols-2 lg:grid-cols-4 md:gap-2.5">
+              <div className="glass-window mt-6 rounded-[34px] p-2.5 md:p-3.5">
+                <div className="grid max-h-[70svh] grid-cols-1 gap-2.5 overflow-y-auto overscroll-contain rounded-[24px] sm:grid-cols-2 lg:grid-cols-4 md:gap-3">
                   {reviews.map((r) => <ReviewCard key={r.id} r={r} />)}
                 </div>
               </div>

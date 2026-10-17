@@ -140,13 +140,13 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
     >
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
         <div className="flex min-w-0 items-center gap-2">
-        {onBack && <button onClick={onBack} aria-label="Back to projects" className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 transition-colors hover:text-paper">← Back</button>}
+        {onBack && <button onClick={onBack} aria-label="Back to projects" className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 hover:text-paper">← Back</button>}
         <span className="glass meta truncate rounded-full px-3.5 py-1.5 text-paper/80">
           {title && <span className="mr-2.5 text-paper">{title}</span>}
           {String(index + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
         </span>
         </div>
-        <button onClick={onClose} aria-label="Close viewer" className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 transition-colors hover:text-paper"><CloseIcon /></button>
+        <button onClick={onClose} aria-label="Close viewer" className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>
       </div>
 
       <div ref={area} className={`relative flex min-h-0 min-w-0 w-full flex-1 items-center justify-center ${embedded ? "overflow-hidden" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -192,7 +192,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">End of session</motion.span>
           )}
         </AnimatePresence>
-        {action ? <button onClick={action.onClick} className="glass hit meta rounded-full px-4 py-2 text-paper transition-colors hover:bg-paper hover:text-ink">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper transition-colors hover:bg-paper hover:text-ink">Book</button>}
+        {action ? <button onClick={action.onClick} className="glass hit meta rounded-full px-4 py-2 text-paper">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper">Book</button>}
       </div>
 
       <AnimatePresence>

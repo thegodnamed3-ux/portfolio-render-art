@@ -115,7 +115,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
         >
           <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-4 md:px-8 md:pt-6">
             <h2 className="display text-3xl md:text-5xl">{c.title}.</h2>
-            <button onClick={onClose} aria-label="Close portfolio" className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 transition-colors hover:text-paper"><CloseIcon /></button>
+            <button onClick={onClose} aria-label="Close portfolio" className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>
           </div>
           <div className="flex gap-1 overflow-x-auto px-3 pb-3 [scrollbar-width:none] md:px-7">
             {internalCategories.map((x) => (

@@ -10,6 +10,8 @@ export function HeroSlideshow({ slides, controlsClassName }: { slides: HomeImage
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const [tick, setTick] = useState(0);
+  /** Arrow clicks answer quickly; the automatic crossfade stays slow. */
+  const [manual, setManual] = useState(false);
   const reduced = useRef(false);
   const n = slides.length;
 
@@ -22,11 +24,11 @@ export function HeroSlideshow({ slides, controlsClassName }: { slides: HomeImage
 
   useEffect(() => {
     if (n < 2 || paused || reduced.current) return;
-    const t = setTimeout(() => setI((v) => (v + 1) % n), INTERVAL);
+    const t = setTimeout(() => { setManual(false); setI((v) => (v + 1) % n); }, INTERVAL);
     return () => clearTimeout(t);
   }, [i, n, paused, tick]);
 
-  const go = useCallback((d: number) => { setI((v) => (v + d + n) % n); setTick((t) => t + 1); }, [n]);
+  const go = useCallback((d: number) => { setManual(true); setI((v) => (v + d + n) % n); setTick((t) => t + 1); }, [n]);
 
   return (
     <>
@@ -41,7 +43,7 @@ export function HeroSlideshow({ slides, controlsClassName }: { slides: HomeImage
               alt=""
               loading={k === 0 ? "eager" : "lazy"}
               decoding="async"
-              style={{ objectPosition: s.pos ?? "50% 50%" }}
+              style={{ objectPosition: s.pos ?? "50% 50%", transitionDuration: manual ? "550ms" : undefined }}
               className={cn(
                 "absolute inset-0 h-full w-full object-cover transition-opacity duration-[1600ms] ease-in-out motion-reduce:transition-none",
                 k === i ? "opacity-100" : "opacity-0",
@@ -64,7 +66,7 @@ export function HeroSlideshow({ slides, controlsClassName }: { slides: HomeImage
               type="button"
               onClick={() => go(d)}
               aria-label={d < 0 ? "Previous photograph" : "Next photograph"}
-              className="glass hit grid size-8 place-items-center rounded-full text-paper/85 transition-colors hover:text-paper"
+              className="glass hit grid size-9 cursor-pointer place-items-center rounded-full text-paper/85 hover:text-paper"
             >
               {d < 0 ? <ChevronLeft className="size-3.5" strokeWidth={1.5} /> : <ChevronRight className="size-3.5" strokeWidth={1.5} />}
             </button>

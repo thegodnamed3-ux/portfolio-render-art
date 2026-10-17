@@ -165,6 +165,16 @@
   backdrop-filter: blur(22px) saturate(160%);
   border: 1px solid color-mix(in oklab, var(--paper) 16%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--paper) 22%, transparent), 0 10px 30px -12px oklch(0 0 0 / 60%);
+  transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, scale 160ms ease, opacity 300ms ease;
+  /* Interactive glass stays glass: a brighter tint on hover, a press-in on click. */
+  &:where(button, a, label):hover {
+    background: color-mix(in oklab, var(--paper) 20%, transparent);
+    border-color: color-mix(in oklab, var(--paper) 30%, transparent);
+  }
+  &:where(button, a, label):active {
+    scale: 0.93;
+    background: color-mix(in oklab, var(--paper) 28%, transparent);
+  }
 }
 
 /* Invisible touch-target expansion: keeps 44px+ hit areas while the visible control stays small. */
@@ -183,6 +193,32 @@
   backdrop-filter: blur(18px) saturate(150%);
   border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in oklab, white 70%, transparent), 0 6px 18px -12px oklch(0 0 0 / 25%);
+  transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, scale 160ms ease, opacity 300ms ease;
+  &:where(button, a, label):hover {
+    background: color-mix(in oklab, var(--ink) 9%, transparent);
+    border-color: color-mix(in oklab, var(--ink) 22%, transparent);
+  }
+  &:where(button, a, label):active {
+    scale: 0.93;
+    background: color-mix(in oklab, var(--ink) 15%, transparent);
+  }
+}
+
+/* Light Liquid Glass window and cards (reviews on the paper Contact band). */
+@utility glass-window {
+  background:
+    radial-gradient(120% 80% at 0% 0%, color-mix(in oklab, white 55%, transparent), transparent 60%),
+    radial-gradient(120% 90% at 100% 100%, color-mix(in oklab, var(--ink) 6%, transparent), transparent 65%),
+    color-mix(in oklab, var(--ink) 3%, transparent);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid color-mix(in oklab, white 70%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 85%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--ink) 5%, transparent), 0 30px 60px -36px oklch(0 0 0 / 35%);
+}
+@utility glass-card {
+  background: linear-gradient(180deg, color-mix(in oklab, white 66%, transparent), color-mix(in oklab, white 38%, transparent));
+  backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid color-mix(in oklab, white 80%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 95%, transparent), 0 12px 28px -18px oklch(0 0 0 / 30%);
 }
 
 /* Large Liquid Glass surface for the fullscreen portfolio overlay. */

@@ -8,9 +8,9 @@ const initials = (name: string) =>
 
 function Avatar({ r, size = "size-8" }: { r: PublicReview; size?: string }) {
   return r.avatar_url ? (
-    <img src={r.avatar_url} alt="" loading="lazy" decoding="async" draggable={false} className={cn(size, "shrink-0 rounded-full object-cover ring-2 ring-white/80")} />
+    <img src={r.avatar_url} alt="" loading="lazy" decoding="async" draggable={false} className={cn(size, "shrink-0 rounded-full object-cover")} />
   ) : (
-    <span aria-hidden className={cn(size, "inline-flex shrink-0 items-center justify-center rounded-full bg-ink font-[Inter,sans-serif] text-[0.5625rem] font-medium tracking-[0.04em] text-paper ring-2 ring-white/80")}>
+    <span aria-hidden className={cn(size, "inline-flex shrink-0 items-center justify-center rounded-full bg-ink font-[Inter,sans-serif] text-[0.5625rem] font-medium tracking-[0.04em] text-paper")}>
       {initials(r.name)}
     </span>
   );
@@ -99,10 +99,10 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
           role="dialog"
           aria-modal="true"
           aria-label={`Review by ${open.name}`}
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-viewer/60 p-4 backdrop-blur-xl"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-white/5 p-4 backdrop-blur-2xl"
           onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}
         >
-          <figure className="glass-card flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-[32px] p-6 md:p-8">
+          <figure className="glass-card flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-[32px] !bg-white/85 p-6 md:p-8">
             <figcaption className="flex items-center gap-3">
               <Avatar r={open} size="size-11" />
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{open.name}</span>

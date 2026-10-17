@@ -154,7 +154,7 @@ function About({ image }: { image: HomeImage }) {
         style={{ objectPosition: image.pos ?? "50% 50%" }}
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-background/90 via-background/30 to-background/50" />
-      <p className="meta text-paper/75">About</p>
+      <h2 className="display text-3xl text-paper md:text-4xl">About.</h2>
       <div>
         <p className="display text-4xl text-paper md:text-6xl">Gor Arsakjan.</p>
         <p className="meta mt-5 text-paper/75">Photographer &amp; filmmaker · Tallinn</p>

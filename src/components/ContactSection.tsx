@@ -64,9 +64,9 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const height = heights[onReviews ? 1 : 0];
 
   return (
-    <section {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-20 text-ink md:px-10 md:pt-32">
+    <section {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
       <div className="flex items-center justify-between gap-4">
-        <p className="meta text-ink-muted">{onReviews ? "Reviews" : "Contact"}</p>
+        <h2 className="display text-3xl md:text-4xl">{onReviews ? "Reviews." : "Contact."}</h2>
         {has && (
           <button
             type="button"
@@ -92,9 +92,9 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           style={{ transform: onReviews ? "translateX(-50%)" : "translateX(0)" }}
         >
           <div ref={panes[0]} aria-hidden={onReviews} className={cn("w-1/2 shrink-0 pr-4 transition-[visibility] duration-700", onReviews && "invisible")}>
-            <h2 className="display mt-6 text-[15vw] md:text-[9vw]">
+            <p className="display mt-6 text-[15vw] md:text-[9vw]">
               Book a <em>session.</em>
-            </h2>
+            </p>
             <ContactLinks tone="light" className="mt-8 md:mt-12" />
           </div>
           <div ref={panes[1]} aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 pl-4 transition-[visibility] duration-700", !onReviews && "invisible")}>

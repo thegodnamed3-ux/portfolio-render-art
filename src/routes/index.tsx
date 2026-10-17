@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import { Frame } from "@/components/Frame";
 import { usePortfolio } from "@/components/PortfolioOverlay";
-import { ContactLinks } from "@/components/ContactLinks";
+import { ContactSection } from "@/components/ContactSection";
 import { useLightbox } from "@/components/Lightbox";
 import { SiteNav } from "@/components/SiteNav";
 import { categories } from "@/content/categories";
@@ -163,26 +163,6 @@ function About({ image }: { image: HomeImage }) {
   );
 }
 
-function Contact() {
-  return (
-    <section id="contact" data-nav-light className="bg-paper px-5 pb-10 pt-20 text-ink md:px-10 md:pt-32">
-      <p className="meta text-ink-muted">Contact</p>
-      <h2 className="display mt-6 text-[15vw] md:text-[9vw]">
-        Book a <em>session.</em>
-      </h2>
-      <ContactLinks tone="light" className="mt-8 md:mt-12" />
-      <footer className="meta mt-16 border-t border-ink/15 pt-5 text-ink-muted md:mt-24">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="wordmark text-ink">thegodnamed</span>
-          <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">
-            <span>Tallinn</span>
-            <span>&copy; {new Date().getFullYear()}</span>
-          </span>
-        </div>
-      </footer>
-    </section>
-  );
-}
 
 function Index() {
   const { hero, about } = Route.useLoaderData();
@@ -193,7 +173,7 @@ function Index() {
       <Work />
       <Index_Disciplines />
       <About image={about ?? defaultAbout} />
-      <Contact />
+      <ContactSection id="contact" />
     </main>
   );
 }

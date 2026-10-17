@@ -4,14 +4,15 @@ import { ContactLinks } from "./ContactLinks";
 
 export type ViewerItem = { src: string; w: number; h: number; alt?: string };
 
-type ViewerOptions = { hideBook?: boolean };
+export type ViewerAction = { label: string; onClick: () => void };
+type ViewerOptions = { hideBook?: boolean; action?: ViewerAction };
 type Ctx = { open: (items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => void };
 const LightboxContext = createContext<Ctx>({ open: () => {} });
 export const useLightbox = () => useContext(LightboxContext);
 
 export function LightboxProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string | undefined; hideBook?: boolean | undefined } | null>(null);
-  const open = useCallback((items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => setState({ items, index, title, hideBook: options?.hideBook }), []);
+  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string | undefined; hideBook?: boolean | undefined; action?: ViewerAction | undefined } | null>(null);
+  const open = useCallback((items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => setState({ items, index, title, hideBook: options?.hideBook, action: options?.action }), []);
   const close = useCallback(() => setState(null), []);
   return (
     <LightboxContext.Provider value={{ open }}>
@@ -42,7 +43,7 @@ function useViewport() {
   return vp;
 }
 
-export function Viewer({ items, index: start, title, onClose, onBack, embedded, hideBook }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean; hideBook?: boolean | undefined }) {
+export function Viewer({ items, index: start, title, onClose, onBack, embedded, hideBook, action }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean; hideBook?: boolean | undefined; action?: ViewerAction | undefined }) {
   const [index, setIndex] = useState(start);
   const [dir, setDir] = useState<1 | -1>(1);
   const [panel, setPanel] = useState(false);
@@ -191,7 +192,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">End of session</motion.span>
           )}
         </AnimatePresence>
-        {hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper transition-colors hover:bg-paper hover:text-ink">Book</button>}
+        {action ? <button onClick={action.onClick} className="glass hit meta rounded-full px-4 py-2 text-paper transition-colors hover:bg-paper hover:text-ink">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper transition-colors hover:bg-paper hover:text-ink">Book</button>}
       </div>
 
       <AnimatePresence>

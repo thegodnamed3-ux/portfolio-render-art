@@ -1,9 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ContactLinks } from "@/components/ContactLinks";
+import { ContactSection } from "@/components/ContactSection";
 import { useLightbox } from "@/components/Lightbox";
 import { getDelivery, type Delivery, type DeliveryFile } from "@/lib/delivery.functions";
+import { submitReview } from "@/lib/reviews.functions";
 import { ZipWriter } from "@/lib/zip";
 import { formatSize } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -98,8 +100,85 @@ function DeliveryPage() {
         <span className="meta text-[0.6875rem] text-muted-foreground">Private gallery</span>
       </header>
       {delivery ? <Gallery d={delivery} /> : <Missing />}
-      <Contact />
+      <ContactSection reviews={false} />
     </main>
+  );
+}
+
+function ReviewDialog({ token, defaultName, onClose }: { token: string; defaultName: string; onClose: () => void }) {
+  const send = useServerFn(submitReview);
+  const [name, setName] = useState(defaultName);
+  const [body, setBody] = useState("");
+  const [rating, setRating] = useState<number | null>(null);
+  const [hover, setHover] = useState<number | null>(null);
+  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopImmediatePropagation(); onClose(); } };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [onClose]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setState("sending");
+    try {
+      await send({ data: { token, name, body, rating } });
+      setState("sent");
+    } catch (err) {
+      toast.error((err as Error).message || "Could not send the review");
+      setState("idle");
+    }
+  };
+
+  const field = "w-full rounded-2xl border border-paper/15 bg-transparent px-4 py-3 text-sm text-paper outline-none placeholder:text-paper/40 focus:border-paper/50";
+  const shown = hover ?? rating ?? 0;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Leave a review"
+      className="fixed inset-0 z-[110] flex items-end justify-center bg-viewer/70 p-3 backdrop-blur-md sm:items-center"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="glass-panel w-full max-w-md rounded-[28px] p-5 text-paper md:p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <p className="meta text-paper/70">Leave a review</p>
+          <button type="button" onClick={onClose} aria-label="Close" className="glass hit inline-flex size-8 items-center justify-center rounded-full text-paper/80 hover:text-paper">✕</button>
+        </div>
+        {state === "sent" ? (
+          <div className="py-6">
+            <p className="display text-4xl">Thank you.</p>
+            <p className="mt-3 text-sm text-paper/70">Your review means a lot. It will appear on the website after a quick check.</p>
+            <button type="button" onClick={onClose} className="meta mt-6 rounded-full bg-paper px-5 py-2.5 text-ink">Close</button>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="space-y-3">
+            <div className="flex items-center gap-1" onMouseLeave={() => setHover(null)} role="radiogroup" aria-label="Rating (optional)">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={rating === n}
+                  aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                  onMouseEnter={() => setHover(n)}
+                  onClick={() => setRating(rating === n ? null : n)}
+                  className={cn("text-2xl leading-none transition-colors", n <= shown ? "text-paper" : "text-paper/20")}
+                >★</button>
+              ))}
+              <span className="meta ml-2 text-[0.5625rem] text-paper/40">optional</span>
+            </div>
+            <input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={60} required aria-label="Your name" />
+            <textarea className={cn(field, "min-h-32 resize-y")} value={body} onChange={(e) => setBody(e.target.value)} placeholder="A few words about the shoot and the photos" maxLength={1000} required aria-label="Review" />
+            <button type="submit" disabled={state === "sending" || !name.trim() || body.trim().length < 3} className="meta w-full rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90 disabled:opacity-50">
+              {state === "sending" ? "Sending…" : "Send review"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -115,7 +194,9 @@ function Missing() {
 
 function Gallery({ d }: { d: Delivery }) {
   const { open } = useLightbox();
+  const { token } = Route.useParams();
   const [progress, setProgress] = useState<number | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const n = d.files.length;
 
   const all = async () => {
@@ -129,7 +210,7 @@ function Gallery({ d }: { d: Delivery }) {
     setProgress(null);
   };
 
-  const view = (i: number) => open(d.files.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { hideBook: true });
+  const view = (i: number) => open(d.files.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { action: { label: "Leave a review", onClick: () => setReviewOpen(true) } });
 
   return (
     <>
@@ -153,7 +234,16 @@ function Gallery({ d }: { d: Delivery }) {
             <span className="meta text-[0.625rem] text-muted-foreground">Or download photos one by one below</span>
           </div>
         )}
+        <button
+          type="button"
+          onClick={() => setReviewOpen(true)}
+          className="group mt-6 inline-flex items-center gap-2 text-sm text-paper/60 transition-colors hover:text-paper"
+        >
+          Liked the photos? <span className="underline decoration-paper/30 underline-offset-4 group-hover:decoration-paper">Leave a review</span>
+          <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+        </button>
       </section>
+      {reviewOpen && <ReviewDialog token={token} defaultName={d.clientName ?? ""} onClose={() => setReviewOpen(false)} />}
 
       <section className="px-5 pb-20 md:px-10 md:pb-32">
         {n === 0 ? (
@@ -210,23 +300,3 @@ function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
   );
 }
 
-function Contact() {
-  return (
-    <section data-nav-light className="bg-paper px-5 pb-10 pt-20 text-ink md:px-10 md:pt-28">
-      <p className="meta text-ink-muted">Contact</p>
-      <h2 className="display mt-6 text-[15vw] md:text-[9vw]">
-        Book a <em>session.</em>
-      </h2>
-      <ContactLinks tone="light" className="mt-8 md:mt-12" />
-      <footer className="meta mt-16 border-t border-ink/15 pt-5 text-ink-muted md:mt-24">
-        <div className="flex items-baseline justify-between gap-4">
-          <Link to="/" className="wordmark text-ink transition-opacity hover:opacity-60">thegodnamed</Link>
-          <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">
-            <span>Tallinn</span>
-            <span>&copy; {new Date().getFullYear()}</span>
-          </span>
-        </div>
-      </footer>
-    </section>
-  );
-}

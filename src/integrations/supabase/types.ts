@@ -228,6 +228,44 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          body: string
+          created_at: string
+          delivery_id: string | null
+          id: string
+          name: string
+          rating: number | null
+          status: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          delivery_id?: string | null
+          id?: string
+          name: string
+          rating?: number | null
+          status?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delivery_id?: string | null
+          id?: string
+          name?: string
+          rating?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "client_deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           about_image: Json | null

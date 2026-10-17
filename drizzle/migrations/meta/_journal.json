@@ -57,6 +57,13 @@
       "when": 1792242753255,
       "tag": "0007_apply_pending_private_portfolio_bucket",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792245000000,
+      "tag": "0008_reviews",
+      "breakpoints": true
     }
   ]
 }

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { DeliveriesTab } from "@/components/admin/DeliveriesTab";
+import { ReviewsTab } from "@/components/admin/ReviewsTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -146,7 +147,7 @@ function Studio() {
   const q = useData();
   const qc = useQueryClient();
   const runImport = useServerFn(importWfolio);
-  const [tab, setTab] = useState<"shoots" | "library" | "home" | "review" | "clients">("shoots");
+  const [tab, setTab] = useState<"shoots" | "library" | "home" | "review" | "clients" | "reviews">("shoots");
   const [cat, setCat] = useState(photoCats[0]!.slug);
   const [selected, setSelected] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "portfolio"] });
@@ -166,9 +167,9 @@ function Studio() {
     <div>
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <div className="glass flex flex-wrap rounded-3xl p-1 sm:rounded-full">
-          {(["shoots", "review", "library", "home", "clients"] as const).map((t) => (
+          {(["shoots", "review", "library", "home", "clients", "reviews"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={cn("meta rounded-full px-4 py-2", tab === t ? "bg-paper text-ink" : "text-paper/75")}>
-              {t === "shoots" ? "Photoshoots" : t === "review" ? "Import review" : t === "library" ? "Media library" : t === "home" ? "Homepage" : "Client delivery"}
+              {t === "shoots" ? "Photoshoots" : t === "review" ? "Import review" : t === "library" ? "Media library" : t === "home" ? "Homepage" : t === "clients" ? "Client delivery" : "Reviews"}
             </button>
           ))}
         </div>
@@ -182,6 +183,8 @@ function Studio() {
       <WhatsAppSetting />
       {tab === "clients" ? (
         <DeliveriesTab />
+      ) : tab === "reviews" ? (
+        <ReviewsTab />
       ) : tab === "review" ? (
         <ReviewTab shoots={shoots} links={links} media={media} refresh={refresh} onEdit={(sh) => { setTab("shoots"); setCat(sh.category); setSelected(sh.id); }} />
       ) : tab === "home" ? (

@@ -174,8 +174,6 @@ function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; def
   const send = useServerFn(submitReview);
   const [name, setName] = useState(defaultName);
   const [body, setBody] = useState("");
-  const [rating, setRating] = useState<number | null>(null);
-  const [hover, setHover] = useState<number | null>(null);
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
 
   useEffect(() => {
@@ -188,7 +186,7 @@ function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; def
     e.preventDefault();
     setState("sending");
     try {
-      await send({ data: { ...access, name, body, rating } });
+      await send({ data: { ...access, name, body } });
       setState("sent");
     } catch (err) {
       toast.error((err as Error).message || "Could not send the review");
@@ -197,7 +195,6 @@ function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; def
   };
 
   const field = "w-full rounded-2xl border border-paper/15 bg-transparent px-4 py-3 text-sm text-paper outline-none placeholder:text-paper/40 focus:border-paper/50";
-  const shown = hover ?? rating ?? 0;
 
   return (
     <div
@@ -220,21 +217,6 @@ function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; def
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">
-            <div className="flex items-center gap-1" onMouseLeave={() => setHover(null)} role="radiogroup" aria-label="Rating (optional)">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  role="radio"
-                  aria-checked={rating === n}
-                  aria-label={`${n} star${n > 1 ? "s" : ""}`}
-                  onMouseEnter={() => setHover(n)}
-                  onClick={() => setRating(rating === n ? null : n)}
-                  className={cn("text-2xl leading-none transition-colors", n <= shown ? "text-paper" : "text-paper/20")}
-                >★</button>
-              ))}
-              <span className="meta ml-2 text-[0.5625rem] text-paper/40">optional</span>
-            </div>
             <input className={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={60} required aria-label="Your name" />
             <textarea className={cn(field, "min-h-32 resize-y")} value={body} onChange={(e) => setBody(e.target.value)} placeholder="A few words about the shoot and the photos" maxLength={1000} required aria-label="Review" />
             <button type="submit" disabled={state === "sending" || !name.trim() || body.trim().length < 3} className="meta w-full rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90 disabled:opacity-50">

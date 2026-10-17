@@ -8,17 +8,15 @@ const MAX_PER_DELIVERY = 5;
 
 /** Client page: leave a review. Only works through an active delivery link; lands as "pending". */
 export const submitReview = createServerFn({ method: "POST" })
-  .inputValidator((input: { token: string; password?: string | null; name: string; body: string; rating: number | null }) => {
+  .inputValidator((input: { token: string; password?: string | null; name: string; body: string }) => {
     const token = String(input?.token ?? "");
     const name = String(input?.name ?? "").trim().slice(0, 60);
     const body = String(input?.body ?? "").trim().slice(0, 1000);
-    const r = Number(input?.rating);
-    const rating = Number.isInteger(r) && r >= 1 && r <= 5 ? r : null;
     if (!TOKEN.test(token)) throw new Error("This link is not valid.");
     if (!name) throw new Error("Please add your name.");
     if (body.length < 3) throw new Error("Please write a few words.");
     const password = input?.password ? String(input.password).slice(0, 200) : null;
-    return { token, password, name, body, rating };
+    return { token, password, name, body };
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -33,7 +31,7 @@ export const submitReview = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin
       .from("reviews")
-      .insert({ delivery_id: d.id, name: data.name, body: data.body, rating: data.rating, status: "pending" });
+      .insert({ delivery_id: d.id, name: data.name, body: data.body, status: "pending" });
     if (error) {
       console.error("submitReview", error);
       throw new Error("Could not send the review. Please try again.");
@@ -42,12 +40,11 @@ export const submitReview = createServerFn({ method: "POST" })
     try {
       const { sendTelegram, esc, siteOrigin } = await import("@/lib/telegram.server");
       const origin = await siteOrigin();
-      const stars = data.rating ? `${"★".repeat(data.rating)}${"☆".repeat(5 - data.rating)}` : null;
       await sendTelegram(
         [
           "<b>New review</b> · awaiting approval",
           "",
-          `<b>${esc(data.name)}</b>${stars ? `  ${stars}` : ""}`,
+          `<b>${esc(data.name)}</b>`,
           esc(d.title),
           "",
           `<blockquote>${esc(data.body)}</blockquote>`,

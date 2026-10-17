@@ -94,7 +94,6 @@ function ReviewItem({ r, refresh }: { r: Review; refresh: () => void }) {
           {r.avatar_url && <img src={r.avatar_url} alt="" className="size-7 shrink-0 rounded-full object-cover" />}
           {r.name}
         </p>
-        {r.rating ? <span className="text-xs tracking-[0.1em] text-paper">{"★".repeat(r.rating)}<span className="text-paper/20">{"★".repeat(5 - r.rating)}</span></span> : null}
       </div>
       {editing ? (
         <div className="space-y-2">

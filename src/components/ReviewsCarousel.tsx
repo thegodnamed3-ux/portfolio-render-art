@@ -16,13 +16,6 @@ function Avatar({ r, size = "size-8" }: { r: PublicReview; size?: string }) {
   );
 }
 
-function Stars({ n }: { n: number }) {
-  return (
-    <span aria-label={`${n} out of 5`} className="text-[0.625rem] tracking-[0.1em] text-ink">
-      {"★".repeat(n)}<span className="text-ink/20">{"★".repeat(5 - n)}</span>
-    </span>
-  );
-}
 
 function ReviewCard({ r, onOpen }: { r: PublicReview; onOpen: () => void }) {
   return (
@@ -34,7 +27,6 @@ function ReviewCard({ r, onOpen }: { r: PublicReview; onOpen: () => void }) {
       <span className="flex w-full items-center gap-2">
         <Avatar r={r} size="size-6" />
         <span className="min-w-0 flex-1 truncate text-xs font-medium text-ink">{r.name}</span>
-        {r.rating ? <Stars n={r.rating} /> : null}
       </span>
       <span className="line-clamp-4 text-[0.6875rem] leading-snug text-ink/75 lg:line-clamp-4">{r.body}</span>
     </button>
@@ -106,7 +98,6 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
             <figcaption className="flex items-center gap-3">
               <Avatar r={open} size="size-11" />
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{open.name}</span>
-              {open.rating ? <Stars n={open.rating} /> : null}
               <button type="button" onClick={() => setOpen(null)} aria-label="Close review" className="glass-ink hit grid size-9 shrink-0 place-items-center self-center rounded-full text-ink/70 hover:text-ink">
                 <svg viewBox="0 0 24 24" aria-hidden className="size-3.5 fill-none stroke-current" strokeWidth="1.6" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
               </button>

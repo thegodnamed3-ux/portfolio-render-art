@@ -196,6 +196,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          country: string | null
+          created_at: string
+          device: string | null
+          id: number
+          path: string
+          referrer: string | null
+          visitor: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: never
+          path: string
+          referrer?: string | null
+          visitor: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: never
+          path?: string
+          referrer?: string | null
+          visitor?: string
+        }
+        Relationships: []
+      }
       photoshoot_images: {
         Row: {
           media_id: string
@@ -331,6 +361,7 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          report_week: string | null
           about_image: Json | null
           featured_columns: number | null
           featured_work: Json | null
@@ -340,6 +371,7 @@ export type Database = {
           whatsapp_url: string | null
         }
         Insert: {
+          report_week?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null
@@ -349,6 +381,7 @@ export type Database = {
           whatsapp_url?: string | null
         }
         Update: {
+          report_week?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null

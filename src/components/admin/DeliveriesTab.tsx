@@ -422,7 +422,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
   );
 }
 
-type Stats = { views: number; lastView: string | null; zips: number; downloads: number };
+type Stats = { views: number; lastView: string | null; zips: number; downloads: number; picksAt: string | null };
 
 /** Password, expiry date and what the client has done with the link. */
 function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[]; refresh: () => Promise<void> }) {
@@ -440,6 +440,7 @@ function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[];
         lastView: rows.find((r) => r.kind === "view")?.created_at ?? null,
         zips: rows.filter((r) => r.kind === "zip").length,
         downloads: rows.filter((r) => r.kind === "download").length,
+        picksAt: rows.find((r) => r.kind === "picks")?.created_at ?? null,
       };
     },
     refetchInterval: 60_000,
@@ -549,6 +550,7 @@ function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[];
             <li>Opened {s.views} {s.views === 1 ? "time" : "times"}{s.lastView ? ` · last ${new Date(s.lastView).toLocaleString()}` : " · not yet"}</li>
             <li>ZIP downloaded {s.zips} {s.zips === 1 ? "time" : "times"}</li>
             <li>Single photos downloaded {s.downloads}</li>
+            <li>{s.picksAt ? `Selection sent ${new Date(s.picksAt).toLocaleString()}` : "Selection not sent yet"}</li>
           </ul>
         )}
       </div>

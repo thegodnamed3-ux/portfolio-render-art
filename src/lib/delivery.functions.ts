@@ -151,3 +151,40 @@ export const logDeliveryEvent = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+/** Proofing done: the client sends their hearted photos (and notes) to the studio's Telegram. */
+export const submitPicks = createServerFn({ method: "POST" })
+  .inputValidator(access)
+  .handler(async ({ data }) => {
+    const { requireAccess } = await import("@/lib/delivery-auth.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const d = await requireAccess(data.token, data.password);
+    const { data: rows, error } = await supabaseAdmin
+      .from("client_delivery_files")
+      .select("file_name, favorite, client_note, position")
+      .eq("delivery_id", d.id)
+      .order("position")
+      .order("file_name");
+    if (error) throw new Error("Could not send — please try again.");
+    const picks = (rows ?? []).filter((f) => f.favorite);
+    const notes = (rows ?? []).filter((f) => f.client_note);
+    if (!picks.length && !notes.length) throw new Error("Tap the heart on the photos you like first.");
+
+    await supabaseAdmin.from("client_delivery_events").insert({ delivery_id: d.id, kind: "picks" });
+
+    const { sendTelegram, esc, siteOrigin } = await import("@/lib/telegram.server");
+    const list = picks.slice(0, 80).map((f) => esc(f.file_name)).join("\n") + (picks.length > 80 ? `\n… and ${picks.length - 80} more` : "");
+    const noteLines = notes.slice(0, 30).map((f) => `<i>${esc(f.file_name)}</i> — ${esc(f.client_note ?? "")}`).join("\n");
+    const html = [
+      "<b>Selection ready</b>",
+      "",
+      `<b>${esc(d.client_name || d.title)}</b>`,
+      d.client_name ? esc(d.title) : null,
+      `${picks.length} ${picks.length === 1 ? "photo" : "photos"} selected`,
+      picks.length ? `\n<blockquote expandable>${list}</blockquote>` : null,
+      notes.length ? `\n<b>Notes</b>\n${noteLines}` : null,
+    ].filter((l) => l !== null).join("\n");
+    const origin = await siteOrigin();
+    await sendTelegram(html, origin ? [{ text: "Open in studio", url: `${origin}/admin` }] : []);
+    return { count: picks.length };
+  });

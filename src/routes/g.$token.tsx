@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ContactSection } from "@/components/ContactSection";
 import { useLightbox } from "@/components/Lightbox";
-import { getDelivery, logDeliveryEvent, markDeliveryFile, type Delivery, type DeliveryFile, type DeliveryResult } from "@/lib/delivery.functions";
+import { getDelivery, logDeliveryEvent, markDeliveryFile, submitPicks, type Delivery, type DeliveryFile, type DeliveryResult } from "@/lib/delivery.functions";
 import { submitReview } from "@/lib/reviews.functions";
 import { ZipWriter } from "@/lib/zip";
 import { formatSize } from "@/lib/format";
@@ -257,6 +257,19 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
   const { open } = useLightbox();
   const mark = useServerFn(markDeliveryFile);
   const log = useServerFn(logDeliveryEvent);
+  const sendPicks = useServerFn(submitPicks);
+  const [picksState, setPicksState] = useState<"idle" | "sending" | "sent">("idle");
+  const sendSelection = async () => {
+    setPicksState("sending");
+    try {
+      const r = await sendPicks({ data: access });
+      setPicksState("sent");
+      toast.success(`Sent — ${r.count} ${r.count === 1 ? "photo" : "photos"} in your selection`);
+    } catch (e) {
+      setPicksState("idle");
+      toast.error((e as Error).message || "Could not send");
+    }
+  };
   const [progress, setProgress] = useState<number | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [onlyFavs, setOnlyFavs] = useState(false);
@@ -276,6 +289,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
 
   const save = async (id: string, patch: { favorite?: boolean; note?: string | null }) => {
     const before = marks[id]!;
+    if (picksState === "sent") setPicksState("idle");
     setMarks((m) => ({ ...m, [id]: { ...m[id]!, ...patch } }));
     try {
       await mark({ data: { ...access, fileId: id, ...patch } });
@@ -330,13 +344,23 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
               <HeartIcon filled={favCount > 0} className="size-3.5" />
               {onlyFavs ? "Show all" : `Favourites ${favCount}`}
             </button>
+            {favCount > 0 && (
+              <button
+                type="button"
+                onClick={sendSelection}
+                disabled={picksState === "sending"}
+                className="glass meta inline-flex items-center gap-2 rounded-full px-4 py-3 text-paper disabled:opacity-50"
+              >
+                {picksState === "sending" ? "Sending…" : picksState === "sent" ? "Selection sent · send again" : `Send my selection (${favCount})`}
+              </button>
+            )}
           </div>
         )}
         {d.watermark && n > 0 && (
           <p className="mt-4 max-w-md text-sm text-paper/70">These are watermarked previews. Full-quality downloads open once the shoot is paid — the link stays the same.</p>
         )}
         {n > 0 && (
-          <p className="mt-4 max-w-md text-xs text-paper/50">Tap the heart on the photos you like most, and the speech bubble to leave a note — I’ll see your picks.</p>
+          <p className="mt-4 max-w-md text-xs text-paper/50">Tap the heart on the photos you like most and the speech bubble to leave a note, then press “Send my selection”.</p>
         )}
         <button
           type="button"

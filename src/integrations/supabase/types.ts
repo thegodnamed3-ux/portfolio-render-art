@@ -19,6 +19,7 @@ export type Database = {
           client_name: string | null
           created_at: string
           expires_at: string | null
+          expiry_reminded_at: string | null
           id: string
           is_active: boolean
           message: string | null
@@ -32,6 +33,7 @@ export type Database = {
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
+          expiry_reminded_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
@@ -45,6 +47,7 @@ export type Database = {
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
+          expiry_reminded_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
@@ -366,6 +369,7 @@ export type Database = {
           featured_work: Json | null
           hero_slides: Json | null
           id: number
+          reminders_checked_at: string | null
           report_week: string | null
           updated_at: string
           whatsapp_url: string | null
@@ -376,6 +380,7 @@ export type Database = {
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
+          reminders_checked_at?: string | null
           report_week?: string | null
           updated_at?: string
           whatsapp_url?: string | null
@@ -386,6 +391,7 @@ export type Database = {
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
+          reminders_checked_at?: string | null
           report_week?: string | null
           updated_at?: string
           whatsapp_url?: string | null

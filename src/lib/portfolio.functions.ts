@@ -109,7 +109,7 @@ export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () =
     const srcs = work.filter((x) => !x.sm).map((x) => x.src).slice(0, 200);
     const { data: rows } = await sb.from("media").select("src, sm").in("src", srcs);
     const bySrc = new Map((rows ?? []).filter((r) => r.sm && r.sm !== r.src).map((r) => [r.src, r.sm as string]));
-    work.forEach((x) => { if (!x.sm && bySrc.has(x.src)) x.sm = bySrc.get(x.src); });
+    work.forEach((x) => { const sm = bySrc.get(x.src); if (!x.sm && sm) x.sm = sm; });
   }
   return { hero, about, work, columns };
 });

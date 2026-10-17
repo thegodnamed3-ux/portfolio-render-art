@@ -14,6 +14,7 @@ import { Route as CategoryRouteImport } from './routes/$category'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as GTokenRouteImport } from './routes/g.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,6 +35,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GTokenRoute = GTokenRouteImport.update({
+  id: '/g/$token',
+  path: '/g/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -45,12 +51,14 @@ export interface FileRoutesByFullPath {
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/g/$token': typeof GTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/g/$token': typeof GTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +67,13 @@ export interface FileRoutesById {
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/g/$token': typeof GTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$category' | '/auth' | '/admin'
+  fullPaths: '/' | '/$category' | '/auth' | '/admin' | '/g/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$category' | '/auth' | '/admin'
+  to: '/' | '/$category' | '/auth' | '/admin' | '/g/$token'
   id:
     | '__root__'
     | '/'
@@ -72,6 +81,7 @@ export interface FileRouteTypes {
     | '/$category'
     | '/auth'
     | '/_authenticated/admin'
+    | '/g/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -79,6 +89,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CategoryRoute: typeof CategoryRoute
   AuthRoute: typeof AuthRoute
+  GTokenRoute: typeof GTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -118,6 +129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/g/$token': {
+      id: '/g/$token'
+      path: '/g/$token'
+      fullPath: '/g/$token'
+      preLoaderRoute: typeof GTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -137,6 +155,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CategoryRoute: CategoryRoute,
   AuthRoute: AuthRoute,
+  GTokenRoute: GTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

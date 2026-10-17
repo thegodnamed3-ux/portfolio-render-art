@@ -39,14 +39,11 @@ const num = (n: number) => String(n).padStart(2, "0");
 function Hero({ slides }: { slides: HomeImage[] }) {
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden">
-      <HeroSlideshow slides={slides} controlsClassName="absolute bottom-[4.75rem] right-5 z-10 md:bottom-[6.25rem] md:right-10" />
+      <HeroSlideshow slides={slides} controlsClassName="absolute bottom-[3.5rem] right-5 z-10 md:bottom-[4.5rem] md:right-10" />
       <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
-      <div className="pointer-events-none relative flex min-h-[100svh] flex-col justify-end px-5 pb-8 md:px-10 md:pb-12">
-        <p className="meta reveal mb-4 text-[0.5rem] text-paper/65 md:mb-6 md:text-[0.6875rem]">
-          Photography, film &amp; visual storytelling.
-        </p>
+      <div className="pointer-events-none relative flex min-h-[100svh] flex-col justify-end px-5 pb-5 md:px-10 md:pb-8">
         <h1
-          className="display reveal text-[clamp(3.4rem,15.5vw,11.5rem)] text-paper"
+          className="display reveal text-[clamp(2.75rem,11vw,8rem)] text-paper"
           style={{ animationDelay: "0.14s" }}
         >
           <span className="block">Beyond</span>
@@ -54,9 +51,9 @@ function Hero({ slides }: { slides: HomeImage[] }) {
             the <em>obvious.</em>
           </span>
         </h1>
-        <div className="meta mt-10 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-5 text-paper/70 md:mt-14">
+        <div className="meta mt-6 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-9">
           <span>Tallinn, Estonia</span>
-          <span className="hidden md:inline">Photography · Film</span>
+          <span className="hidden md:inline">Photography · Visual storytelling</span>
           <a href="#work" className="pointer-events-auto transition-colors hover:text-paper">Scroll ↓</a>
         </div>
       </div>

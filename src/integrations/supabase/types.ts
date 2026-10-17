@@ -230,36 +230,30 @@ export type Database = {
       }
       reviews: {
         Row: {
-          avatar_url: string | null
           body: string
           created_at: string
           delivery_id: string | null
           id: string
           name: string
           rating: number | null
-          source_key: string | null
           status: string
         }
         Insert: {
-          avatar_url?: string | null
           body: string
           created_at?: string
           delivery_id?: string | null
           id?: string
           name: string
           rating?: number | null
-          source_key?: string | null
           status?: string
         }
         Update: {
-          avatar_url?: string | null
           body?: string
           created_at?: string
           delivery_id?: string | null
           id?: string
           name?: string
           rating?: number | null
-          source_key?: string | null
           status?: string
         }
         Relationships: [

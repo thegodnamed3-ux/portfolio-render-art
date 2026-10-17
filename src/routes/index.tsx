@@ -11,7 +11,8 @@ import { categories } from "@/content/categories";
 import type { Category } from "@/content/categories";
 import { photos } from "@/lib/photos";
 import { getHomeMedia, type HomeImage } from "@/lib/portfolio.functions";
-import { defaultHero, defaultAbout } from "@/content/home";
+import { defaultHero, defaultAbout, defaultWork, defaultWorkColumns, type WorkItem } from "@/content/home";
+import { WorkGrid } from "@/components/WorkGrid";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 
 export const Route = createFileRoute("/")({
@@ -63,16 +64,7 @@ function Hero({ slides }: { slides: HomeImage[] }) {
   );
 }
 
-function Work() {
-  // All landscape 3:2 frames at one size: a calm row of three, then two centred.
-  const frames = [
-    { n: 3, caption: "Coastline" },
-    { n: 13, caption: "Red room" },
-    { n: 26, caption: "Edge of the cliff" },
-    { n: 8, caption: "Blue hour" },
-    { n: 5, caption: "Couples — sunset" },
-  ];
-  const place = ["col-span-2", "", "", "md:col-start-2", ""];
+function Work({ items, columns }: { items: WorkItem[]; columns: number }) {
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
       <div className="mb-10 grid gap-6 md:mb-16 md:grid-cols-12">
@@ -81,20 +73,7 @@ function Work() {
           Portraits by the sea, in studios, <em className="text-muted-foreground">and in between.</em>
         </p>
       </div>
-
-      <div className="grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-6 md:gap-x-6 md:gap-y-12">
-        {frames.map((f, i) => (
-          <Frame
-            key={f.n}
-            static
-            photo={p(f.n)}
-            caption={f.caption}
-            index={num(i + 1)}
-            sizes="(min-width: 768px) 33vw, 50vw"
-            className={cn("md:col-span-2", place[i])}
-          />
-        ))}
-      </div>
+      <WorkGrid items={items} columns={columns} />
     </section>
   );
 }
@@ -177,12 +156,12 @@ function About({ image }: { image: HomeImage }) {
 
 
 function Index() {
-  const { hero, about } = Route.useLoaderData();
+  const { hero, about, work, columns } = Route.useLoaderData();
   return (
     <main>
       <SiteNav />
       <Hero slides={hero ?? defaultHero} />
-      <Work />
+      <Work items={work ?? defaultWork} columns={columns ?? defaultWorkColumns} />
       <Index_Disciplines />
       <About image={about ?? defaultAbout} />
       <ContactSection id="contact" />

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
 export type FramePhoto = { src: string; w: number; h: number; sm?: string; pos?: string };
@@ -12,10 +13,11 @@ type Props = {
   onOpen?: () => void;
   /** Purely visual: no click target, no hover motion, no pointer cursor. */
   static?: boolean;
+  style?: CSSProperties;
 };
 
 /** Photograph at its native aspect ratio with small editorial caption. */
-export function Frame({ photo, index, caption, className, eager, sizes, onOpen, static: isStatic }: Props) {
+export function Frame({ photo, index, caption, className, eager, sizes, onOpen, static: isStatic, style }: Props) {
   const img = (
     <div className="overflow-hidden bg-charcoal" style={{ aspectRatio: `${photo.w} / ${photo.h}` }}>
       <img
@@ -36,7 +38,7 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen, 
     </div>
   );
   return (
-    <figure className={cn(!isStatic && "group", className)}>
+    <figure className={cn(!isStatic && "group", className)} style={style}>
       {onOpen && !isStatic ? (
         <button type="button" onClick={onOpen} aria-label={`Open ${caption ?? "photograph"} fullscreen`} className="block w-full cursor-zoom-in">
           {img}

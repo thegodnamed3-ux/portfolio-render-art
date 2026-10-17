@@ -96,8 +96,13 @@ export type HomeImage = { src: string; w: number; h: number; pos?: string };
 
 /** Homepage hero slides and About portrait chosen in the studio (null = site defaults). */
 export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () => {
-  const { data } = await publicClient().from("site_settings").select("hero_slides, about_image").eq("id", 1).maybeSingle();
+  const sb = publicClient();
+  const { data } = await sb.from("site_settings").select("hero_slides, about_image").eq("id", 1).maybeSingle();
   const hero = Array.isArray(data?.hero_slides) && data.hero_slides.length ? (data.hero_slides as unknown as HomeImage[]) : null;
   const about = data?.about_image && typeof data.about_image === "object" ? (data.about_image as unknown as HomeImage) : null;
-  return { hero, about };
+  // Read separately so a missing column can never take the hero down with it.
+  const { data: w } = await sb.from("site_settings").select("featured_work, featured_columns").eq("id", 1).maybeSingle();
+  const work = Array.isArray(w?.featured_work) && w.featured_work.length ? (w.featured_work as unknown as (HomeImage & { caption?: string })[]) : null;
+  const columns = typeof w?.featured_columns === "number" ? w.featured_columns : null;
+  return { hero, about, work, columns };
 });

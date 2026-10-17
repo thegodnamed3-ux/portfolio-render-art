@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { ContactLinks } from "@/components/ContactLinks";
 import { getApprovedReviews } from "@/lib/reviews.functions";
 import { ReviewsCarousel } from "@/components/ReviewsCarousel";
+import { BookingDialog } from "@/components/BookingDialog";
 import { cn } from "@/lib/utils";
 
 /**
@@ -20,6 +21,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
     enabled: withReviews,
   });
   const [view, setView] = useState<"contact" | "reviews">("contact");
+  const [booking, setBooking] = useState(false);
   const has = withReviews && reviews.length > 0;
   const onReviews = has && view === "reviews";
 
@@ -75,7 +77,16 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             <p className="display text-[15vw] leading-[0.95] md:text-[9vw]">
               Book a <em>session.</em>
             </p>
-            <ContactLinks tone="light" className="mt-8 md:mt-12" />
+            <button
+              type="button"
+              onClick={() => setBooking(true)}
+              tabIndex={onReviews ? -1 : 0}
+              className="hit group meta mt-8 inline-flex items-center gap-2.5 rounded-full bg-ink px-4 py-2.5 text-[0.625rem] text-paper transition-[opacity,scale] duration-150 hover:opacity-85 active:scale-[0.96] md:mt-12"
+            >
+              Send a request
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+            </button>
+            <ContactLinks tone="light" className="mt-3" />
             </div>
           </div>
           <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col transition-[visibility] duration-700", !onReviews && "invisible")}>
@@ -89,6 +100,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           </div>
         </div>
       </div>
+
+      {booking && <BookingDialog onClose={() => setBooking(false)} />}
 
       <footer className="meta mt-12 border-t border-ink/15 pt-5 text-ink-muted">
         <div className="flex items-baseline justify-between gap-4">

@@ -38,6 +38,23 @@ export const submitReview = createServerFn({ method: "POST" })
       console.error("submitReview", error);
       throw new Error("Could not send the review. Please try again.");
     }
+    // Ping the studio; a Telegram hiccup never fails the client's submission.
+    try {
+      const { sendTelegram, siteOrigin } = await import("@/lib/telegram.server");
+      const origin = await siteOrigin();
+      await sendTelegram([
+        "⭐ New review — waiting for approval",
+        "",
+        `${data.name}${data.rating ? ` · ${"★".repeat(data.rating)}` : ""}`,
+        `From: ${d.title}`,
+        "",
+        data.body,
+        "",
+        origin ? `Edit & publish: ${origin}/admin (Reviews tab)` : "Edit & publish in the studio → Reviews tab",
+      ].join("\n"));
+    } catch (e) {
+      console.error("submitReview telegram", e);
+    }
     return { ok: true };
   });
 

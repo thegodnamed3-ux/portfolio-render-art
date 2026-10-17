@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       client_deliveries: {
         Row: {
+          watermark: boolean
           client_name: string | null
           created_at: string
           expires_at: string | null
@@ -28,6 +29,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          watermark?: boolean
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -40,6 +42,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          watermark?: boolean
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -94,6 +97,7 @@ export type Database = {
       }
       client_delivery_files: {
         Row: {
+          preview_wm_path: string | null
           client_note: string | null
           created_at: string
           delivery_id: string
@@ -108,6 +112,7 @@ export type Database = {
           w: number | null
         }
         Insert: {
+          preview_wm_path?: string | null
           client_note?: string | null
           created_at?: string
           delivery_id: string
@@ -122,6 +127,7 @@ export type Database = {
           w?: number | null
         }
         Update: {
+          preview_wm_path?: string | null
           client_note?: string | null
           created_at?: string
           delivery_id?: string

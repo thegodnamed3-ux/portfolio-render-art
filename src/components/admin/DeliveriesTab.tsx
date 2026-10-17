@@ -14,12 +14,12 @@ import { cn } from "@/lib/utils";
 type DeliveryRow = {
   id: string; token: string; title: string; client_name: string | null; message: string | null;
   is_active: boolean; created_at: string; client_delivery_files: { count: number }[];
-  password_hash: string | null; expires_at: string | null;
+  password_hash: string | null; expires_at: string | null; watermark?: boolean;
 };
 type FileRow = {
   id: string; delivery_id: string; storage_path: string; preview_path: string | null;
   file_name: string; size: number; w: number | null; h: number | null; position: number;
-  favorite: boolean; client_note: string | null;
+  favorite: boolean; client_note: string | null; preview_wm_path?: string | null;
 };
 
 const btn = "meta inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2 text-paper/85 transition-colors hover:border-paper/60 hover:text-paper disabled:opacity-40";
@@ -45,20 +45,52 @@ function safeName(name: string) {
 }
 
 /** Web-sized JPEG for the gallery grid and viewer (the original stays untouched for download). */
-async function makePreview(file: File): Promise<{ blob: Blob | null; w: number | null; h: number | null }> {
+/** Draws the photo at ≤2048px; with `mark`, tiles a diagonal "thegodnamed" across it. */
+function render(bmp: ImageBitmap, mark: boolean): Promise<Blob | null> {
+  const scale = Math.min(1, 2048 / Math.max(bmp.width, bmp.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bmp.width * scale);
+  canvas.height = Math.round(bmp.height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.resolve(null);
+  ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  if (mark) {
+    const cw = canvas.width, ch = canvas.height;
+    const fs = Math.round(Math.max(cw, ch) / 18);
+    ctx.save();
+    ctx.translate(cw / 2, ch / 2);
+    ctx.rotate(-Math.PI / 9);
+    ctx.font = `800 ${fs}px Archivo, "Helvetica Neue", Arial, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = Math.max(1, fs / 40);
+    const R = Math.hypot(cw, ch);
+    const stepX = fs * 8, stepY = fs * 3;
+    let row = 0;
+    for (let y = -R; y < R; y += stepY, row++) {
+      for (let x = -R + (row % 2) * (stepX / 2); x < R; x += stepX) {
+        ctx.strokeText("thegodnamed", x, y);
+        ctx.fillText("thegodnamed", x, y);
+      }
+    }
+    ctx.restore();
+  }
+  return new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", mark ? 0.82 : 0.86));
+}
+
+/** Web-sized JPEG for the gallery grid and viewer (the original stays untouched for download). */
+async function makePreview(file: File, withMark = false): Promise<{ blob: Blob | null; wm: Blob | null; w: number | null; h: number | null }> {
   try {
     const bmp = await createImageBitmap(file);
     const w = bmp.width, h = bmp.height;
-    const scale = Math.min(1, 2048 / Math.max(w, h));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(w * scale);
-    canvas.height = Math.round(h * scale);
-    canvas.getContext("2d")?.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await render(bmp, false);
+    const wm = withMark ? await render(bmp, true) : null;
     bmp.close();
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.86));
-    return { blob, w, h };
+    return { blob, wm, w, h };
   } catch {
-    return { blob: null, w: null, h: null };
+    return { blob: null, wm: null, w: null, h: null };
   }
 }
 
@@ -220,15 +252,22 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
           const original = `${folder}/${safeName(file.name)}`;
           const up = await bucket().upload(original, file, { contentType: file.type || "application/octet-stream" });
           if (up.error) throw up.error;
-          const { blob, w, h } = await makePreview(file);
+          const { blob, wm, w, h } = await makePreview(file, !!d.watermark);
           let preview: string | null = null;
           if (blob) {
             const p = `${folder}/preview.jpg`;
             const r = await bucket().upload(p, blob, { contentType: "image/jpeg", cacheControl: "86400" });
             if (!r.error) preview = p;
           }
+          let previewWm: string | null = null;
+          if (wm) {
+            const p = `${folder}/preview-wm.jpg`;
+            const r = await bucket().upload(p, wm, { contentType: "image/jpeg", cacheControl: "86400" });
+            if (!r.error) previewWm = p;
+          }
           const ins = await supabase.from("client_delivery_files").insert({
             delivery_id: d.id, storage_path: original, preview_path: preview, file_name: file.name,
+            ...(previewWm ? { preview_wm_path: previewWm } : {}),
             size: file.size, w, h, position: start + i,
           });
           if (ins.error) throw ins.error;
@@ -246,7 +285,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
     await reload();
   };
 
-  const pathsOf = (fs: FileRow[]) => fs.flatMap((f) => [f.storage_path, ...(f.preview_path ? [f.preview_path] : [])]);
+  const pathsOf = (fs: FileRow[]) => fs.flatMap((f) => [f.storage_path, ...(f.preview_path ? [f.preview_path] : []), ...(f.preview_wm_path ? [f.preview_wm_path] : [])]);
 
   const removePicked = () => act(async () => {
     const sel = rows.filter((f) => picked.has(f.id));
@@ -302,7 +341,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
         </div>
       </div>
 
-      <AccessAndStats d={d} refresh={reload} />
+      <AccessAndStats d={d} rows={rows} refresh={reload} />
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <label className={cn(btnPrimary, "cursor-pointer", upload && "pointer-events-none opacity-60")}>
@@ -386,7 +425,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
 type Stats = { views: number; lastView: string | null; zips: number; downloads: number };
 
 /** Password, expiry date and what the client has done with the link. */
-function AccessAndStats({ d, refresh }: { d: DeliveryRow; refresh: () => Promise<void> }) {
+function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[]; refresh: () => Promise<void> }) {
   const [pw, setPw] = useState("");
   const [expires, setExpires] = useState(d.expires_at ? d.expires_at.slice(0, 10) : "");
   const [busy, setBusy] = useState(false);
@@ -425,6 +464,38 @@ function AccessAndStats({ d, refresh }: { d: DeliveryRow; refresh: () => Promise
     value ? `Link works until ${new Date(`${value}T12:00:00`).toLocaleDateString()}` : "No expiry date",
   );
   const expired = d.expires_at && new Date(d.expires_at).getTime() < Date.now();
+
+  // Watermark until paid: make sure every photo has a watermarked preview, then switch on.
+  const [wmProgress, setWmProgress] = useState<{ done: number; total: number } | null>(null);
+  const setWatermark = async (on: boolean) => {
+    if (!on) return run(() => supabase.from("client_deliveries").update({ watermark: false }).eq("id", d.id), "Watermark off — downloads are open");
+    const todo = rows.filter((f) => !f.preview_wm_path);
+    setWmProgress({ done: 0, total: todo.length });
+    let failed = 0;
+    for (let i = 0; i < todo.length; i++) {
+      const f = todo[i]!;
+      try {
+        const src = await bucket().createSignedUrl(f.preview_path ?? f.storage_path, 600);
+        if (src.error) throw src.error;
+        const bmp = await createImageBitmap(await (await fetch(src.data.signedUrl)).blob());
+        const blob = await render(bmp, true);
+        bmp.close();
+        if (!blob) throw new Error("render");
+        const path = `${f.storage_path.slice(0, f.storage_path.lastIndexOf("/"))}/preview-wm.jpg`;
+        const up = await bucket().upload(path, blob, { contentType: "image/jpeg", cacheControl: "86400", upsert: true });
+        if (up.error) throw up.error;
+        const u = await supabase.from("client_delivery_files").update({ preview_wm_path: path }).eq("id", f.id);
+        if (u.error) throw u.error;
+      } catch (e) {
+        console.error(e);
+        failed++;
+      }
+      setWmProgress({ done: i + 1, total: todo.length });
+    }
+    setWmProgress(null);
+    if (failed) toast.error(`${failed} preview(s) could not be watermarked — they show a light overlay instead`);
+    await run(() => supabase.from("client_deliveries").update({ watermark: true }).eq("id", d.id), "Watermark on — the client sees previews only, no downloads");
+  };
   const s = stats.data;
 
   return (
@@ -450,6 +521,22 @@ function AccessAndStats({ d, refresh }: { d: DeliveryRow; refresh: () => Promise
           {expires && <button className={btn} disabled={busy} onClick={() => { setExpires(""); void saveExpiry(""); }}>No limit</button>}
         </div>
         {expired && <p className="text-xs text-destructive">This link has expired — the client sees “expired”.</p>}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!d.watermark}
+            disabled={busy || !!wmProgress}
+            onClick={() => void setWatermark(!d.watermark)}
+            className={cn("relative h-6 w-11 shrink-0 rounded-full border border-border transition-colors disabled:opacity-50", d.watermark ? "bg-paper" : "bg-transparent")}
+          >
+            <span className={cn("absolute top-0.5 size-[1.125rem] rounded-full transition-all", d.watermark ? "left-[1.375rem] bg-ink" : "left-0.5 bg-paper/70")} />
+          </button>
+          <span className="text-sm text-paper/85">
+            {wmProgress ? `Watermarking previews… ${wmProgress.done} / ${wmProgress.total}` : "Watermark until paid"}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">While on, the client sees watermarked previews and can’t download originals. Switch off once paid — same link.</p>
       </div>
       <div className="space-y-2 rounded-2xl border border-border p-4">
         <p className="meta text-muted-foreground">Client activity</p>

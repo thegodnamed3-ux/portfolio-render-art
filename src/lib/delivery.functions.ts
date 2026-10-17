@@ -10,8 +10,10 @@ export type DeliveryFile = {
   h: number;
   /** Web-sized image for the grid and the viewer. */
   preview: string;
-  /** Original file; the response is served as an attachment with the original name. */
-  download: string;
+  /** Original file (served as an attachment with the original name); null while the watermark is on. */
+  download: string | null;
+  /** True when no baked watermarked preview exists yet — the page overlays one. */
+  overlay: boolean;
   /** Proofing: the client's heart and note. */
   favorite: boolean;
   note: string | null;
@@ -22,6 +24,8 @@ export type Delivery = {
   clientName: string | null;
   message: string | null;
   totalSize: number;
+  /** Watermark until paid: previews only, no downloads. */
+  watermark: boolean;
   files: DeliveryFile[];
 };
 
@@ -50,12 +54,10 @@ export const getDelivery = createServerFn({ method: "POST" })
     if (a.state !== "ok") return a;
     const d = a.delivery;
 
-    const { data: rows, error: e2 } = await supabaseAdmin
-      .from("client_delivery_files")
-      .select("id, storage_path, preview_path, file_name, size, w, h, position, favorite, client_note")
-      .eq("delivery_id", d.id)
-      .order("position")
-      .order("file_name");
+    const cols = "id, storage_path, preview_path, file_name, size, w, h, position, favorite, client_note";
+    const query = (c: string) => supabaseAdmin.from("client_delivery_files").select(c).eq("delivery_id", d.id).order("position").order("file_name");
+    let { data: rows, error: e2 } = (await query(`${cols}, preview_wm_path`)) as { data: any[] | null; error: any };
+    if (e2) ({ data: rows, error: e2 } = (await query(cols)) as { data: any[] | null; error: any });
     if (e2) {
       console.error("getDelivery files", e2);
       return { state: "missing" };
@@ -63,12 +65,15 @@ export const getDelivery = createServerFn({ method: "POST" })
     const files = rows ?? [];
     const bucket = supabaseAdmin.storage.from(DELIVERY_BUCKET);
 
-    const originals = files.map((f) => f.storage_path);
-    const previews = files.map((f) => f.preview_path ?? f.storage_path);
+    const wm = !!d.watermark;
+    // With the watermark on, originals are never signed and previews are the watermarked copies.
+    const previewOf = (f: (typeof files)[number]) => (wm && f.preview_wm_path) || f.preview_path || f.storage_path;
+    const originals = wm ? [] : files.map((f) => f.storage_path);
+    const previews = files.map(previewOf);
     const [dl, pv] = files.length
       ? await Promise.all([
           // Object names end with the original file name, so `download: true` keeps it.
-          bucket.createSignedUrls(originals, TTL, { download: true }),
+          originals.length ? bucket.createSignedUrls(originals, TTL, { download: true }) : Promise.resolve({ data: [], error: null }),
           bucket.createSignedUrls(previews, TTL),
         ])
       : [{ data: [], error: null }, { data: [], error: null }];
@@ -81,11 +86,12 @@ export const getDelivery = createServerFn({ method: "POST" })
 
     const out: DeliveryFile[] = [];
     for (const f of files) {
-      const download = dlBy.get(f.storage_path);
-      const preview = pvBy.get(f.preview_path ?? f.storage_path) ?? download;
-      if (!download || !preview) continue;
+      const download = wm ? null : (dlBy.get(f.storage_path) ?? null);
+      const preview = pvBy.get(previewOf(f)) ?? download;
+      if (!preview || (!wm && !download)) continue;
       out.push({
         id: f.id, name: f.file_name, size: Number(f.size) || 0, w: f.w ?? 3, h: f.h ?? 2, preview, download,
+        overlay: wm && !f.preview_wm_path,
         favorite: !!f.favorite, note: f.client_note,
       });
     }
@@ -96,6 +102,7 @@ export const getDelivery = createServerFn({ method: "POST" })
         clientName: d.client_name,
         message: d.message,
         totalSize: out.reduce((n, f) => n + f.size, 0),
+        watermark: wm,
         files: out,
       },
     };

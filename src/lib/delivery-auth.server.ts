@@ -11,6 +11,7 @@ export type DeliveryRow = {
   is_active: boolean;
   password_hash: string | null;
   expires_at: string | null;
+  watermark: boolean;
 };
 
 export type Access =
@@ -22,11 +23,14 @@ export type Access =
 /** Resolves a client link: unknown / switched off, expired, password needed, or open. */
 export async function checkAccess(token: string, password?: string | null): Promise<Access> {
   if (!TOKEN_RE.test(token)) return { state: "missing" };
-  const { data: d, error } = await supabaseAdmin
-    .from("client_deliveries")
-    .select("id, title, client_name, message, is_active, password_hash, expires_at")
-    .eq("token", token)
-    .maybeSingle();
+  const base = "id, title, client_name, message, is_active, password_hash, expires_at";
+  let { data: d, error } = await supabaseAdmin.from("client_deliveries").select(`${base}, watermark`).eq("token", token).maybeSingle();
+  if (error) {
+    // Database update for the watermark not applied yet: carry on without it.
+    const r = await supabaseAdmin.from("client_deliveries").select(base).eq("token", token).maybeSingle();
+    d = r.data ? { ...r.data, watermark: false } : null;
+    error = r.error;
+  }
   if (error) {
     console.error("checkAccess", error);
     return { state: "missing" };

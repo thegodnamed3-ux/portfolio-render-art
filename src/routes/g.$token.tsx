@@ -74,6 +74,7 @@ async function downloadAll(d: Delivery, onProgress: (done: number) => void) {
     const zip = new ZipWriter(write);
     for (let i = 0; i < d.files.length; i++) {
       const f = d.files[i]!;
+      if (!f.download) continue;
       const res = await fetch(f.download);
       if (!res.ok) throw new Error(`Could not download ${f.name}`);
       await zip.add(f.name, new Uint8Array(await res.arrayBuffer()));
@@ -310,7 +311,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
         {d.message && <p className="mt-6 max-w-xl whitespace-pre-line text-sm leading-relaxed text-paper/75 md:text-base">{d.message}</p>}
         {n > 0 && (
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button
+            {!d.watermark && <button
               type="button"
               onClick={all}
               disabled={progress !== null}
@@ -318,7 +319,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
             >
               <DownloadIcon className="size-4" />
               {progress === null ? "Download all (.zip)" : `Preparing ${progress} / ${n}…`}
-            </button>
+            </button>}
             <button
               type="button"
               onClick={() => setOnlyFavs((v) => !v)}
@@ -330,6 +331,9 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
               {onlyFavs ? "Show all" : `Favourites ${favCount}`}
             </button>
           </div>
+        )}
+        {d.watermark && n > 0 && (
+          <p className="mt-4 max-w-md text-sm text-paper/70">These are watermarked previews. Full-quality downloads open once the shoot is paid — the link stays the same.</p>
         )}
         {n > 0 && (
           <p className="mt-4 max-w-md text-xs text-paper/50">Tap the heart on the photos you like most, and the speech bubble to leave a note — I’ll see your picks.</p>
@@ -444,6 +448,11 @@ function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
           onError={() => { if (src !== f.download) setSrc(f.download); }}
           className="pointer-events-none block h-full w-full object-cover"
         />
+        {f.overlay && (
+          <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
+            <span className="wordmark -rotate-12 text-[clamp(0.7rem,2.2cqw,1.4rem)] text-white/35 [text-shadow:0_1px_2px_rgb(0_0_0/0.25)]">thegodnamed</span>
+          </span>
+        )}
       </button>
       <div className="absolute bottom-1 left-1 z-10 flex gap-1">
         <button
@@ -465,7 +474,7 @@ function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
           <NoteIcon filled={!!mark.note} className="size-3" />
         </button>
       </div>
-      <a
+      {f.download && <a
         href={f.download}
         download={f.name}
         onClick={onDownload}
@@ -473,7 +482,7 @@ function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
         className={cn("glass absolute bottom-1 right-1 z-10 inline-flex size-6 items-center justify-center rounded-full text-paper", reveal)}
       >
         <DownloadIcon className="size-3" />
-      </a>
+      </a>}
     </li>
   );
 }

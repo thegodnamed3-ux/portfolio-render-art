@@ -59,7 +59,7 @@ function Hero({ slides }: { slides: HomeImage[] }) {
         </div>
         <div className="meta mt-5 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-8">
           <span>Tallinn, Estonia</span>
-          <span className="hidden md:inline">Photography · Visual storytelling</span>
+          <span className="hidden md:inline">Photography · Visuals</span>
           <a href="#work" className="pointer-events-auto transition-colors hover:text-paper">Scroll ↓</a>
         </div>
       </div>

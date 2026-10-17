@@ -93,9 +93,9 @@ function DeliveryPage() {
   return (
     <main className="min-h-[100svh]">
       <header className="flex items-center justify-between gap-4 px-5 py-4 md:px-10 md:py-6">
-        <Link to="/" aria-label="thegodnamed — open the website" className="meta inline-flex flex-col items-center whitespace-nowrap text-paper transition-opacity hover:opacity-60">
+        <Link to="/" aria-label="thegodnamed — open the website" className="meta inline-flex flex-col items-start whitespace-nowrap text-paper transition-opacity hover:opacity-60">
           <span className="wordmark">thegodnamed</span>
-          <span className="-mr-[0.275em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] text-paper/85 md:mt-1 md:text-[0.5625rem]">PHOTOGRAPHY · FILM</span>
+          <span className="mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] text-paper/85 md:mt-1 md:text-[0.5625rem]">PHOTOGRAPHY · VISUALS</span>
         </Link>
         <span className="meta text-[0.6875rem] text-muted-foreground">Private gallery</span>
       </header>

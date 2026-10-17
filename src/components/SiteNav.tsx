@@ -47,11 +47,11 @@ export function SiteNav() {
             hash="top"
             onClick={() => setMenu(false)}
             aria-label="thegodnamed"
-            className="inline-flex flex-col items-start whitespace-nowrap transition-opacity hover:opacity-60"
+            className="inline-flex flex-col items-center whitespace-nowrap transition-opacity hover:opacity-60"
           >
             <span className="wordmark">thegodnamed</span>
             <span
-              className={`mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
+              className={`-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
             >
               PHOTOGRAPHY · VISUALS
             </span>

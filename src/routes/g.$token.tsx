@@ -159,9 +159,20 @@ function Gallery({ d }: { d: Delivery }) {
         {n === 0 ? (
           <p className="meta py-16 text-center text-muted-foreground">Photos are on their way — check back soon.</p>
         ) : (
-          <ul className="grid grid-cols-4 gap-1 sm:gap-1.5 md:grid-cols-6 lg:grid-cols-8 2xl:grid-cols-10">
-            {d.files.map((f, i) => <Tile key={f.id} f={f} onOpen={() => view(i)} />)}
-          </ul>
+          // Row height = one landscape (3:2) cell; portraits span two rows, so two
+          // landscapes stack in the space of one portrait. Dense flow fills the holes.
+          <div style={{ containerType: "inline-size" }}>
+            <ul
+              className="grid grid-flow-row-dense [--cols:4] [--gap:0.25rem] sm:[--gap:0.375rem] md:[--cols:6] lg:[--cols:8]"
+              style={{
+                gridTemplateColumns: "repeat(var(--cols), minmax(0, 1fr))",
+                gridAutoRows: "calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 / 3)",
+                gap: "var(--gap)",
+              }}
+            >
+              {d.files.map((f, i) => <Tile key={f.id} f={f} onOpen={() => view(i)} />)}
+            </ul>
+          </div>
         )}
       </section>
     </>
@@ -169,16 +180,29 @@ function Gallery({ d }: { d: Delivery }) {
 }
 
 function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
+  const portrait = f.h > f.w * 1.05;
+  const [src, setSrc] = useState(f.preview);
   return (
-    <li className="group relative aspect-[3/2] overflow-hidden rounded-sm bg-charcoal">
-      <button type="button" onClick={onOpen} className="block h-full w-full cursor-zoom-in" aria-label={`Open ${f.name}`}>
-        <img src={f.preview} alt={f.name} width={f.w} height={f.h} loading="lazy" decoding="async" className="block h-full w-full object-cover" />
+    <li className={cn("group relative overflow-hidden rounded-sm bg-charcoal", portrait && "row-span-2")}>
+      <button type="button" onClick={onOpen} className="absolute inset-0 z-0 block cursor-zoom-in" aria-label={`Open ${f.name}`}>
+        <img
+          src={src}
+          alt={f.name}
+          width={f.w}
+          height={f.h}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          // If the web preview is missing, fall back to the original file.
+          onError={() => { if (src !== f.download) setSrc(f.download); }}
+          className="pointer-events-none block h-full w-full object-cover"
+        />
       </button>
       <a
         href={f.download}
         download={f.name}
         aria-label={`Download ${f.name}`}
-        className="glass absolute bottom-1 right-1 inline-flex size-6 items-center justify-center rounded-full text-paper transition-opacity duration-300 hover:bg-paper hover:text-ink md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+        className="glass absolute bottom-1 right-1 z-10 inline-flex size-6 items-center justify-center rounded-full text-paper transition-opacity duration-300 hover:bg-paper hover:text-ink md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
       >
         <DownloadIcon className="size-3" />
       </a>

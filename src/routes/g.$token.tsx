@@ -159,7 +159,7 @@ function Gallery({ d }: { d: Delivery }) {
         {n === 0 ? (
           <p className="meta py-16 text-center text-muted-foreground">Photos are on their way — check back soon.</p>
         ) : (
-          <ul className="columns-1 gap-3 sm:columns-2 md:gap-4 lg:columns-3">
+          <ul className="columns-2 gap-2 sm:columns-3 md:columns-4 md:gap-2.5 lg:columns-5 2xl:columns-6">
             {d.files.map((f, i) => <Tile key={f.id} f={f} onOpen={() => view(i)} />)}
           </ul>
         )}
@@ -170,7 +170,7 @@ function Gallery({ d }: { d: Delivery }) {
 
 function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
   return (
-    <li className="group relative mb-3 break-inside-avoid overflow-hidden rounded-sm bg-charcoal md:mb-4">
+    <li className="group relative mb-2 break-inside-avoid overflow-hidden rounded-sm bg-charcoal md:mb-2.5">
       <button type="button" onClick={onOpen} className="block w-full cursor-zoom-in" aria-label={`Open ${f.name}`}>
         <img src={f.preview} alt={f.name} width={f.w} height={f.h} loading="lazy" decoding="async" className="block h-auto w-full" />
       </button>
@@ -178,9 +178,9 @@ function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
         href={f.download}
         download={f.name}
         aria-label={`Download ${f.name}`}
-        className="glass absolute bottom-2.5 right-2.5 inline-flex size-9 items-center justify-center rounded-full text-paper transition-opacity duration-300 hover:bg-paper hover:text-ink md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+        className="glass absolute bottom-1.5 right-1.5 inline-flex size-8 items-center justify-center rounded-full text-paper transition-opacity duration-300 hover:bg-paper hover:text-ink md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
       >
-        <DownloadIcon className="size-4" />
+        <DownloadIcon className="size-3.5" />
       </a>
     </li>
   );

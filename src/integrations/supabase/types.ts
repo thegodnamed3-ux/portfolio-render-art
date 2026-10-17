@@ -16,37 +16,37 @@ export type Database = {
     Tables: {
       client_deliveries: {
         Row: {
-          expires_at: string | null
-          password_hash: string | null
           client_name: string | null
           created_at: string
+          expires_at: string | null
           id: string
           is_active: boolean
           message: string | null
+          password_hash: string | null
           title: string
           token: string
           updated_at: string
         }
         Insert: {
-          expires_at?: string | null
-          password_hash?: string | null
           client_name?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
+          password_hash?: string | null
           title?: string
           token: string
           updated_at?: string
         }
         Update: {
-          expires_at?: string | null
-          password_hash?: string | null
           client_name?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
+          password_hash?: string | null
           title?: string
           token?: string
           updated_at?: string
@@ -75,14 +75,29 @@ export type Database = {
           id?: string
           kind?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "client_delivery_events_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "client_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_delivery_events_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "client_delivery_files"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_delivery_files: {
         Row: {
           client_note: string | null
-          favorite: boolean
           created_at: string
           delivery_id: string
+          favorite: boolean
           file_name: string
           h: number | null
           id: string
@@ -94,9 +109,9 @@ export type Database = {
         }
         Insert: {
           client_note?: string | null
-          favorite?: boolean
           created_at?: string
           delivery_id: string
+          favorite?: boolean
           file_name: string
           h?: number | null
           id?: string
@@ -108,9 +123,9 @@ export type Database = {
         }
         Update: {
           client_note?: string | null
-          favorite?: boolean
           created_at?: string
           delivery_id?: string
+          favorite?: boolean
           file_name?: string
           h?: number | null
           id?: string

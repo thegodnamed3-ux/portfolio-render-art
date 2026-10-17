@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import { Frame } from "@/components/Frame";
+import { cn } from "@/lib/utils";
 import { usePortfolio } from "@/components/PortfolioOverlay";
 import { ContactSection } from "@/components/ContactSection";
 import { useLightbox } from "@/components/Lightbox";
@@ -63,25 +64,36 @@ function Hero({ slides }: { slides: HomeImage[] }) {
 }
 
 function Work() {
+  // All landscape 3:2 frames at one size: a calm row of three, then two centred.
+  const frames = [
+    { n: 3, caption: "Coastline" },
+    { n: 13, caption: "Red room" },
+    { n: 26, caption: "Edge of the cliff" },
+    { n: 8, caption: "Blue hour" },
+    { n: 5, caption: "Couples — sunset" },
+  ];
+  const place = ["col-span-2", "", "", "md:col-start-2", ""];
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
-      <div className="mb-12 grid gap-6 md:mb-20 md:grid-cols-12">
-        <p className="meta text-muted-foreground md:col-span-3">Selected work</p>
-        <h2 className="display text-5xl md:col-span-8 md:text-7xl">
+      <div className="mb-10 grid gap-6 md:mb-16 md:grid-cols-12">
+        <h2 className="display text-3xl md:col-span-3 md:text-4xl">Selected work.</h2>
+        <p className="display text-4xl md:col-span-9 md:text-6xl">
           Portraits by the sea, in studios, <em className="text-muted-foreground">and in between.</em>
-        </h2>
+        </p>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-12 md:gap-9">
-        <Frame static photo={p(3)} caption="Coastline" index={num(1)} className="md:col-span-8" />
-        <Frame static photo={p(13)} caption="Red room" index={num(2)} className="w-2/3 justify-self-end md:col-span-3 md:col-start-10 md:mt-48 md:w-full" />
-      </div>
-
-      <Frame static photo={p(26)} caption="Edge of the cliff" index={num(3)} className="-mx-5 mt-14 md:-mx-10 md:mt-28 [&_figcaption]:px-5 md:[&_figcaption]:px-10" />
-
-      <div className="mt-14 grid items-end gap-5 md:mt-28 md:grid-cols-12 md:gap-9">
-        <Frame static photo={p(8)} caption="Blue hour" index={num(4)} className="md:col-span-4 md:col-start-2" />
-        <Frame static photo={p(5)} caption="Couples — sunset" index={num(5)} className="md:col-span-6 md:col-start-7" />
+      <div className="grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-6 md:gap-x-6 md:gap-y-12">
+        {frames.map((f, i) => (
+          <Frame
+            key={f.n}
+            static
+            photo={p(f.n)}
+            caption={f.caption}
+            index={num(i + 1)}
+            sizes="(min-width: 768px) 33vw, 50vw"
+            className={cn("md:col-span-2", place[i])}
+          />
+        ))}
       </div>
     </section>
   );

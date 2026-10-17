@@ -169,7 +169,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
                 stage={{ w: stageW, h: stageH }}
                 dir={dir}
                 exitX={exitX}
-                transition={t}
+                transition={tr}
                 onNext={(y) => go(1, y)}
                 onPrev={(y) => go(-1, y)}
                 canNext={index + d < n - 1}

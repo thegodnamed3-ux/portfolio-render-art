@@ -107,7 +107,9 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
               <Avatar r={open} size="size-11" />
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{open.name}</span>
               {open.rating ? <Stars n={open.rating} /> : null}
-              <button type="button" onClick={() => setOpen(null)} aria-label="Close review" className="glass-ink hit grid size-8 place-items-center rounded-full text-ink/70 hover:text-ink">✕</button>
+              <button type="button" onClick={() => setOpen(null)} aria-label="Close review" className="glass-ink hit grid size-9 shrink-0 place-items-center self-center rounded-full text-ink/70 hover:text-ink">
+                <svg viewBox="0 0 24 24" aria-hidden className="size-3.5 fill-none stroke-current" strokeWidth="1.6" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+              </button>
             </figcaption>
             <blockquote className="whitespace-pre-line text-sm leading-relaxed text-ink/80 md:text-base">{open.body}</blockquote>
           </figure>

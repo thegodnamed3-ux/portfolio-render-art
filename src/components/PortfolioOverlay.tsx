@@ -142,7 +142,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
                     </Cover>
                   ))
                 : sessions?.map((s, i) => (
-                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} frames`} onSelect={() => { if (guide) dismissGuide(); setSelected({ kind: "shoot", s }); }}>
+                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} frames`} onSelect={() => setSelected({ kind: "shoot", s })}>
                       <StackPreview s={s} eager={i < 2} demo={demo && i === 0} />
                     </Cover>
                   ))}
@@ -153,7 +153,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
 
           <AnimatePresence>
             {!scrolled && guide && !isVideo && (sessions?.length ?? 0) > 1 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-viewer/70 to-transparent pb-4 pt-10">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-4">
                 <span className="meta text-[0.625rem] tracking-[0.28em] text-paper/60">Scroll to explore ↓</span>
               </motion.div>
             )}

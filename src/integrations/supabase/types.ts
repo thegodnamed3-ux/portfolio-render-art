@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_deliveries: {
+        Row: {
+          client_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          message: string | null
+          title: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          client_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string | null
+          title?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string | null
+          title?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_delivery_files: {
+        Row: {
+          created_at: string
+          delivery_id: string
+          file_name: string
+          h: number | null
+          id: string
+          position: number
+          preview_path: string | null
+          size: number
+          storage_path: string
+          w: number | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_id: string
+          file_name: string
+          h?: number | null
+          id?: string
+          position?: number
+          preview_path?: string | null
+          size?: number
+          storage_path: string
+          w?: number | null
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string
+          file_name?: string
+          h?: number | null
+          id?: string
+          position?: number
+          preview_path?: string | null
+          size?: number
+          storage_path?: string
+          w?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_delivery_files_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "client_deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media: {
         Row: {
           album: string | null

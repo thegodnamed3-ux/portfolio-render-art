@@ -70,7 +70,7 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
   useEffect(() => { if (!active) setOpen(null); }, [active]);
 
   return (
-    <div className="glass-window relative mt-[4.375rem] flex flex-1 flex-col rounded-[28px] p-2.5 md:p-3 lg:mt-[5.25rem]">
+    <div className="glass-window relative flex flex-col rounded-[28px] p-2.5 md:p-3">
       <div
         ref={scroller}
         className="grid snap-x snap-mandatory auto-cols-[82%] grid-flow-col min-h-0 flex-1 grid-rows-[minmax(8.25rem,1fr)] gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-1 px-1 py-1 [scrollbar-width:none] sm:auto-cols-[calc((100%-0.75rem)/2)] sm:gap-3 lg:auto-cols-[calc((100%-2.25rem)/4)] lg:grid-rows-[repeat(2,minmax(7.25rem,1fr))] [&::-webkit-scrollbar]:hidden"

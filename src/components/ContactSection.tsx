@@ -75,7 +75,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           style={{ transform: onReviews ? "translateX(-50%)" : "translateX(0)" }}
         >
           <div aria-hidden={onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center pr-8 transition-[visibility] duration-700", onReviews && "invisible")}>
-            <div ref={panes[0]} className="pb-2 pt-10 md:pt-12">
+            <div ref={panes[0]} className="py-8 md:py-10">
             <p className="display text-[15vw] leading-[0.95] md:text-[9vw]">
               {t("book.l1")} <em>{t("book.l2")}</em>
             </p>
@@ -91,10 +91,11 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             <ContactLinks tone="light" className="mt-3" />
             </div>
           </div>
-          <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col transition-[visibility] duration-700", !onReviews && "invisible")}>
-            <div ref={panes[1]} className="flex flex-1 flex-col">
+          <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center transition-[visibility] duration-700", !onReviews && "invisible")}>
+            {/* Both panes are centred in the same height, so they share one centre line. */}
+            <div ref={panes[1]} className="py-8 md:py-10">
             {has && (
-              <div data-reviews-window className="flex flex-1 flex-col">
+              <div data-reviews-window>
                 <ReviewsCarousel reviews={reviews} active={onReviews} />
               </div>
             )}

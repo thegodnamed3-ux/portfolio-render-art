@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       client_deliveries: {
         Row: {
+          expires_at: string | null
+          password_hash: string | null
           client_name: string | null
           created_at: string
           id: string
@@ -26,6 +28,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          expires_at?: string | null
+          password_hash?: string | null
           client_name?: string | null
           created_at?: string
           id?: string
@@ -36,6 +40,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          expires_at?: string | null
+          password_hash?: string | null
           client_name?: string | null
           created_at?: string
           id?: string
@@ -47,8 +53,34 @@ export type Database = {
         }
         Relationships: []
       }
+      client_delivery_events: {
+        Row: {
+          created_at: string
+          delivery_id: string
+          file_id: string | null
+          id: string
+          kind: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_id: string
+          file_id?: string | null
+          id?: string
+          kind: string
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string
+          file_id?: string | null
+          id?: string
+          kind?: string
+        }
+        Relationships: []
+      }
       client_delivery_files: {
         Row: {
+          client_note: string | null
+          favorite: boolean
           created_at: string
           delivery_id: string
           file_name: string
@@ -61,6 +93,8 @@ export type Database = {
           w: number | null
         }
         Insert: {
+          client_note?: string | null
+          favorite?: boolean
           created_at?: string
           delivery_id: string
           file_name: string
@@ -73,6 +107,8 @@ export type Database = {
           w?: number | null
         }
         Update: {
+          client_note?: string | null
+          favorite?: boolean
           created_at?: string
           delivery_id?: string
           file_name?: string

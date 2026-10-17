@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ContactSection } from "@/components/ContactSection";
 import { useLightbox } from "@/components/Lightbox";
-import { getDelivery, type Delivery, type DeliveryFile } from "@/lib/delivery.functions";
+import { getDelivery, logDeliveryEvent, markDeliveryFile, type Delivery, type DeliveryFile, type DeliveryResult } from "@/lib/delivery.functions";
 import { submitReview } from "@/lib/reviews.functions";
 import { ZipWriter } from "@/lib/zip";
 import { formatSize } from "@/lib/format";
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/g/$token")({
   loader: ({ params }) => getDelivery({ data: { token: params.token } }),
   head: ({ loaderData }) => ({
     meta: [
-      { title: loaderData ? `${loaderData.title} — thegodnamed` : "Gallery — thegodnamed" },
+      { title: loaderData?.state === "ok" ? `${loaderData.delivery.title} — thegodnamed` : "Gallery — thegodnamed" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "referrer", content: "no-referrer" },
     ],
@@ -88,8 +88,35 @@ async function downloadAll(d: Delivery, onProgress: (done: number) => void) {
   }
 }
 
+type AccessKey = { token: string; password: string | null };
+
 function DeliveryPage() {
-  const delivery = Route.useLoaderData();
+  const initial = Route.useLoaderData();
+  const { token } = Route.useParams();
+  const fetchDelivery = useServerFn(getDelivery);
+  const [result, setResult] = useState<DeliveryResult>(initial);
+  const [password, setPassword] = useState<string | null>(null);
+  const key = `delivery-pw:${token}`;
+
+  const unlock = async (pw: string, silent = false) => {
+    const r = await fetchDelivery({ data: { token, password: pw } });
+    if (r.state === "ok") {
+      setPassword(pw);
+      try { sessionStorage.setItem(key, pw); } catch { /* private mode */ }
+    }
+    if (!(silent && r.state === "locked")) setResult(r);
+    return r;
+  };
+
+  // A password typed earlier in this browser session opens the gallery straight away.
+  useEffect(() => {
+    if (initial.state !== "locked") return;
+    let saved: string | null = null;
+    try { saved = sessionStorage.getItem(key); } catch { /* ignore */ }
+    if (saved) void unlock(saved, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <main className="min-h-[100svh]">
       <header className="flex items-center justify-between gap-4 px-5 py-4 md:px-10 md:py-6">
@@ -99,13 +126,51 @@ function DeliveryPage() {
         </Link>
         <span className="meta text-[0.6875rem] text-muted-foreground">Private gallery</span>
       </header>
-      {delivery ? <Gallery d={delivery} /> : <Missing />}
+      {result.state === "ok" ? (
+        <Gallery d={result.delivery} access={{ token, password }} />
+      ) : result.state === "locked" ? (
+        <PasswordGate wrong={result.wrong} onSubmit={unlock} />
+      ) : result.state === "expired" ? (
+        <Notice title={<>This link has <em>expired.</em></>} />
+      ) : (
+        <Notice title={<>This link is <em>no longer active.</em></>} />
+      )}
       <ContactSection reviews={false} />
     </main>
   );
 }
 
-function ReviewDialog({ token, defaultName, onClose }: { token: string; defaultName: string; onClose: () => void }) {
+function PasswordGate({ wrong, onSubmit }: { wrong: boolean; onSubmit: (pw: string) => Promise<DeliveryResult> }) {
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <section className="flex min-h-[60svh] items-center justify-center px-5 py-20">
+      <form
+        onSubmit={async (e) => { e.preventDefault(); setBusy(true); await onSubmit(pw).catch(() => toast.error("Could not open the gallery")); setBusy(false); }}
+        className="glass-panel w-full max-w-sm space-y-4 rounded-[28px] p-6 text-paper"
+      >
+        <p className="meta text-paper/70">Private gallery</p>
+        <p className="display text-4xl">Enter the <em>password.</em></p>
+        <input
+          type="password"
+          autoFocus
+          autoComplete="current-password"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          aria-label="Password"
+          className="w-full rounded-full border border-paper/15 bg-transparent px-4 py-3 text-sm text-paper outline-none placeholder:text-paper/40 focus:border-paper/50"
+          placeholder="Password"
+        />
+        {wrong && <p className="text-xs text-destructive">That password doesn’t match. Try again.</p>}
+        <button type="submit" disabled={busy || !pw} className="meta w-full rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90 disabled:opacity-50">
+          {busy ? "Opening…" : "Open gallery"}
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function ReviewDialog({ access, defaultName, onClose }: { access: AccessKey; defaultName: string; onClose: () => void }) {
   const send = useServerFn(submitReview);
   const [name, setName] = useState(defaultName);
   const [body, setBody] = useState("");
@@ -123,7 +188,7 @@ function ReviewDialog({ token, defaultName, onClose }: { token: string; defaultN
     e.preventDefault();
     setState("sending");
     try {
-      await send({ data: { token, name, body, rating } });
+      await send({ data: { ...access, name, body, rating } });
       setState("sent");
     } catch (err) {
       toast.error((err as Error).message || "Could not send the review");
@@ -182,35 +247,76 @@ function ReviewDialog({ token, defaultName, onClose }: { token: string; defaultN
   );
 }
 
-function Missing() {
+function Notice({ title }: { title: React.ReactNode }) {
   return (
     <section className="px-5 pb-24 pt-24 md:px-10 md:pb-36 md:pt-40">
       <p className="meta text-muted-foreground">Gallery</p>
-      <h1 className="display mt-6 text-5xl text-paper md:text-7xl">This link is <em>no longer active.</em></h1>
+      <h1 className="display mt-6 text-5xl text-paper md:text-7xl">{title}</h1>
       <p className="mt-6 max-w-md text-sm text-muted-foreground">If you need your photos again, just send me a message — I’ll share a fresh link.</p>
     </section>
   );
 }
 
-function Gallery({ d }: { d: Delivery }) {
+const HeartIcon = ({ filled, className }: { filled: boolean; className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden className={cn("stroke-current", filled ? "fill-current" : "fill-none", className)} strokeWidth="1.6" strokeLinejoin="round">
+    <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
+  </svg>
+);
+const NoteIcon = ({ filled, className }: { filled: boolean; className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden className={cn("stroke-current", filled ? "fill-current" : "fill-none", className)} strokeWidth="1.6" strokeLinejoin="round">
+    <path d="M5 5h14v10H10l-5 4z" />
+  </svg>
+);
+
+type Marks = Record<string, { favorite: boolean; note: string | null }>;
+
+function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
   const { open } = useLightbox();
-  const { token } = Route.useParams();
+  const mark = useServerFn(markDeliveryFile);
+  const log = useServerFn(logDeliveryEvent);
   const [progress, setProgress] = useState<number | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [onlyFavs, setOnlyFavs] = useState(false);
+  const [noteFor, setNoteFor] = useState<DeliveryFile | null>(null);
+  const [marks, setMarks] = useState<Marks>(() => Object.fromEntries(d.files.map((f) => [f.id, { favorite: f.favorite, note: f.note }])));
+  const favCount = Object.values(marks).filter((m) => m.favorite).length;
+  const shown = onlyFavs ? d.files.filter((f) => marks[f.id]?.favorite) : d.files;
   const n = d.files.length;
+
+  // Stats: one "opened" per browser session.
+  useEffect(() => {
+    const k = `delivery-viewed:${access.token}`;
+    try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch { /* ignore */ }
+    void log({ data: { ...access, kind: "view" } }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const save = async (id: string, patch: { favorite?: boolean; note?: string | null }) => {
+    const before = marks[id]!;
+    setMarks((m) => ({ ...m, [id]: { ...m[id]!, ...patch } }));
+    try {
+      await mark({ data: { ...access, fileId: id, ...patch } });
+    } catch (e) {
+      setMarks((m) => ({ ...m, [id]: before }));
+      toast.error((e as Error).message || "Could not save");
+    }
+  };
 
   const all = async () => {
     setProgress(0);
     try {
       const ok = await downloadAll(d, setProgress);
-      if (ok) toast.success("Download complete");
+      if (ok) {
+        toast.success("Download complete");
+        void log({ data: { ...access, kind: "zip" } }).catch(() => {});
+      }
     } catch (e) {
       toast.error((e as Error).message || "Download failed — please try again");
     }
     setProgress(null);
   };
 
-  const view = (i: number) => open(d.files.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { action: { label: "Leave a review", onClick: () => setReviewOpen(true) } });
+  const view = (i: number) => open(shown.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { action: { label: "Leave a review", onClick: () => setReviewOpen(true) } });
 
   return (
     <>
@@ -231,8 +337,20 @@ function Gallery({ d }: { d: Delivery }) {
               <DownloadIcon className="size-4" />
               {progress === null ? "Download all (.zip)" : `Preparing ${progress} / ${n}…`}
             </button>
-            <span className="meta text-[0.625rem] text-muted-foreground">Or download photos one by one below</span>
+            <button
+              type="button"
+              onClick={() => setOnlyFavs((v) => !v)}
+              aria-pressed={onlyFavs}
+              disabled={!favCount && !onlyFavs}
+              className={cn("glass meta inline-flex items-center gap-2 rounded-full px-4 py-3 text-paper disabled:opacity-40", onlyFavs && "!bg-paper !text-ink")}
+            >
+              <HeartIcon filled={favCount > 0} className="size-3.5" />
+              {onlyFavs ? "Show all" : `Favourites ${favCount}`}
+            </button>
           </div>
+        )}
+        {n > 0 && (
+          <p className="mt-4 max-w-md text-xs text-paper/50">Tap the heart on the photos you like most, and the speech bubble to leave a note — I’ll see your picks.</p>
         )}
         <button
           type="button"
@@ -243,7 +361,15 @@ function Gallery({ d }: { d: Delivery }) {
           <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
         </button>
       </section>
-      {reviewOpen && <ReviewDialog token={token} defaultName={d.clientName ?? ""} onClose={() => setReviewOpen(false)} />}
+      {reviewOpen && <ReviewDialog access={access} defaultName={d.clientName ?? ""} onClose={() => setReviewOpen(false)} />}
+      {noteFor && (
+        <NoteDialog
+          file={noteFor}
+          initial={marks[noteFor.id]?.note ?? ""}
+          onClose={() => setNoteFor(null)}
+          onSave={(note) => { void save(noteFor.id, { note: note.trim() || null }); setNoteFor(null); }}
+        />
+      )}
 
       <section className="px-5 pb-20 md:px-10 md:pb-32">
         {n === 0 ? (
@@ -260,7 +386,17 @@ function Gallery({ d }: { d: Delivery }) {
                 gap: "var(--gap)",
               }}
             >
-              {d.files.map((f, i) => <Tile key={f.id} f={f} onOpen={() => view(i)} />)}
+              {shown.map((f, i) => (
+                <Tile
+                  key={f.id}
+                  f={f}
+                  mark={marks[f.id] ?? { favorite: false, note: null }}
+                  onOpen={() => view(i)}
+                  onFavorite={() => void save(f.id, { favorite: !marks[f.id]?.favorite })}
+                  onNote={() => setNoteFor(f)}
+                  onDownload={() => void log({ data: { ...access, kind: "download", fileId: f.id } }).catch(() => {})}
+                />
+              ))}
             </ul>
           </div>
         )}
@@ -269,9 +405,48 @@ function Gallery({ d }: { d: Delivery }) {
   );
 }
 
-function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
+function NoteDialog({ file, initial, onClose, onSave }: { file: DeliveryFile; initial: string; onClose: () => void; onSave: (note: string) => void }) {
+  const [text, setText] = useState(initial);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Note on this photo" className="fixed inset-0 z-[110] flex items-end justify-center bg-viewer/50 p-3 backdrop-blur-md sm:items-center" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <form onSubmit={(e) => { e.preventDefault(); onSave(text); }} className="glass-panel w-full max-w-md space-y-4 rounded-[28px] p-5 text-paper md:p-6">
+        <div className="flex items-center gap-3">
+          <img src={file.preview} alt="" className="size-12 shrink-0 rounded-xl object-cover" />
+          <div className="min-w-0">
+            <p className="meta text-paper/70">Note on this photo</p>
+            <p className="truncate text-xs text-paper/50">{file.name}</p>
+          </div>
+        </div>
+        <textarea
+          autoFocus
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={500}
+          placeholder="e.g. a bit warmer, crop tighter, remove the sign…"
+          aria-label="Note"
+          className="min-h-28 w-full resize-y rounded-2xl border border-paper/15 bg-transparent px-4 py-3 text-sm text-paper outline-none placeholder:text-paper/40 focus:border-paper/50"
+        />
+        <div className="flex gap-2">
+          <button type="submit" className="meta flex-1 rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90">Save note</button>
+          {initial && <button type="button" onClick={() => onSave("")} className="glass meta rounded-full px-4 py-3 text-paper">Remove</button>}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
+  f: DeliveryFile; mark: { favorite: boolean; note: string | null };
+  onOpen: () => void; onFavorite: () => void; onNote: () => void; onDownload: () => void;
+}) {
   const portrait = f.h > f.w * 1.05;
   const [src, setSrc] = useState(f.preview);
+  const reveal = "md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100";
   return (
     <li className={cn("group relative overflow-hidden rounded-sm bg-charcoal", portrait && "row-span-2")}>
       <button type="button" onClick={onOpen} className="absolute inset-0 z-0 block cursor-zoom-in" aria-label={`Open ${f.name}`}>
@@ -288,15 +463,35 @@ function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
           className="pointer-events-none block h-full w-full object-cover"
         />
       </button>
+      <div className="absolute bottom-1 left-1 z-10 flex gap-1">
+        <button
+          type="button"
+          onClick={onFavorite}
+          aria-pressed={mark.favorite}
+          aria-label={mark.favorite ? `Remove ${f.name} from favourites` : `Add ${f.name} to favourites`}
+          className={cn("glass inline-flex size-6 items-center justify-center rounded-full text-paper", !mark.favorite && reveal)}
+        >
+          <HeartIcon filled={mark.favorite} className="size-3" />
+        </button>
+        <button
+          type="button"
+          onClick={onNote}
+          aria-label={mark.note ? `Edit note on ${f.name}` : `Add a note to ${f.name}`}
+          title={mark.note ?? undefined}
+          className={cn("glass inline-flex size-6 items-center justify-center rounded-full text-paper", !mark.note && reveal)}
+        >
+          <NoteIcon filled={!!mark.note} className="size-3" />
+        </button>
+      </div>
       <a
         href={f.download}
         download={f.name}
+        onClick={onDownload}
         aria-label={`Download ${f.name}`}
-        className="glass absolute bottom-1 right-1 z-10 inline-flex size-6 items-center justify-center rounded-full text-paper md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+        className={cn("glass absolute bottom-1 right-1 z-10 inline-flex size-6 items-center justify-center rounded-full text-paper", reveal)}
       >
         <DownloadIcon className="size-3" />
       </a>
     </li>
   );
 }
-

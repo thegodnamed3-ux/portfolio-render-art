@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DELIVERY_BUCKET } from "@/lib/delivery.functions";
 import { formatSize } from "@/lib/format";
+import { hashDeliveryPassword } from "@/lib/delivery-hash";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -13,10 +14,12 @@ import { cn } from "@/lib/utils";
 type DeliveryRow = {
   id: string; token: string; title: string; client_name: string | null; message: string | null;
   is_active: boolean; created_at: string; client_delivery_files: { count: number }[];
+  password_hash: string | null; expires_at: string | null;
 };
 type FileRow = {
   id: string; delivery_id: string; storage_path: string; preview_path: string | null;
   file_name: string; size: number; w: number | null; h: number | null; position: number;
+  favorite: boolean; client_note: string | null;
 };
 
 const btn = "meta inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2 text-paper/85 transition-colors hover:border-paper/60 hover:text-paper disabled:opacity-40";
@@ -260,6 +263,14 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
     onClose();
   }, "Delivery deleted");
 
+  const [onlyFavs, setOnlyFavs] = useState(false);
+  const favs = rows.filter((f) => f.favorite);
+  const notes = rows.filter((f) => f.client_note);
+  const copyPicks = async () => {
+    try { await navigator.clipboard.writeText(favs.map((f) => f.file_name).join("\n")); toast.success(`${favs.length} file names copied`); }
+    catch { toast.error("Could not copy"); }
+  };
+
   const toggle = (id: string) => setPicked((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   return (
@@ -291,6 +302,8 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
         </div>
       </div>
 
+      <AccessAndStats d={d} refresh={reload} />
+
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <label className={cn(btnPrimary, "cursor-pointer", upload && "pointer-events-none opacity-60")}>
           {upload ? `Uploading ${upload.done} / ${upload.total}…` : "+ Upload photos"}
@@ -307,20 +320,40 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
             Remove {picked.size}
           </button>
         )}
+        {favs.length > 0 && (
+          <>
+            <button className={cn(btn, onlyFavs && "border-paper text-paper")} onClick={() => setOnlyFavs((v) => !v)}>
+              ♥ Client picks {favs.length}{onlyFavs ? " · show all" : ""}
+            </button>
+            <button className={btn} onClick={copyPicks}>Copy file names</button>
+          </>
+        )}
       </div>
       <p className="mt-3 text-xs text-muted-foreground">Originals are delivered untouched (full size, original file names). Photos are shown in file-name order.</p>
+
+      {notes.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-border p-4">
+          <p className="meta mb-2 text-muted-foreground">Client notes</p>
+          <ul className="space-y-1.5 text-sm">
+            {notes.map((f) => <li key={f.id}><span className="text-paper">{f.file_name}</span><span className="text-muted-foreground"> — {f.client_note}</span></li>)}
+          </ul>
+        </div>
+      )}
 
       {files.isLoading ? (
         <p className="meta mt-6 text-muted-foreground">Loading…</p>
       ) : (
         <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-7">
-          {rows.map((f) => {
+          {(onlyFavs ? favs : rows).map((f) => {
             const on = picked.has(f.id);
             const src = files.data?.thumbs.get(f.id);
             return (
               <button key={f.id} type="button" onClick={() => toggle(f.id)} aria-pressed={on} title={f.file_name}
                 className={cn("relative aspect-square overflow-hidden rounded-lg bg-charcoal ring-2 transition", on ? "ring-paper" : "ring-transparent")}>
                 {src && <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />}
+                {(f.favorite || f.client_note) && (
+                  <span className="meta pointer-events-none absolute right-1 top-1 rounded-full bg-paper px-1.5 text-[0.6rem] text-ink">{f.favorite ? "♥" : ""}{f.client_note ? " ✎" : ""}</span>
+                )}
                 <span className="meta pointer-events-none absolute inset-x-1 bottom-1 truncate rounded-full bg-viewer/75 px-1.5 text-[0.55rem] text-paper/80">{f.file_name}</span>
               </button>
             );
@@ -347,5 +380,91 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
         </AlertDialogContent>
       </AlertDialog>
     </section>
+  );
+}
+
+type Stats = { views: number; lastView: string | null; zips: number; downloads: number };
+
+/** Password, expiry date and what the client has done with the link. */
+function AccessAndStats({ d, refresh }: { d: DeliveryRow; refresh: () => Promise<void> }) {
+  const [pw, setPw] = useState("");
+  const [expires, setExpires] = useState(d.expires_at ? d.expires_at.slice(0, 10) : "");
+  const [busy, setBusy] = useState(false);
+  const stats = useQuery({
+    queryKey: ["admin", "delivery-stats", d.id],
+    queryFn: async (): Promise<Stats | null> => {
+      const { data, error } = await supabase.from("client_delivery_events").select("kind, created_at").eq("delivery_id", d.id).order("created_at", { ascending: false }).limit(1000);
+      if (error) return null;
+      const rows = data ?? [];
+      return {
+        views: rows.filter((r) => r.kind === "view").length,
+        lastView: rows.find((r) => r.kind === "view")?.created_at ?? null,
+        zips: rows.filter((r) => r.kind === "zip").length,
+        downloads: rows.filter((r) => r.kind === "download").length,
+      };
+    },
+    refetchInterval: 60_000,
+  });
+
+  const run = async (fn: () => Promise<{ error: { message: string } | null }>, ok: string) => {
+    setBusy(true);
+    const { error } = await fn();
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(ok);
+    await refresh();
+  };
+  const setPassword = async () => {
+    const hash = await hashDeliveryPassword(d.id, pw.trim());
+    await run(() => supabase.from("client_deliveries").update({ password_hash: hash }).eq("id", d.id), "Password set — send it to the client with the link");
+    setPw("");
+  };
+  const clearPassword = () => run(() => supabase.from("client_deliveries").update({ password_hash: null }).eq("id", d.id), "Password removed");
+  const saveExpiry = (value: string) => run(
+    () => supabase.from("client_deliveries").update({ expires_at: value ? new Date(`${value}T23:59:59`).toISOString() : null }).eq("id", d.id),
+    value ? `Link works until ${new Date(`${value}T12:00:00`).toLocaleDateString()}` : "No expiry date",
+  );
+  const expired = d.expires_at && new Date(d.expires_at).getTime() < Date.now();
+  const s = stats.data;
+
+  return (
+    <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="space-y-3 rounded-2xl border border-border p-4">
+        <p className="meta text-muted-foreground">Access</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            placeholder={d.password_hash ? "Password is set — type a new one to change" : "Password (optional)"}
+            aria-label="Password"
+            className={cn(input, "min-w-0 flex-1 rounded-full")}
+            maxLength={100}
+          />
+          <button className={btnPrimary} disabled={busy || pw.trim().length < 3} onClick={setPassword}>{d.password_hash ? "Change" : "Set"}</button>
+          {d.password_hash && <button className={btn} disabled={busy} onClick={clearPassword}>Remove</button>}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor={`exp-${d.id}`} className="meta text-muted-foreground">Works until</label>
+          <input id={`exp-${d.id}`} type="date" value={expires} onChange={(e) => { setExpires(e.target.value); void saveExpiry(e.target.value); }} className={cn(input, "w-auto rounded-full [color-scheme:dark]")} />
+          {expires && <button className={btn} disabled={busy} onClick={() => { setExpires(""); void saveExpiry(""); }}>No limit</button>}
+        </div>
+        {expired && <p className="text-xs text-destructive">This link has expired — the client sees “expired”.</p>}
+      </div>
+      <div className="space-y-2 rounded-2xl border border-border p-4">
+        <p className="meta text-muted-foreground">Client activity</p>
+        {s === null ? (
+          <p className="text-xs text-muted-foreground">Stats will appear once the database update for them is applied.</p>
+        ) : !s ? (
+          <p className="text-xs text-muted-foreground">Loading…</p>
+        ) : (
+          <ul className="space-y-1 text-sm text-paper/85">
+            <li>Opened {s.views} {s.views === 1 ? "time" : "times"}{s.lastView ? ` · last ${new Date(s.lastView).toLocaleString()}` : " · not yet"}</li>
+            <li>ZIP downloaded {s.zips} {s.zips === 1 ? "time" : "times"}</li>
+            <li>Single photos downloaded {s.downloads}</li>
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }

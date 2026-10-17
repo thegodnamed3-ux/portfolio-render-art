@@ -1,0 +1,51 @@
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { hashDeliveryPassword } from "@/lib/delivery-hash";
+
+export const TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/;
+
+export type DeliveryRow = {
+  id: string;
+  title: string;
+  client_name: string | null;
+  message: string | null;
+  is_active: boolean;
+  password_hash: string | null;
+  expires_at: string | null;
+};
+
+export type Access =
+  | { state: "missing" }
+  | { state: "expired" }
+  | { state: "locked"; wrong: boolean }
+  | { state: "ok"; delivery: DeliveryRow };
+
+/** Resolves a client link: unknown / switched off, expired, password needed, or open. */
+export async function checkAccess(token: string, password?: string | null): Promise<Access> {
+  if (!TOKEN_RE.test(token)) return { state: "missing" };
+  const { data: d, error } = await supabaseAdmin
+    .from("client_deliveries")
+    .select("id, title, client_name, message, is_active, password_hash, expires_at")
+    .eq("token", token)
+    .maybeSingle();
+  if (error) {
+    console.error("checkAccess", error);
+    return { state: "missing" };
+  }
+  if (!d || !d.is_active) return { state: "missing" };
+  if (d.expires_at && new Date(d.expires_at).getTime() < Date.now()) return { state: "expired" };
+  if (d.password_hash) {
+    if (!password) return { state: "locked", wrong: false };
+    const hash = await hashDeliveryPassword(d.id, password);
+    if (hash !== d.password_hash) return { state: "locked", wrong: true };
+  }
+  return { state: "ok", delivery: d };
+}
+
+/** For client actions: the open delivery, or an error the page can show. */
+export async function requireAccess(token: string, password?: string | null) {
+  const a = await checkAccess(token, password);
+  if (a.state === "ok") return a.delivery;
+  if (a.state === "expired") throw new Error("This link has expired.");
+  if (a.state === "locked") throw new Error("Please enter the password again.");
+  throw new Error("This link is no longer active.");
+}

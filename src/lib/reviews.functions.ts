@@ -8,7 +8,7 @@ const MAX_PER_DELIVERY = 5;
 
 /** Client page: leave a review. Only works through an active delivery link; lands as "pending". */
 export const submitReview = createServerFn({ method: "POST" })
-  .inputValidator((input: { token: string; name: string; body: string; rating: number | null }) => {
+  .inputValidator((input: { token: string; password?: string | null; name: string; body: string; rating: number | null }) => {
     const token = String(input?.token ?? "");
     const name = String(input?.name ?? "").trim().slice(0, 60);
     const body = String(input?.body ?? "").trim().slice(0, 1000);
@@ -17,16 +17,13 @@ export const submitReview = createServerFn({ method: "POST" })
     if (!TOKEN.test(token)) throw new Error("This link is not valid.");
     if (!name) throw new Error("Please add your name.");
     if (body.length < 3) throw new Error("Please write a few words.");
-    return { token, name, body, rating };
+    const password = input?.password ? String(input.password).slice(0, 200) : null;
+    return { token, password, name, body, rating };
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: d } = await supabaseAdmin
-      .from("client_deliveries")
-      .select("id, is_active")
-      .eq("token", data.token)
-      .maybeSingle();
-    if (!d || !d.is_active) throw new Error("This link is no longer active.");
+    const { requireAccess } = await import("@/lib/delivery-auth.server");
+    const d = await requireAccess(data.token, data.password);
 
     const { count } = await supabaseAdmin
       .from("reviews")

@@ -406,7 +406,7 @@ function AccessAndStats({ d, refresh }: { d: DeliveryRow; refresh: () => Promise
     refetchInterval: 60_000,
   });
 
-  const run = async (fn: () => Promise<{ error: { message: string } | null }>, ok: string) => {
+  const run = async (fn: () => PromiseLike<{ error: { message: string } | null }>, ok: string) => {
     setBusy(true);
     const { error } = await fn();
     setBusy(false);

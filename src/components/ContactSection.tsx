@@ -79,9 +79,9 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             </div>
           </div>
           <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col transition-[visibility] duration-700", !onReviews && "invisible")}>
-            <div ref={panes[1]} className="lg:flex lg:flex-1 lg:flex-col">
+            <div ref={panes[1]} className="flex flex-1 flex-col">
             {has && (
-              <div data-reviews-window className="lg:flex lg:flex-1 lg:flex-col">
+              <div data-reviews-window className="flex flex-1 flex-col">
                 <ReviewsCarousel reviews={reviews} active={onReviews} />
               </div>
             )}

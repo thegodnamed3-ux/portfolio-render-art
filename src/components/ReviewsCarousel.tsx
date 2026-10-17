@@ -78,10 +78,10 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
   useEffect(() => { if (!active) setOpen(null); }, [active]);
 
   return (
-    <div className="glass-window relative mt-6 rounded-[28px] p-2.5 md:p-3 lg:mt-12 lg:flex lg:flex-1 lg:flex-col">
+    <div className="glass-window relative mt-10 flex flex-1 flex-col rounded-[28px] p-2.5 md:p-3 lg:mt-12">
       <div
         ref={scroller}
-        className="grid snap-x snap-mandatory auto-cols-[82%] grid-flow-col grid-rows-[8.25rem] gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-1 px-1 py-1 [scrollbar-width:none] sm:auto-cols-[calc((100%-0.75rem)/2)] sm:gap-3 lg:auto-cols-[calc((100%-2.25rem)/4)] lg:min-h-0 lg:flex-1 lg:grid-rows-[repeat(2,minmax(7.25rem,1fr))] [&::-webkit-scrollbar]:hidden"
+        className="grid snap-x snap-mandatory auto-cols-[82%] grid-flow-col min-h-0 flex-1 grid-rows-[minmax(8.25rem,1fr)] gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-1 px-1 py-1 [scrollbar-width:none] sm:auto-cols-[calc((100%-0.75rem)/2)] sm:gap-3 lg:auto-cols-[calc((100%-2.25rem)/4)] lg:grid-rows-[repeat(2,minmax(7.25rem,1fr))] [&::-webkit-scrollbar]:hidden"
       >
         {reviews.map((r) => <ReviewCard key={r.id} r={r} onOpen={() => setOpen(r)} />)}
       </div>

@@ -24,6 +24,19 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const onReviews = has && view === "reviews";
 
   // One height for both panes, on every screen: switching never resizes or scrolls the page.
+  const paneA = useRef<HTMLDivElement>(null);
+  const paneB = useRef<HTMLDivElement>(null);
+  const panes = [paneA, paneB] as const;
+  const [heights, setHeights] = useState<[number, number]>([0, 0]);
+  useEffect(() => {
+    const measure = () =>
+      setHeights([paneA.current?.offsetHeight ?? 0, paneB.current?.offsetHeight ?? 0]);
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (paneA.current) ro.observe(paneA.current);
+    if (paneB.current) ro.observe(paneB.current);
+    return () => ro.disconnect();
+  }, [has]);
   const height = Math.max(heights[0], heights[1]);
 
   const section = useRef<HTMLElement>(null);

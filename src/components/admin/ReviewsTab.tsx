@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { connectTelegramButtons, telegramStatus } from "@/lib/telegram.functions";
 import { cn } from "@/lib/utils";
 
 type Review = {
@@ -46,6 +48,7 @@ export function ReviewsTab() {
 
   return (
     <div className="space-y-6">
+      <TelegramPanel />
       <div className="flex flex-wrap items-center gap-3">
         <div className="glass inline-flex rounded-full p-1">
           {FILTERS.map((f) => (
@@ -122,5 +125,37 @@ function ReviewItem({ r, refresh }: { r: Review; refresh: () => void }) {
         )}
       </div>
     </li>
+  );
+}
+
+/** Connects the Publish / Hide buttons under review notifications in Telegram. */
+function TelegramPanel() {
+  const status = useServerFn(telegramStatus);
+  const connect = useServerFn(connectTelegramButtons);
+  const q = useQuery({ queryKey: ["admin", "telegram"], queryFn: () => status() });
+  const [busy, setBusy] = useState(false);
+  if (q.isLoading || q.error || !q.data) return null;
+  const here = typeof window === "undefined" ? "" : `${window.location.origin}/api/telegram`;
+  const connected = !!q.data.webhook && q.data.webhook === here;
+  const run = async () => {
+    setBusy(true);
+    try { const r = await connect(); toast.success(`Telegram buttons connected (${r.url})`); await q.refetch(); }
+    catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border p-4">
+      <p className="meta text-muted-foreground">Telegram</p>
+      {!q.data.configured ? (
+        <p className="text-xs text-muted-foreground">Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in Lovable Cloud to get review alerts.</p>
+      ) : connected ? (
+        <p className="text-xs text-paper/80">Alerts on · Publish / Hide buttons work from Telegram.</p>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">Alerts on. Connect the Publish / Hide buttons — do it from the published site.</p>
+          <button className={btn} disabled={busy} onClick={run}>{busy ? "Connecting…" : "Connect buttons"}</button>
+        </>
+      )}
+    </div>
   );
 }

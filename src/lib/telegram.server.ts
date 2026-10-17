@@ -1,4 +1,4 @@
-export type TgButton = { text: string; url: string };
+export type TgButton = { text: string; url: string } | { text: string; callback_data: string };
 
 /** Escapes user text for Telegram's HTML formatting. */
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -9,14 +9,15 @@ export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
  * Needs TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID (Lovable Cloud secrets).
  * Returns false instead of throwing, so callers decide whether a failure matters.
  */
-export async function sendTelegram(html: string, buttons: TgButton[] = []): Promise<boolean> {
+export async function sendTelegram(html: string, buttons: TgButton[] = [], layout?: TgButton[][]): Promise<boolean> {
   const token = process.env["TELEGRAM_BOT_TOKEN"];
   const chat = process.env["TELEGRAM_CHAT_ID"];
   if (!token || !chat) {
     console.error("sendTelegram: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID are not set");
     return false;
   }
-  const valid = buttons.filter((b) => /^https:\/\//.test(b.url));
+  const ok = (b: TgButton) => ("url" in b ? /^https:\/\//.test(b.url) : b.callback_data.length <= 64);
+  const rows = (layout ?? buttons.map((b) => [b])).map((r) => r.filter(ok)).filter((r) => r.length);
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
@@ -26,7 +27,7 @@ export async function sendTelegram(html: string, buttons: TgButton[] = []): Prom
         text: html,
         parse_mode: "HTML",
         link_preview_options: { is_disabled: true },
-        ...(valid.length ? { reply_markup: { inline_keyboard: valid.map((b) => [b]) } } : {}),
+        ...(rows.length ? { reply_markup: { inline_keyboard: rows } } : {}),
       }),
     });
     if (!res.ok) console.error("sendTelegram: Telegram answered", res.status, await res.text().catch(() => ""));
@@ -61,4 +62,50 @@ export function replyButton(contact: string): TgButton | null {
     return { text: "Reply in WhatsApp", url: `https://wa.me/${intl}` };
   }
   return null;
+}
+
+/** Calls any Bot API method; returns the parsed reply (or null on network failure). */
+export async function tgApi(method: string, payload: Record<string, unknown>): Promise<any> {
+  const token = process.env["TELEGRAM_BOT_TOKEN"];
+  if (!token) return null;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return await res.json();
+  } catch (e) {
+    console.error("tgApi", method, e);
+    return null;
+  }
+}
+
+/** Secret Telegram sends back with every webhook call — derived from the bot token, so no extra setting. */
+export async function webhookSecret(): Promise<string | null> {
+  const token = process.env["TELEGRAM_BOT_TOKEN"];
+  if (!token) return null;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${token}:thegodnamed-webhook`));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 48);
+}
+
+export type ReviewForMessage = { id: string; name: string; body: string; status: string; source?: string | null };
+
+/** The review notification — same layout when first sent and after Publish / Hide. */
+export function reviewMessage(r: ReviewForMessage, origin: string) {
+  const state = r.status === "approved" ? "published" : r.status === "hidden" ? "hidden" : "awaiting approval";
+  const html = [
+    `<b>${r.status === "pending" ? "New review" : "Review"}</b> · ${state}`,
+    "",
+    `<b>${esc(r.name)}</b>`,
+    r.source ? esc(r.source) : null,
+    "",
+    `<blockquote>${esc(r.body)}</blockquote>`,
+  ].filter((l) => l !== null).join("\n");
+  const actions: TgButton[] = [];
+  if (r.status !== "approved") actions.push({ text: "Publish", callback_data: `rv:p:${r.id}` });
+  if (r.status !== "hidden") actions.push({ text: "Hide", callback_data: `rv:h:${r.id}` });
+  const layout: TgButton[][] = [actions];
+  if (origin) layout.push([{ text: "Edit in studio", url: `${origin}/admin` }]);
+  return { html, layout };
 }

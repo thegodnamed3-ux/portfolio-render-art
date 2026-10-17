@@ -29,28 +29,20 @@ export const submitReview = createServerFn({ method: "POST" })
       .eq("delivery_id", d.id);
     if ((count ?? 0) >= MAX_PER_DELIVERY) throw new Error("Thank you — we already have your review.");
 
-    const { error } = await supabaseAdmin
+    const { data: inserted, error } = await supabaseAdmin
       .from("reviews")
-      .insert({ delivery_id: d.id, name: data.name, body: data.body, status: "pending" });
+      .insert({ delivery_id: d.id, name: data.name, body: data.body, status: "pending" })
+      .select("id")
+      .single();
     if (error) {
       console.error("submitReview", error);
       throw new Error("Could not send the review. Please try again.");
     }
     // Ping the studio; a Telegram hiccup never fails the client's submission.
     try {
-      const { sendTelegram, esc, siteOrigin } = await import("@/lib/telegram.server");
-      const origin = await siteOrigin();
-      await sendTelegram(
-        [
-          "<b>New review</b> · awaiting approval",
-          "",
-          `<b>${esc(data.name)}</b>`,
-          esc(d.title),
-          "",
-          `<blockquote>${esc(data.body)}</blockquote>`,
-        ].join("\n"),
-        origin ? [{ text: "Edit & publish", url: `${origin}/admin` }] : [],
-      );
+      const { sendTelegram, reviewMessage, siteOrigin } = await import("@/lib/telegram.server");
+      const { html, layout } = reviewMessage({ id: inserted.id, name: data.name, body: data.body, status: "pending", source: d.title }, await siteOrigin());
+      await sendTelegram(html, [], layout);
     } catch (e) {
       console.error("submitReview telegram", e);
     }

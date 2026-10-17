@@ -1,7 +1,7 @@
 -- Private client deliveries: finished photos shared through an unguessable link.
 -- Only admins touch these tables; the public page reads them through a server
 -- function (service role) after matching the link token.
-CREATE TABLE public.client_deliveries (
+CREATE TABLE IF NOT EXISTS public.client_deliveries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   token text NOT NULL UNIQUE CHECK (char_length(token) >= 16),
   title text NOT NULL DEFAULT 'Untitled delivery',
@@ -12,7 +12,7 @@ CREATE TABLE public.client_deliveries (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE public.client_delivery_files (
+CREATE TABLE IF NOT EXISTS public.client_delivery_files (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   delivery_id uuid NOT NULL REFERENCES public.client_deliveries(id) ON DELETE CASCADE,
   storage_path text NOT NULL,
@@ -24,8 +24,9 @@ CREATE TABLE public.client_delivery_files (
   position int NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX client_delivery_files_delivery_idx ON public.client_delivery_files (delivery_id, position);
+CREATE INDEX IF NOT EXISTS client_delivery_files_delivery_idx ON public.client_delivery_files (delivery_id, position);
 
+DROP TRIGGER IF EXISTS client_deliveries_touch ON public.client_deliveries;
 CREATE TRIGGER client_deliveries_touch BEFORE UPDATE ON public.client_deliveries
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
@@ -35,8 +36,10 @@ GRANT ALL ON public.client_deliveries, public.client_delivery_files TO service_r
 ALTER TABLE public.client_deliveries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.client_delivery_files ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "admin manages deliveries" ON public.client_deliveries;
 CREATE POLICY "admin manages deliveries" ON public.client_deliveries FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "admin manages delivery files" ON public.client_delivery_files;
 CREATE POLICY "admin manages delivery files" ON public.client_delivery_files FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
@@ -44,11 +47,15 @@ CREATE POLICY "admin manages delivery files" ON public.client_delivery_files FOR
 INSERT INTO storage.buckets (id, name, public) VALUES ('client-deliveries', 'client-deliveries', false)
   ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS "admin reads delivery files" ON storage.objects;
 CREATE POLICY "admin reads delivery files" ON storage.objects FOR SELECT TO authenticated
   USING (bucket_id = 'client-deliveries' AND public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "admin uploads delivery files" ON storage.objects;
 CREATE POLICY "admin uploads delivery files" ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'client-deliveries' AND public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "admin updates delivery files" ON storage.objects;
 CREATE POLICY "admin updates delivery files" ON storage.objects FOR UPDATE TO authenticated
   USING (bucket_id = 'client-deliveries' AND public.has_role(auth.uid(), 'admin'));
+DROP POLICY IF EXISTS "admin deletes delivery files" ON storage.objects;
 CREATE POLICY "admin deletes delivery files" ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'client-deliveries' AND public.has_role(auth.uid(), 'admin'));

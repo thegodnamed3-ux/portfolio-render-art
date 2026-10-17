@@ -63,14 +63,26 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   }, [has]);
   const height = heights[onReviews ? 1 : 0];
 
+  // Switching panes brings the whole band into view, so the reviews window is never cut off.
+  const section = useRef<HTMLElement>(null);
+  const toggle = () => {
+    setView(onReviews ? "contact" : "reviews");
+    const el = section.current;
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: reduce ? "auto" : "smooth" });
+    });
+  };
+
   return (
-    <section {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
+    <section ref={section} {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
       <div className="flex items-center justify-between gap-4">
         <h2 className="display text-3xl md:text-4xl">{onReviews ? "Reviews." : "Contact."}</h2>
         {has && (
           <button
             type="button"
-            onClick={() => setView(onReviews ? "contact" : "reviews")}
+            onClick={toggle}
             aria-expanded={onReviews}
             className="glass-ink hit group meta inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.625rem] text-ink"
           >
@@ -100,7 +112,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           <div ref={panes[1]} aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 transition-[visibility] duration-700", !onReviews && "invisible")}>
             {has && (
               <div className="glass-window mt-6 rounded-[34px] p-2.5 md:p-3.5">
-                <div className="grid max-h-[70svh] grid-cols-1 gap-2.5 overflow-y-auto overscroll-contain rounded-[24px] sm:grid-cols-2 lg:grid-cols-4 md:gap-3">
+                <div className="grid max-h-[calc(100svh-13rem)] grid-cols-1 gap-2.5 overflow-y-auto overscroll-contain rounded-[24px] sm:grid-cols-2 lg:grid-cols-4 md:gap-3">
                   {reviews.map((r) => <ReviewCard key={r.id} r={r} />)}
                 </div>
               </div>

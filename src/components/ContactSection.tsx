@@ -64,7 +64,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   return (
     <section ref={section} {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="display text-3xl md:text-4xl">{onReviews ? "Reviews." : "Contact."}</h2>
+        <h2 className="display text-3xl leading-none md:text-4xl">{onReviews ? "Reviews." : "Contact."}</h2>
         {has && (
           <button
             type="button"
@@ -86,26 +86,30 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
         style={has && height ? { height: height + 8 } : undefined}
       >
         <div
-          className="flex w-[200%] items-start transition-transform duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
+          className="flex w-[200%] items-stretch transition-transform duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
           style={{ transform: onReviews ? "translateX(-50%)" : "translateX(0)" }}
         >
-          <div ref={panes[0]} aria-hidden={onReviews} className={cn("w-1/2 shrink-0 pr-8 transition-[visibility] duration-700", onReviews && "invisible")}>
-            <p className="display mt-6 text-[15vw] md:text-[9vw]">
+          <div aria-hidden={onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center pr-8 transition-[visibility] duration-700", onReviews && "invisible")}>
+            <div ref={panes[0]} className="pb-2 pt-10 md:pt-12">
+            <p className="display text-[15vw] leading-[0.95] md:text-[9vw]">
               Book a <em>session.</em>
             </p>
             <ContactLinks tone="light" className="mt-8 md:mt-12" />
+            </div>
           </div>
-          <div ref={panes[1]} aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 transition-[visibility] duration-700", !onReviews && "invisible")}>
+          <div aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 transition-[visibility] duration-700", !onReviews && "invisible")}>
+            <div ref={panes[1]}>
             {has && (
               <div data-reviews-window>
                 <ReviewsCarousel reviews={reviews} active={onReviews} />
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
 
-      <footer className="meta mt-16 border-t border-ink/15 pt-5 text-ink-muted md:mt-24">
+      <footer className="meta mt-12 border-t border-ink/15 pt-5 text-ink-muted md:mt-16">
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" hash="top" className="wordmark text-ink transition-opacity hover:opacity-60">thegodnamed</Link>
           <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">

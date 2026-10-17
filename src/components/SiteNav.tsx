@@ -58,12 +58,15 @@ export function SiteNav() {
               PHOTOGRAPHY · VISUALS
             </span>
           </Link>
-          <div className="hidden items-baseline gap-8 text-[0.6875rem] md:flex">
+          <div className="hidden items-center gap-8 text-[0.6875rem] md:flex">
             {links.map((l) => (
               <Link key={l.hash} to="/" hash={l.hash} className="transition-opacity hover:opacity-60">{t(l.key)}</Link>
             ))}
-            <LangSwitch className="ml-2 border-l border-current/25 pl-6" />
+            <span aria-hidden className="ml-2 h-3 w-px self-center bg-current opacity-30" />
+            <LangSwitch className="whitespace-nowrap" />
           </div>
+          <div className="flex items-center gap-4 md:hidden">
+          <LangSwitch className="whitespace-nowrap text-[0.625rem]" />
           <button
             type="button"
             onClick={() => setMenu((m) => !m)}
@@ -77,6 +80,7 @@ export function SiteNav() {
               <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${menu ? "top-1 -rotate-45" : "top-2"}`} />
             </span>
           </button>
+          </div>
         </div>
       </nav>
 
@@ -94,7 +98,6 @@ export function SiteNav() {
             </li>
           ))}
         </ul>
-        <LangSwitch className="meta mt-8 text-sm text-paper" />
       </div>
     </header>
   );

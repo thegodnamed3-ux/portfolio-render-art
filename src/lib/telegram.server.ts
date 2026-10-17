@@ -55,6 +55,10 @@ export function replyButton(contact: string): TgButton | null {
   const handle = c.match(/^@([A-Za-z][A-Za-z0-9_]{4,31})$/);
   if (handle) return { text: "💬 Reply in Telegram", url: `https://t.me/${handle[1]}` };
   const digits = c.replace(/[\s().-]/g, "");
-  if (/^\+?\d{7,15}$/.test(digits)) return { text: "🟢 Reply in WhatsApp", url: `https://wa.me/${digits.replace(/^\+/, "")}` };
+  if (/^\+?\d{7,15}$/.test(digits)) {
+    // Short local numbers without a country code are taken as Estonian (+372).
+    const intl = digits.startsWith("+") ? digits.slice(1) : digits.startsWith("00") ? digits.slice(2) : digits.length <= 8 ? `372${digits}` : digits;
+    return { text: "🟢 Reply in WhatsApp", url: `https://wa.me/${intl}` };
+  }
   return null;
 }

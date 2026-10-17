@@ -86,7 +86,10 @@ async function maybeSendWeekly(sb: any, origin: string) {
   let claim = sb.from("site_settings").update({ report_week: week }).eq("id", 1);
   claim = last === null ? claim.is("report_week", null) : claim.eq("report_week", last);
   const { data: claimed } = await claim.select("id");
-  if (!claimed?.length || last === null) return; // first run only sets the marker
+  if (!claimed?.length) return;
+  // Retention promised in the privacy policy: visit records older than two years go.
+  await sb.from("page_views").delete().lt("created_at", new Date(now.getTime() - 730 * 86400000).toISOString());
+  if (last === null) return; // first run only sets the marker
 
   const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - ((now.getUTCDay() || 7) - 1)));
   const from = new Date(monday.getTime() - 7 * 86400000);

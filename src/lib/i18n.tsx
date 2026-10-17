@@ -37,9 +37,9 @@ const D = {
   "nav.subtitle": { en: "PHOTOGRAPHY · VISUALS", et: "FOTOGRAAFIA · VISUAALID", ru: "ФОТОГРАФИЯ · ВИЗУАЛ" },
 
   // Hero
-  "hero.l1": { en: "Beyond", et: "Kaugemale", ru: "За гранью" },
-  "hero.l2a": { en: "the", et: "", ru: "" },
-  "hero.l2b": { en: "obvious.", et: "ilmselgest.", ru: "очевидного." },
+  "hero.l1": { en: "Beyond", et: "Beyond", ru: "Beyond" },
+  "hero.l2a": { en: "the", et: "the", ru: "the" },
+  "hero.l2b": { en: "obvious.", et: "obvious.", ru: "obvious." },
   "hero.place": { en: "Tallinn, Estonia", et: "Tallinn, Eesti", ru: "Таллин, Эстония" },
   "hero.tag": { en: "Photography · Visuals", et: "Fotograafia · Visuaalid", ru: "Фотография · Визуал" },
   "hero.scroll": { en: "Scroll ↓", et: "Keri ↓", ru: "Вниз ↓" },

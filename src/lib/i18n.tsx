@@ -56,7 +56,7 @@ const D = {
   "work.lead2": { en: "and in between.", et: "ja kõikjal vahepeal.", ru: "и везде между ними." },
   "disciplines.title": { en: "Disciplines.", et: "Suunad.", ru: "Направления." },
   "about.title": { en: "About.", et: "Minust.", ru: "Обо мне." },
-  "about.role": { en: "Photographer & content creator · Tallinn", et: "Fotograaf ja sisulooja · Tallinn", ru: "Фотограф и контент-креатор · Таллин" },
+  "about.role": { en: "Photographer & visual artist · Tallinn", et: "Fotograaf ja visuaalkunstnik · Tallinn", ru: "Фотограф и визуальный художник · Таллин" },
   "about.p1": {
     en: "I make pictures for people, places and brands — homes that feel lived-in before anyone moves in, faces that forget the camera is there, ads that don’t look like ads.",
     et: "Teen pilte inimestele, kohtadele ja brändidele — kodud, mis tunduvad elatud juba enne sissekolimist, näod, mis unustavad kaamera, reklaamid, mis ei näe välja nagu reklaam.",

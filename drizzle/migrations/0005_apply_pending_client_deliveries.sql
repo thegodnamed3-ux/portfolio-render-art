@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.client_deliveries IS 'Client photo deliveries shared through secret links';

@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.media IS 'Photos served through long-lived signed URLs; anonymous bucket reads are removed by the pending 0006 migration.';

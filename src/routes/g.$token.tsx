@@ -129,7 +129,7 @@ function Gallery({ d }: { d: Delivery }) {
     setProgress(null);
   };
 
-  const view = (i: number) => open(d.files.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title);
+  const view = (i: number) => open(d.files.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { hideBook: true });
 
   return (
     <>

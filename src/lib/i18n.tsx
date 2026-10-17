@@ -150,6 +150,17 @@ const D = {
   "rv.send": { en: "Send review", et: "Saada arvustus", ru: "Отправить отзыв" },
   "rv.thanks1": { en: "Thank you.", et: "Aitäh.", ru: "Спасибо." },
   "rv.thanks2": { en: "Your review means a lot. It will appear on the website after a quick check.", et: "Sinu arvustus on väga oluline. See ilmub kodulehele pärast kiiret ülevaatust.", ru: "Ваш отзыв очень важен. Он появится на сайте после быстрой проверки." },
+  "nf.meta": { en: "404", et: "404", ru: "404" },
+  "nf.t1": { en: "Nothing", et: "Siin pole", ru: "Здесь" },
+  "nf.t2": { en: "in this frame.", et: "midagi.", ru: "ничего нет." },
+  "nf.p": { en: "This page doesn’t exist or has moved. The work is still where it was.", et: "Seda lehte pole või see on liikunud. Tööd on endiselt alles.", ru: "Такой страницы нет или она переехала. Работы — на своём месте." },
+  "nf.home": { en: "Back to the website", et: "Tagasi kodulehele", ru: "На главную" },
+  "err.meta": { en: "Error", et: "Viga", ru: "Ошибка" },
+  "err.t1": { en: "Something went", et: "Midagi läks", ru: "Что-то пошло" },
+  "err.t2": { en: "sideways.", et: "viltu.", ru: "не так." },
+  "err.p": { en: "The page didn’t load this time. Try again in a moment — or head back to the start.", et: "Leht seekord ei laadinud. Proovi hetke pärast uuesti või mine algusesse.", ru: "Страница не загрузилась. Попробуйте ещё раз чуть позже — или вернитесь на главную." },
+  "err.retry": { en: "Try again", et: "Proovi uuesti", ru: "Попробовать снова" },
+  "err.home": { en: "Home", et: "Avaleht", ru: "Главная" },
   "rv.fail": { en: "Could not send the review", et: "Arvustust ei õnnestunud saata", ru: "Не удалось отправить отзыв" },
 } satisfies Record<string, Entry>;
 

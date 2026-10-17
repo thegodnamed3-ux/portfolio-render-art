@@ -13,7 +13,11 @@ const isLang = (v: unknown): v is Lang => v === "en" || v === "et" || v === "ru"
 export const getLang = createServerFn({ method: "GET" }).handler(async (): Promise<Lang> => {
   try {
     const { getRequest } = await import("@tanstack/react-start/server");
-    const h = getRequest().headers;
+    const req = getRequest();
+    const h = req.headers;
+    // A shared link can carry ?lang=et — it wins on the first visit.
+    const fromUrl = new URL(req.url).searchParams.get("lang");
+    if (isLang(fromUrl)) return fromUrl;
     const cookie = /(?:^|;\s*)lang=(en|et|ru)\b/.exec(h.get("cookie") ?? "")?.[1];
     if (isLang(cookie)) return cookie;
     const accept = (h.get("accept-language") ?? "").toLowerCase();
@@ -170,6 +174,14 @@ export const useI18n = () => useContext(I18n);
 export function I18nProvider({ initial, children }: { initial: Lang; children: ReactNode }) {
   const [lang, setState] = useState<Lang>(initial);
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  // ?lang=xx in a shared link is remembered for the next visits too.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("lang");
+    if (isLang(q)) {
+      setState(q);
+      try { document.cookie = `lang=${q}; path=/; max-age=31536000; samesite=lax`; } catch { /* ignore */ }
+    }
+  }, []);
   const setLang = useCallback((l: Lang) => {
     setState(l);
     try { document.cookie = `lang=${l}; path=/; max-age=31536000; samesite=lax`; } catch { /* ignore */ }

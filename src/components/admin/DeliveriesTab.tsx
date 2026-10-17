@@ -342,6 +342,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
       </div>
 
       <AccessAndStats d={d} rows={rows} refresh={reload} />
+      <ClientMessage d={d} link={link} />
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <label className={cn(btnPrimary, "cursor-pointer", upload && "pointer-events-none opacity-60")}>
@@ -456,10 +457,11 @@ function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[];
   };
   const setPassword = async () => {
     const hash = await hashDeliveryPassword(d.id, pw.trim());
+    try { localStorage.setItem(`delivery-pw:${d.id}`, pw.trim()); } catch { /* ignore */ }
     await run(() => supabase.from("client_deliveries").update({ password_hash: hash }).eq("id", d.id), "Password set — send it to the client with the link");
     setPw("");
   };
-  const clearPassword = () => run(() => supabase.from("client_deliveries").update({ password_hash: null }).eq("id", d.id), "Password removed");
+  const clearPassword = () => { try { localStorage.removeItem(`delivery-pw:${d.id}`); } catch { /* ignore */ } return run(() => supabase.from("client_deliveries").update({ password_hash: null }).eq("id", d.id), "Password removed"); };
   const saveExpiry = (value: string) => run(
     async () => {
       const r = await supabase.from("client_deliveries").update({ expires_at: value ? new Date(`${value}T23:59:59`).toISOString() : null }).eq("id", d.id);
@@ -558,6 +560,58 @@ function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[];
             <li>{s.picksAt ? `Selection sent ${new Date(s.picksAt).toLocaleString()}` : "Selection not sent yet"}</li>
           </ul>
         )}
+      </div>
+    </div>
+  );
+}
+
+type MsgLang = "en" | "et" | "ru";
+const MSG: Record<MsgLang, { hi: (n: string) => string; ready: string; pw: string; until: string; how: string; wm: string; sign: string }> = {
+  en: { hi: (n) => (n ? `Hi ${n}!` : "Hi!"), ready: "Your photos are ready:", pw: "Password:", until: "The link works until", how: "You can download everything at once or one by one, and mark your favourites with a heart.", wm: "These are previews with a watermark — downloads open after payment.", sign: "— Gor" },
+  et: { hi: (n) => (n ? `Tere, ${n}!` : "Tere!"), ready: "Sinu fotod on valmis:", pw: "Parool:", until: "Link töötab kuni", how: "Saad kõik korraga või ükshaaval alla laadida ning märkida lemmikud südamega.", wm: "Need on vesimärgiga eelvaated — allalaadimine avaneb pärast tasumist.", sign: "— Gor" },
+  ru: { hi: (n) => (n ? `Здравствуйте, ${n}!` : "Здравствуйте!"), ready: "Ваши фото готовы:", pw: "Пароль:", until: "Ссылка работает до", how: "Можно скачать всё сразу или по одному и отметить понравившиеся сердечком.", wm: "Это превью с водяным знаком — скачивание откроется после оплаты.", sign: "— Гор" },
+};
+
+/** Ready-to-send message for the client in EN / ET / RU — copy, or open in WhatsApp / Telegram. */
+function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
+  const [lang, setLang] = useState<MsgLang>("en");
+  const [edited, setEdited] = useState<string | null>(null);
+  let pw: string | null = null;
+  try { pw = typeof window === "undefined" ? null : localStorage.getItem(`delivery-pw:${d.id}`); } catch { /* ignore */ }
+  const m = MSG[lang];
+  const date = d.expires_at ? new Date(d.expires_at).toLocaleDateString("en-GB").replace(/\//g, ".") : null;
+  const text = [
+    m.hi(d.client_name ?? ""),
+    "",
+    `${m.ready} ${d.title}`,
+    `${link}?lang=${lang}`,
+    d.password_hash ? `${m.pw} ${pw ?? "…"}` : null,
+    date ? `${m.until} ${date}.` : null,
+    "",
+    d.watermark ? m.wm : m.how,
+    "",
+    m.sign,
+  ].filter((l) => l !== null).join("\n");
+  const value = edited ?? text;
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(value); toast.success("Message copied"); } catch { toast.error("Could not copy"); }
+  };
+  return (
+    <div className="mt-4 space-y-3 rounded-3xl border border-border/60 bg-card/30 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="meta text-muted-foreground">Message to the client</p>
+        <div className="glass inline-flex rounded-full p-1">
+          {(["en", "et", "ru"] as const).map((l) => (
+            <button key={l} onClick={() => { setLang(l); setEdited(null); }} className={cn("meta rounded-full px-3 py-1", lang === l ? "bg-paper text-ink" : "text-paper/75")}>{l.toUpperCase()}</button>
+          ))}
+        </div>
+      </div>
+      <textarea value={value} onChange={(e) => setEdited(e.target.value)} rows={9} className={cn(input, "resize-y font-sans text-sm leading-relaxed")} aria-label="Message to the client" />
+      {d.password_hash && !pw && <p className="text-xs text-muted-foreground">The password isn’t known in this browser — type it in place of “…”, or set it again above.</p>}
+      <div className="flex flex-wrap gap-2">
+        <button className={btnPrimary} onClick={copy}>Copy message</button>
+        <a className={btn} href={`https://wa.me/?text=${encodeURIComponent(value)}`} target="_blank" rel="noopener noreferrer">Send in WhatsApp</a>
+        <a className={btn} href={`https://t.me/share/url?url=${encodeURIComponent(`${link}?lang=${lang}`)}&text=${encodeURIComponent(value)}`} target="_blank" rel="noopener noreferrer">Send in Telegram</a>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Review = {
-  id: string; name: string; body: string; rating: number | null; status: string; created_at: string;
+  id: string; name: string; body: string; rating: number | null; status: string; created_at: string; avatar_url: string | null;
   client_deliveries: { title: string } | null;
 };
 
@@ -27,7 +27,7 @@ export function ReviewsTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reviews")
-        .select("id, name, body, rating, status, created_at, client_deliveries(title)")
+        .select("id, name, body, rating, status, created_at, avatar_url, client_deliveries(title)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as unknown as Review[];
@@ -90,7 +90,10 @@ function ReviewItem({ r, refresh }: { r: Review; refresh: () => void }) {
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-border p-4">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="truncate text-sm text-paper">{r.name}</p>
+        <p className="flex min-w-0 items-center gap-2 truncate text-sm text-paper">
+          {r.avatar_url && <img src={r.avatar_url} alt="" className="size-7 shrink-0 rounded-full object-cover" />}
+          {r.name}
+        </p>
         {r.rating ? <span className="text-xs tracking-[0.1em] text-paper">{"★".repeat(r.rating)}<span className="text-paper/20">{"★".repeat(5 - r.rating)}</span></span> : null}
       </div>
       {editing ? (

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-export type PublicReview = { id: string; name: string; body: string; rating: number | null };
+export type PublicReview = { id: string; name: string; body: string; rating: number | null; avatar_url: string | null };
 
 const TOKEN = /^[A-Za-z0-9_-]{16,64}$/;
 /** A single delivery link can't be used to flood the studio with reviews. */
@@ -49,7 +49,7 @@ export const getApprovedReviews = createServerFn({ method: "GET" }).handler(asyn
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("reviews")
-    .select("id, name, body, rating")
+    .select("id, name, body, rating, avatar_url")
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(48);

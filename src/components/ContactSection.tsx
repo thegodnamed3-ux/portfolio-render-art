@@ -21,9 +21,13 @@ function ReviewCard({ r }: { r: PublicReview }) {
   return (
     <figure className="glass-ink flex flex-col gap-2.5 rounded-2xl p-3 md:p-3.5">
       <figcaption className="flex items-center gap-2">
-        <span aria-hidden className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-[Inter,sans-serif] text-[0.5625rem] font-medium tracking-[0.04em] text-paper">
-          {initials(r.name)}
-        </span>
+        {r.avatar_url ? (
+          <img src={r.avatar_url} alt="" loading="lazy" decoding="async" className="size-7 shrink-0 rounded-full object-cover" />
+        ) : (
+          <span aria-hidden className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-[Inter,sans-serif] text-[0.5625rem] font-medium tracking-[0.04em] text-paper">
+            {initials(r.name)}
+          </span>
+        )}
         <span className="min-w-0 flex-1 truncate text-xs font-medium text-ink">{r.name}</span>
         {r.rating ? <Stars n={r.rating} /> : null}
       </figcaption>

@@ -159,7 +159,7 @@ function Gallery({ d }: { d: Delivery }) {
         {n === 0 ? (
           <p className="meta py-16 text-center text-muted-foreground">Photos are on their way — check back soon.</p>
         ) : (
-          <ul className="columns-4 gap-1 sm:gap-1.5 md:columns-6 lg:columns-8 2xl:columns-10">
+          <ul className="grid grid-cols-4 gap-1 sm:gap-1.5 md:grid-cols-6 lg:grid-cols-8 2xl:grid-cols-10">
             {d.files.map((f, i) => <Tile key={f.id} f={f} onOpen={() => view(i)} />)}
           </ul>
         )}
@@ -170,9 +170,9 @@ function Gallery({ d }: { d: Delivery }) {
 
 function Tile({ f, onOpen }: { f: DeliveryFile; onOpen: () => void }) {
   return (
-    <li className="group relative mb-1 break-inside-avoid overflow-hidden rounded-sm bg-charcoal sm:mb-1.5">
-      <button type="button" onClick={onOpen} className="block w-full cursor-zoom-in" aria-label={`Open ${f.name}`}>
-        <img src={f.preview} alt={f.name} width={f.w} height={f.h} loading="lazy" decoding="async" className="block h-auto w-full" />
+    <li className="group relative aspect-[3/2] overflow-hidden rounded-sm bg-charcoal">
+      <button type="button" onClick={onOpen} className="block h-full w-full cursor-zoom-in" aria-label={`Open ${f.name}`}>
+        <img src={f.preview} alt={f.name} width={f.w} height={f.h} loading="lazy" decoding="async" className="block h-full w-full object-cover" />
       </button>
       <a
         href={f.download}

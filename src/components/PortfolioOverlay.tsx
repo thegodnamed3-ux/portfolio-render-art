@@ -131,7 +131,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
           </div>
           <div className="mx-4 h-px bg-paper/10 md:mx-8" />
 
-          <div ref={scroller} onScroll={onScroll} onPointerDown={() => guide && dismissGuide()} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-6 md:px-8">
+          <div ref={scroller} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-6 md:px-8">
             <div key={cat} className="grid gap-10 md:grid-cols-3 md:gap-x-8 md:gap-y-14">
               {isVideo
                 ? c.videos.map((v, i) => (
@@ -142,7 +142,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
                     </Cover>
                   ))
                 : sessions?.map((s, i) => (
-                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} frames`} onSelect={() => { if (guide) dismissGuide(); setSelected({ kind: "shoot", s }); }}>
+                    <Cover key={s.id} i={i} title={s.title} meta={`${String(s.count).padStart(2, "0")} frames`} onSelect={() => setSelected({ kind: "shoot", s })}>
                       <StackPreview s={s} eager={i < 2} demo={demo && i === 0} />
                     </Cover>
                   ))}
@@ -152,31 +152,13 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
           </div>
 
           <AnimatePresence>
-            {!scrolled && !guide && !isVideo && (sessions?.length ?? 0) > 1 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-viewer/70 to-transparent pb-4 pt-10">
+            {!scrolled && guide && !isVideo && (sessions?.length ?? 0) > 1 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-4">
                 <span className="meta text-[0.625rem] tracking-[0.28em] text-paper/60">Scroll to explore ↓</span>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <AnimatePresence>
-            {guide && !selected && (
-              <motion.div
-                role="note"
-                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: reduce ? 0.1 : 0.4, delay: reduce ? 0 : 0.5 }}
-                className="glass absolute bottom-4 left-1/2 z-10 w-[min(88%,320px)] -translate-x-1/2 rounded-[16px] p-3.5 pr-10"
-              >
-                <button onClick={dismissGuide} aria-label="Dismiss hint" className="hit absolute right-2.5 top-2.5 inline-flex size-6 items-center justify-center rounded-full text-paper/60 hover:text-paper"><CloseIcon /></button>
-                <p className="meta text-[0.625rem] text-paper">↕ Scroll vertically</p>
-                <p className="mt-0.5 text-xs text-paper/55">Browse photoshoots.</p>
-                <p className="meta mt-2.5 text-[0.625rem] text-paper">↔ Swipe horizontally</p>
-                <p className="mt-0.5 text-xs text-paper/55">Explore photographs inside a selected photoshoot.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
 
         {/* State two — the same glass surface becomes the viewer. */}

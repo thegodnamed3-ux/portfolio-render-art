@@ -98,9 +98,20 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
   }, [index, items]);
 
   // Fit every card into the same stage, preserving its native aspect ratio.
+  // Embedded: size from the measured photo area inside the glass overlay, never the window.
+  const area = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    if (!embedded || !area.current) return;
+    const el = area.current;
+    const ro = new ResizeObserver(() => setBox({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [embedded]);
   const mobile = vp.w < 768;
-  const stageW = vp.w * (mobile ? (embedded ? 0.8 : 0.88) : 0.72) - OFFSET * DEPTH;
-  const stageH = vp.h * (mobile ? (embedded ? 0.6 : 0.66) : (embedded ? 0.66 : 0.74)) - OFFSET * DEPTH;
+  const pad = mobile ? 16 : 40;
+  const stageW = Math.max(80, embedded && box ? box.w - pad * 2 - OFFSET * DEPTH : vp.w * (mobile ? 0.8 : 0.72) - OFFSET * DEPTH);
+  const stageH = Math.max(80, embedded && box ? box.h - pad - OFFSET * DEPTH : vp.h * (mobile ? 0.66 : 0.74) - OFFSET * DEPTH);
   const size = (it: ViewerItem) => {
     const s = Math.min(stageW / it.w, stageH / it.h);
     return { w: Math.round(it.w * s), h: Math.round(it.h * s) };
@@ -136,7 +147,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
         <button onClick={onClose} aria-label="Close viewer" className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 transition-colors hover:text-paper"><CloseIcon /></button>
       </div>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div ref={area} className={`relative flex min-h-0 min-w-0 w-full flex-1 items-center justify-center ${embedded ? "overflow-hidden" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
         <motion.div
           key={bump}
           className="relative"
@@ -173,7 +184,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded }
         </div>
         <AnimatePresence>
           {hint && !atEnd && (
-            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute left-1/2 -translate-x-1/2 text-[0.625rem] tracking-[0.28em] text-paper/60">← Swipe →</motion.span>
+            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.625rem] tracking-[0.28em] text-paper/55">← Swipe to explore →</motion.span>
           )}
           {atEnd && n > 1 && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">End of session</motion.span>

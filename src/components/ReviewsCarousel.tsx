@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { createPortal } from "react-dom";
 import type { PublicReview } from "@/lib/reviews.functions";
 import { cn } from "@/lib/utils";
 
@@ -46,8 +46,8 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
   const scroller = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState(false);
   const [open, setOpen] = useState<PublicReview | null>(null);
-  // Progress bar: thumb size = visible share, thumb position = how far along.
-  const [bar, setBar] = useState({ size: 1, pos: 0, atStart: true, atEnd: true });
+  // Progress bar fills left to right: the share of reviews already scrolled into view.
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const el = scroller.current;
@@ -55,12 +55,7 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
     const measure = () => {
       const max = el.scrollWidth - el.clientWidth;
       setOverflow(max > 4);
-      setBar({
-        size: el.scrollWidth ? Math.min(1, el.clientWidth / el.scrollWidth) : 1,
-        pos: max > 0 ? el.scrollLeft / max : 0,
-        atStart: el.scrollLeft <= 4,
-        atEnd: el.scrollLeft >= max - 4,
-      });
+      setProgress(el.scrollWidth ? Math.min(1, (el.scrollLeft + el.clientWidth) / el.scrollWidth) : 1);
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -69,7 +64,16 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
     return () => { ro.disconnect(); el.removeEventListener("scroll", measure); };
   }, [reviews.length]);
 
-  const page = (d: 1 | -1) => scroller.current?.scrollBy({ left: d * scroller.current.clientWidth, behavior: "smooth" });
+  // The full review opens above everything; Escape or a tap outside closes it.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => { html.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+  }, [open]);
 
   useEffect(() => { if (!active) setOpen(null); }, [active]);
 
@@ -83,42 +87,32 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
       </div>
 
       {overflow && (
-        <div className="mt-2 flex items-center gap-4 px-2 md:mt-2.5 md:gap-6">
-          <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-ink/10" aria-hidden>
-            <span
-              className="absolute inset-y-0 rounded-full bg-ink/55 transition-[left] duration-150 ease-out"
-              style={{ width: `${bar.size * 100}%`, left: `${bar.pos * (1 - bar.size) * 100}%` }}
-            />
-          </div>
-          <div className="flex shrink-0 gap-2">
-            {([-1, 1] as const).map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => page(d)}
-                disabled={d < 0 ? bar.atStart : bar.atEnd}
-                aria-label={d < 0 ? "Previous reviews" : "Next reviews"}
-                className="glass-ink hit grid size-8 cursor-pointer place-items-center rounded-full text-ink/80 hover:text-ink disabled:cursor-default disabled:opacity-35"
-              >
-                {d < 0 ? <ChevronLeft className="size-3.5" strokeWidth={1.5} /> : <ChevronRight className="size-3.5" strokeWidth={1.5} />}
-              </button>
-            ))}
+        <div className="mt-2.5 px-2 pb-1 md:mt-3" aria-hidden>
+          <div className="relative h-1 overflow-hidden rounded-full bg-ink/10">
+            <span className="absolute inset-y-0 left-0 rounded-full bg-ink/55 transition-[width] duration-200 ease-out" style={{ width: `${progress * 100}%` }} />
           </div>
         </div>
       )}
 
-      {open && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[28px] bg-paper/40 p-3 backdrop-blur-sm md:p-6" onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}>
-          <figure className="glass-card flex max-h-full w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-[32px] p-6">
+      {open && typeof document !== "undefined" && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Review by ${open.name}`}
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-viewer/60 p-4 backdrop-blur-xl"
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}
+        >
+          <figure className="glass-card flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-[32px] p-6 md:p-8">
             <figcaption className="flex items-center gap-3">
-              <Avatar r={open} size="size-10" />
+              <Avatar r={open} size="size-11" />
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{open.name}</span>
               {open.rating ? <Stars n={open.rating} /> : null}
-              <button type="button" onClick={() => setOpen(null)} aria-label="Close review" className="glass-ink grid size-8 place-items-center rounded-full text-ink/70 hover:text-ink">✕</button>
+              <button type="button" onClick={() => setOpen(null)} aria-label="Close review" className="glass-ink hit grid size-8 place-items-center rounded-full text-ink/70 hover:text-ink">✕</button>
             </figcaption>
-            <blockquote className="whitespace-pre-line text-sm leading-relaxed text-ink/80">{open.body}</blockquote>
+            <blockquote className="whitespace-pre-line text-sm leading-relaxed text-ink/80 md:text-base">{open.body}</blockquote>
           </figure>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

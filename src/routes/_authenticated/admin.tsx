@@ -227,7 +227,7 @@ function Studio() {
   };
   const current = ALL_TABS.find((t) => t.id === tab)!;
 
-  const Badge = ({ n, active }: { n?: number; active?: boolean }) =>
+  const Badge = ({ n, active }: { n?: number | undefined; active?: boolean }) =>
     n ? <span className={cn("ml-auto min-w-5 rounded-full px-1.5 text-center text-[0.625rem] font-medium leading-5", active ? "bg-ink/10 text-ink" : "bg-paper/15 text-paper")}>{n}</span> : null;
 
   return (

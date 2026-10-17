@@ -127,7 +127,7 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
 
 function Index_Disciplines() {
   return (
-    <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-20 text-ink md:px-10 md:py-32">
+    <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-14 text-ink md:px-10 md:py-20">
       <div className="grid gap-10 md:grid-cols-12">
         <h2 className="display text-3xl md:col-span-3 md:text-4xl">Disciplines.</h2>
         <ol className="md:col-span-9">

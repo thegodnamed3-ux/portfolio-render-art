@@ -57,6 +57,15 @@ function PrivacyPage() {
           <p><strong className="text-paper">Technical data.</strong> Like any website, the hosting infrastructure processes your IP address and basic request data to deliver pages and keep the service secure (legitimate interest, Art. 6(1)(f)).</p>
         </Section>
 
+        <Section title="Visit statistics">
+          <p>
+            To see how the website is used, I count page views without cookies. For each visit I store the page, the
+            website you came from (e.g. “instagram”), your country and device type. Your IP address is never stored —
+            it is only mixed with your browser type and the date into a one-way code that tells same-day repeat visits
+            apart and changes every day (legitimate interest, Art. 6(1)(f)).
+          </p>
+        </Section>
+
         <Section title="Cookies and storage">
           <p>
             The website does not use advertising or analytics cookies. Your browser may keep a few small technical entries

@@ -4,11 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { trackView } from "../lib/analytics.functions";
 
 import { LightboxProvider } from "../components/Lightbox";
 import { PortfolioProvider } from "../components/PortfolioOverlay";
@@ -130,6 +133,21 @@ function RootComponent() {
         <Outlet />
       </PortfolioProvider></LightboxProvider>
       <Toaster position="bottom-center" />
+      <ViewTracker />
     </QueryClientProvider>
   );
+}
+
+/** Cookie-free page-view counting: one call per page change (private pages are skipped server-side). */
+function ViewTracker() {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const track = useServerFn(trackView);
+  const last = useRef<string | null>(null);
+  useEffect(() => {
+    if (last.current === path) return;
+    const first = last.current === null;
+    last.current = path;
+    void track({ data: { path, referrer: first ? document.referrer : "" } }).catch(() => {});
+  }, [path, track]);
+  return null;
 }

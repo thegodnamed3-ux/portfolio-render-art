@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowUpRight, Images, Inbox, Layers, LayoutTemplate, LogOut, MessageSquareQuote, Send, Settings2, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, BarChart3, Images, Inbox, Layers, LayoutTemplate, LogOut, MessageSquareQuote, Send, Settings2, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DeliveriesTab } from "@/components/admin/DeliveriesTab";
 import { ReviewsTab } from "@/components/admin/ReviewsTab";
+import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -151,7 +152,7 @@ function Shell({ children, onSignOut }: { children: ReactNode; onSignOut: () => 
   );
 }
 
-type Tab = "shoots" | "library" | "home" | "review" | "clients" | "reviews" | "settings";
+type Tab = "shoots" | "library" | "home" | "review" | "clients" | "reviews" | "analytics" | "settings";
 const NAV: { group: string; items: { id: Tab; label: string; hint: string; Icon: LucideIcon }[] }[] = [
   {
     group: "Website",
@@ -169,7 +170,13 @@ const NAV: { group: string; items: { id: Tab; label: string; hint: string; Icon:
       { id: "reviews", label: "Reviews", hint: "Approve, edit or hide what clients wrote.", Icon: MessageSquareQuote },
     ],
   },
-  { group: "Studio", items: [{ id: "settings", label: "Settings", hint: "Contact links used across the site.", Icon: Settings2 }] },
+  {
+    group: "Studio",
+    items: [
+      { id: "analytics", label: "Analytics", hint: "Who visits the website and where they come from — without cookies.", Icon: BarChart3 },
+      { id: "settings", label: "Settings", hint: "Contact links used across the site.", Icon: Settings2 },
+    ],
+  },
 ];
 const ALL_TABS = NAV.flatMap((g) => g.items);
 
@@ -278,6 +285,8 @@ function Studio() {
 
         {tab === "settings" ? (
           <WhatsAppSetting />
+        ) : tab === "analytics" ? (
+          <AnalyticsTab />
         ) : tab === "clients" ? (
           <DeliveriesTab />
         ) : tab === "reviews" ? (

@@ -249,7 +249,7 @@ function Studio() {
                   >
                     <Icon className="size-4 shrink-0" strokeWidth={1.5} />
                     {label}
-                    <Badge n={badges[id]} active={tab === id} />
+                    <Badge n={badges[id] ?? 0} active={tab === id} />
                   </button>
                 </li>
               ))}

@@ -479,7 +479,7 @@ function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
           decoding="async"
           draggable={false}
           // If the web preview is missing, fall back to the original file.
-          onError={() => { if (src !== f.download) setSrc(f.download); }}
+          onError={() => { if (f.download && src !== f.download) setSrc(f.download); }}
           className="pointer-events-none block h-full w-full object-cover"
         />
         {f.overlay && (

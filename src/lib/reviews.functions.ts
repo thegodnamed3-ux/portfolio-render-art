@@ -40,18 +40,20 @@ export const submitReview = createServerFn({ method: "POST" })
     }
     // Ping the studio; a Telegram hiccup never fails the client's submission.
     try {
-      const { sendTelegram, siteOrigin } = await import("@/lib/telegram.server");
+      const { sendTelegram, esc, siteOrigin } = await import("@/lib/telegram.server");
       const origin = await siteOrigin();
-      await sendTelegram([
-        "⭐ New review — waiting for approval",
-        "",
-        `${data.name}${data.rating ? ` · ${"★".repeat(data.rating)}` : ""}`,
-        `From: ${d.title}`,
-        "",
-        data.body,
-        "",
-        origin ? `Edit & publish: ${origin}/admin (Reviews tab)` : "Edit & publish in the studio → Reviews tab",
-      ].join("\n"));
+      const stars = data.rating ? `${"★".repeat(data.rating)}${"☆".repeat(5 - data.rating)}` : null;
+      await sendTelegram(
+        [
+          "⭐ <b>New review</b> · waiting for approval",
+          "",
+          `👤 <b>${esc(data.name)}</b>${stars ? `  ${stars}` : ""}`,
+          `🗂 ${esc(d.title)}`,
+          "",
+          `<blockquote>${esc(data.body)}</blockquote>`,
+        ].join("\n"),
+        origin ? [{ text: "✏️ Edit & publish in the studio", url: `${origin}/admin` }] : [],
+      );
     } catch (e) {
       console.error("submitReview telegram", e);
     }

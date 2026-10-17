@@ -37,8 +37,14 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen, 
   const fade = useFadeIn();
   const reduce = useReducedMotion();
   const zoom = hover ?? !isStatic;
+  const ease = [0.16, 0.8, 0.1, 1] as const;
+  // On reveal the photo also settles from a slight zoom inside its frame — slow and soft.
+  const settle = reveal !== undefined
+    ? { variants: { hidden: { scale: 1.12 }, shown: { scale: 1 } }, transition: reduce ? { duration: 0 } : { duration: 1.8, delay: reveal, ease } }
+    : null;
   const img = (
     <div className="overflow-hidden bg-charcoal" style={{ aspectRatio: `${photo.w} / ${photo.h}` }}>
+      <motion.div className="h-full w-full" {...(settle ?? {})}>
       <img
         ref={fade.ref}
         onLoad={fade.onLoad}
@@ -59,6 +65,7 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen, 
           zoom && "group-hover:scale-[1.03]",
         )}
       />
+      </motion.div>
     </div>
   );
   const body = (
@@ -87,10 +94,11 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen, 
     <motion.figure
       className={cls}
       style={style}
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -8% 0px" }}
-      transition={reduce ? { duration: 0 } : { duration: 0.9, delay: reveal, ease: [0.2, 0.7, 0.1, 1] }}
+      variants={{ hidden: { opacity: 0, y: 56 }, shown: { opacity: 1, y: 0 } }}
+      initial="hidden"
+      whileInView="shown"
+      viewport={{ once: true, amount: 0.2 }}
+      transition={reduce ? { duration: 0 } : { duration: 1.3, delay: reveal, ease }}
     >
       {body}
     </motion.figure>

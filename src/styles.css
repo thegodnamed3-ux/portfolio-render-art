@@ -164,7 +164,7 @@
   background: color-mix(in oklab, var(--paper) 9%, transparent);
   backdrop-filter: blur(22px) saturate(160%);
   border: 1px solid color-mix(in oklab, var(--paper) 16%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--paper) 22%, transparent), 0 10px 30px -12px oklch(0 0 0 / 60%);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--paper) 22%, transparent);
   transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, scale 160ms ease, opacity 300ms ease;
   /* Interactive glass stays glass: a brighter tint on hover, a press-in on click. */
   &:where(button, a, label):hover {
@@ -197,8 +197,7 @@
   border: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, white 85%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--ink) 6%, transparent),
-    0 8px 20px -12px oklch(0 0 0 / 35%);
+    inset 0 -1px 0 color-mix(in oklab, var(--ink) 6%, transparent);
   transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, scale 160ms ease, opacity 300ms ease;
   &:where(button, a, label):hover {
     background:

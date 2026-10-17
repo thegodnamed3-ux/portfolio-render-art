@@ -76,7 +76,7 @@ function Work() {
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
       <div className="mb-10 grid gap-6 md:mb-16 md:grid-cols-12">
-        <h2 className="display text-3xl md:col-span-3 md:text-4xl">Selected work.</h2>
+        <h2 className="display text-3xl md:col-span-3 md:text-4xl">Selected works.</h2>
         <p className="display text-4xl md:col-span-9 md:text-6xl">
           Portraits by the sea, in studios, <em className="text-muted-foreground">and in between.</em>
         </p>

@@ -26,6 +26,7 @@ export type Database = {
           title: string
           token: string
           updated_at: string
+          watermark: boolean
         }
         Insert: {
           client_name?: string | null
@@ -38,6 +39,7 @@ export type Database = {
           title?: string
           token: string
           updated_at?: string
+          watermark?: boolean
         }
         Update: {
           client_name?: string | null
@@ -50,6 +52,7 @@ export type Database = {
           title?: string
           token?: string
           updated_at?: string
+          watermark?: boolean
         }
         Relationships: []
       }
@@ -103,6 +106,7 @@ export type Database = {
           id: string
           position: number
           preview_path: string | null
+          preview_wm_path: string | null
           size: number
           storage_path: string
           w: number | null
@@ -117,6 +121,7 @@ export type Database = {
           id?: string
           position?: number
           preview_path?: string | null
+          preview_wm_path?: string | null
           size?: number
           storage_path: string
           w?: number | null
@@ -131,6 +136,7 @@ export type Database = {
           id?: string
           position?: number
           preview_path?: string | null
+          preview_wm_path?: string | null
           size?: number
           storage_path?: string
           w?: number | null
@@ -187,6 +193,36 @@ export type Database = {
           src?: string
           storage_path?: string | null
           w?: number
+        }
+        Relationships: []
+      }
+      page_views: {
+        Row: {
+          country: string | null
+          created_at: string
+          device: string | null
+          id: number
+          path: string
+          referrer: string | null
+          visitor: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: never
+          path: string
+          referrer?: string | null
+          visitor: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: never
+          path?: string
+          referrer?: string | null
+          visitor?: string
         }
         Relationships: []
       }
@@ -330,6 +366,7 @@ export type Database = {
           featured_work: Json | null
           hero_slides: Json | null
           id: number
+          report_week: string | null
           updated_at: string
           whatsapp_url: string | null
         }
@@ -339,6 +376,7 @@ export type Database = {
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
+          report_week?: string | null
           updated_at?: string
           whatsapp_url?: string | null
         }
@@ -348,6 +386,7 @@ export type Database = {
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
+          report_week?: string | null
           updated_at?: string
           whatsapp_url?: string | null
         }

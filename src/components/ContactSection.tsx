@@ -107,6 +107,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" hash="top" className="wordmark text-ink transition-opacity hover:opacity-60">thegodnamed</Link>
           <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">
+            <Link to="/privacy" className="transition-colors hover:text-ink">Privacy</Link>
             <span>Tallinn</span>
             <span>&copy; {new Date().getFullYear()}</span>
           </span>

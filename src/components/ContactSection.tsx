@@ -23,7 +23,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const has = withReviews && reviews.length > 0;
   const onReviews = has && view === "reviews";
 
-  // The band keeps one height — the taller pane's — so switching never resizes the page.
+  // Desktop: the band keeps one height (the taller pane's) so switching never resizes the page.
+  // Phones: it takes the height of the pane on show, so the contacts don't float in empty space.
   const panes = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)] as const;
   const [heights, setHeights] = useState<[number, number]>([0, 0]);
   useEffect(() => {
@@ -32,7 +33,15 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
     return () => ro.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [has]);
-  const height = Math.max(heights[0], heights[1]);
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const on = () => setWide(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const height = wide ? Math.max(heights[0], heights[1]) : heights[onReviews ? 1 : 0];
 
   // Switching panes brings the whole band into view, so the reviews window is never cut off.
   const section = useRef<HTMLElement>(null);

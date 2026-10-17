@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PublicReview } from "@/lib/reviews.functions";
 import { cn } from "@/lib/utils";
 
@@ -40,96 +40,11 @@ function ReviewCard({ r, onOpen }: { r: PublicReview; onOpen: () => void }) {
   );
 }
 
-/**
- * Glass joystick: drag the knob from the centre — the further it goes, the faster the
- * reviews glide that way; let go and it springs back and the row settles on a column.
- * The arrows at either end step one page.
- */
-function Joystick({ scroller, hint }: { scroller: React.RefObject<HTMLDivElement | null>; hint: number }) {
-  const track = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const off = useRef(0);
-  const raf = useRef(0);
-  const MAX = 34;
-
-  const loop = useCallback(() => {
-    const el = scroller.current;
-    if (el && off.current) el.scrollLeft += (off.current / MAX) * 16;
-    raf.current = requestAnimationFrame(loop);
-  }, [scroller]);
-
-  const setFrom = (clientX: number) => {
-    const r = track.current!.getBoundingClientRect();
-    const v = Math.max(-MAX, Math.min(MAX, clientX - (r.left + r.width / 2)));
-    off.current = v;
-    setOffset(v);
-  };
-  const start = (e: React.PointerEvent) => {
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    if (scroller.current) scroller.current.style.scrollSnapType = "none";
-    setDragging(true);
-    setFrom(e.clientX);
-    cancelAnimationFrame(raf.current);
-    raf.current = requestAnimationFrame(loop);
-  };
-  const end = () => {
-    cancelAnimationFrame(raf.current);
-    off.current = 0;
-    setOffset(0);
-    setDragging(false);
-    const el = scroller.current;
-    if (el) {
-      el.style.scrollSnapType = "";
-      // Settle on the nearest column.
-      el.scrollBy({ left: 1, behavior: "smooth" });
-    }
-  };
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-
-  const page = (d: 1 | -1) => scroller.current?.scrollBy({ left: d * scroller.current.clientWidth, behavior: "smooth" });
-
-  return (
-    <div className="glass-ink flex h-10 w-48 select-none items-center justify-between rounded-full px-1.5">
-      <button type="button" onClick={() => page(-1)} aria-label="Previous reviews" className="grid size-7 place-items-center rounded-full text-ink/70 transition-[color,scale] hover:text-ink active:scale-90">←</button>
-      <div
-        ref={track}
-        role="slider"
-        aria-label="Scroll reviews"
-        aria-valuemin={-1}
-        aria-valuemax={1}
-        aria-valuenow={Math.round((offset / MAX) * 100) / 100}
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "ArrowLeft") page(-1); if (e.key === "ArrowRight") page(1); }}
-        onPointerDown={start}
-        onPointerMove={(e) => dragging && setFrom(e.clientX)}
-        onPointerUp={end}
-        onPointerCancel={end}
-        className="relative flex h-full flex-1 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
-      >
-        <span aria-hidden className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-ink/15" />
-        <span
-          key={hint}
-          aria-hidden
-          className={cn(
-            "relative size-6 rounded-full border border-white/90 bg-white/70 shadow-[inset_0_1px_0_white,0_2px_8px_-3px_oklch(0_0_0/0.35)] backdrop-blur",
-            !dragging && "transition-transform duration-300 ease-[cubic-bezier(0.3,1.6,0.5,1)]",
-            hint > 0 && !dragging && offset === 0 && "animate-[joystick-hint_2.4s_cubic-bezier(0.45,0,0.55,1)_1]",
-          )}
-          style={offset ? { transform: `translateX(${offset}px)` } : undefined}
-        />
-      </div>
-      <button type="button" onClick={() => page(1)} aria-label="Next reviews" className="grid size-7 place-items-center rounded-full text-ink/70 transition-[color,scale] hover:text-ink active:scale-90">→</button>
-    </div>
-  );
-}
-
 /** Reviews window: 4 × 2 cards per screen on desktop, sideways scrolling for more. */
 export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; active: boolean }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState(false);
   const [open, setOpen] = useState<PublicReview | null>(null);
-  const [hint, setHint] = useState(0);
 
   useEffect(() => {
     const el = scroller.current;
@@ -139,12 +54,7 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
     return () => ro.disconnect();
   }, [reviews.length]);
 
-  // Show the joystick hint each time the window opens, once the slide-in has finished.
-  useEffect(() => {
-    if (!active) { setOpen(null); return; }
-    const t = setTimeout(() => setHint((h) => h + 1), 750);
-    return () => clearTimeout(t);
-  }, [active]);
+  useEffect(() => { if (!active) setOpen(null); }, [active]);
 
   return (
     <div className="glass-window relative mt-6 rounded-[36px] p-3 md:p-4">
@@ -155,11 +65,6 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
         {reviews.map((r) => <ReviewCard key={r.id} r={r} onOpen={() => setOpen(r)} />)}
       </div>
 
-      {overflow && (
-        <div className="mt-3 flex justify-center md:mt-4">
-          <Joystick scroller={scroller} hint={hint} />
-        </div>
-      )}
 
       {open && (
         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[36px] bg-paper/40 p-3 backdrop-blur-sm md:p-6" onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}>

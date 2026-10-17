@@ -29,6 +29,8 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: loaderData?.hero?.[0]?.src ?? photos[10]!.src },
       { name: "twitter:image", content: loaderData?.hero?.[0]?.src ?? photos[10]!.src },
     ],
+    // Start fetching the first hero frame before the bundle runs.
+    links: [{ rel: "preload", as: "image", href: (loaderData?.hero ?? defaultHero)[0]?.src ?? photos[10]!.src, fetchPriority: "high" } as never],
   }),
   loader: () => getHomeMedia(),
   component: Index,

@@ -855,7 +855,7 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
 
 /* ---------------- Homepage hero & About ---------------- */
 
-const toImg = (m: Media): HomeImage => ({ src: m.src, w: m.w, h: m.h });
+const toImg = (m: Media): HomeImage => ({ src: m.src, w: m.w, h: m.h, ...(m.sm && m.sm !== m.src ? { sm: m.sm } : {}) });
 
 function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
   const qc = useQueryClient();

@@ -92,7 +92,7 @@ export const getSiteSettings = createServerFn({ method: "GET" }).handler(async (
   return { whatsapp: data?.whatsapp_url?.trim() || null };
 });
 
-export type HomeImage = { src: string; w: number; h: number; pos?: string };
+export type HomeImage = { src: string; w: number; h: number; pos?: string; /** ~600px copy for grids on phones. */ sm?: string };
 
 /** Homepage hero slides and About portrait chosen in the studio (null = site defaults). */
 export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () => {
@@ -104,5 +104,12 @@ export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () =
   const { data: w } = await sb.from("site_settings").select("featured_work, featured_columns").eq("id", 1).maybeSingle();
   const work = Array.isArray(w?.featured_work) && w.featured_work.length ? (w.featured_work as unknown as (HomeImage & { caption?: string })[]) : null;
   const columns = typeof w?.featured_columns === "number" ? w.featured_columns : null;
+  // Older selections were saved without the small copy — look it up so grids can use srcSet.
+  if (work?.some((x) => !x.sm)) {
+    const srcs = work.filter((x) => !x.sm).map((x) => x.src).slice(0, 200);
+    const { data: rows } = await sb.from("media").select("src, sm").in("src", srcs);
+    const bySrc = new Map((rows ?? []).filter((r) => r.sm && r.sm !== r.src).map((r) => [r.src, r.sm as string]));
+    work.forEach((x) => { if (!x.sm && bySrc.has(x.src)) x.sm = bySrc.get(x.src); });
+  }
   return { hero, about, work, columns };
 });

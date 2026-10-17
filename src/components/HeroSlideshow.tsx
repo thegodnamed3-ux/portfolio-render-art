@@ -46,7 +46,8 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
               data-src={s.src}
               alt=""
               loading={k === 0 ? "eager" : "lazy"}
-              decoding="async"
+              {...(k === 0 ? { fetchPriority: "high" as const } : {})}
+              decoding={k === 0 ? "sync" : "async"}
               style={{ objectPosition: s.pos ?? "50% 50%", transitionDuration: manual ? "550ms" : undefined }}
               className={cn(
                 "absolute inset-0 h-full w-full object-cover transition-opacity duration-[1600ms] ease-in-out motion-reduce:transition-none",

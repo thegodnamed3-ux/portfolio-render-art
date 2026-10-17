@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { PublicReview } from "@/lib/reviews.functions";
 import { cn } from "@/lib/utils";
 
@@ -45,14 +46,30 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
   const scroller = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState(false);
   const [open, setOpen] = useState<PublicReview | null>(null);
+  // Progress bar: thumb size = visible share, thumb position = how far along.
+  const [bar, setBar] = useState({ size: 1, pos: 0, atStart: true, atEnd: true });
 
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setOverflow(el.scrollWidth > el.clientWidth + 4));
+    const measure = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      setOverflow(max > 4);
+      setBar({
+        size: el.scrollWidth ? Math.min(1, el.clientWidth / el.scrollWidth) : 1,
+        pos: max > 0 ? el.scrollLeft / max : 0,
+        atStart: el.scrollLeft <= 4,
+        atEnd: el.scrollLeft >= max - 4,
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    el.addEventListener("scroll", measure, { passive: true });
+    return () => { ro.disconnect(); el.removeEventListener("scroll", measure); };
   }, [reviews.length]);
+
+  const page = (d: 1 | -1) => scroller.current?.scrollBy({ left: d * scroller.current.clientWidth, behavior: "smooth" });
 
   useEffect(() => { if (!active) setOpen(null); }, [active]);
 
@@ -65,6 +82,30 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
         {reviews.map((r) => <ReviewCard key={r.id} r={r} onOpen={() => setOpen(r)} />)}
       </div>
 
+      {overflow && (
+        <div className="mt-3 flex items-center gap-4 px-2 md:mt-4 md:gap-6">
+          <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-ink/10" aria-hidden>
+            <span
+              className="absolute inset-y-0 rounded-full bg-ink/55 transition-[left] duration-150 ease-out"
+              style={{ width: `${bar.size * 100}%`, left: `${bar.pos * (1 - bar.size) * 100}%` }}
+            />
+          </div>
+          <div className="flex shrink-0 gap-2">
+            {([-1, 1] as const).map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => page(d)}
+                disabled={d < 0 ? bar.atStart : bar.atEnd}
+                aria-label={d < 0 ? "Previous reviews" : "Next reviews"}
+                className="glass-ink hit grid size-9 cursor-pointer place-items-center rounded-full text-ink/80 hover:text-ink disabled:cursor-default disabled:opacity-35"
+              >
+                {d < 0 ? <ChevronLeft className="size-3.5" strokeWidth={1.5} /> : <ChevronRight className="size-3.5" strokeWidth={1.5} />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {open && (
         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[36px] bg-paper/40 p-3 backdrop-blur-sm md:p-6" onClick={(e) => { if (e.target === e.currentTarget) setOpen(null); }}>

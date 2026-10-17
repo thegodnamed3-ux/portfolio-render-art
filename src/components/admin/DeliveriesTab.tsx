@@ -329,7 +329,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
         </div>
       </div>
 
-      <div className="mt-8 rounded-2xl border border-border p-4">
+      <div className="mt-8 rounded-3xl border border-border/60 bg-card/30 p-5">
         <p className="meta mb-3 text-muted-foreground">
           Client link · {d.is_active ? "working" : "switched off"}
         </p>
@@ -371,7 +371,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
       <p className="mt-3 text-xs text-muted-foreground">Originals are delivered untouched (full size, original file names). Photos are shown in file-name order.</p>
 
       {notes.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-border p-4">
+        <div className="mt-6 rounded-3xl border border-border/60 bg-card/30 p-5">
           <p className="meta mb-2 text-muted-foreground">Client notes</p>
           <ul className="space-y-1.5 text-sm">
             {notes.map((f) => <li key={f.id}><span className="text-paper">{f.file_name}</span><span className="text-muted-foreground"> — {f.client_note}</span></li>)}
@@ -500,7 +500,7 @@ function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[];
 
   return (
     <div className="mt-4 grid gap-4 md:grid-cols-2">
-      <div className="space-y-3 rounded-2xl border border-border p-4">
+      <div className="space-y-3 rounded-3xl border border-border/60 bg-card/30 p-5">
         <p className="meta text-muted-foreground">Access</p>
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -538,7 +538,7 @@ function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[];
         </div>
         <p className="text-xs text-muted-foreground">While on, the client sees watermarked previews and can’t download originals. Switch off once paid — same link.</p>
       </div>
-      <div className="space-y-2 rounded-2xl border border-border p-4">
+      <div className="space-y-2 rounded-3xl border border-border/60 bg-card/30 p-5">
         <p className="meta text-muted-foreground">Client activity</p>
         {s === null ? (
           <p className="text-xs text-muted-foreground">Stats will appear once the database update for them is applied.</p>

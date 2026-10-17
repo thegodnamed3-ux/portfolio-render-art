@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { ArrowUpRight, Images, Inbox, Layers, LayoutTemplate, LogOut, MessageSquareQuote, Send, Settings2, type LucideIcon } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -132,27 +133,76 @@ function AdminPage() {
 
 function Shell({ children, onSignOut }: { children: ReactNode; onSignOut: () => void }) {
   return (
-    <main className="min-h-[100svh] px-4 pb-24 md:px-10">
-      <header className="flex items-center justify-between py-6">
-        <div className="flex items-baseline gap-3">
-          <Link to="/" className="wordmark text-paper">thegodnamed</Link>
-          <span className="meta text-muted-foreground">Studio</span>
+    <main className="min-h-[100svh] pb-24">
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-4 px-4 py-4 md:px-10">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="wordmark text-paper transition-opacity hover:opacity-70">thegodnamed</Link>
+            <span className="meta rounded-full border border-border px-2.5 py-1 text-[0.5625rem] text-muted-foreground">Studio</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <a href="/" target="_blank" rel="noopener noreferrer" className={cn(btn, "hidden sm:inline-flex")}>View site <ArrowUpRight className="size-3.5" strokeWidth={1.5} /></a>
+            <button onClick={onSignOut} className={btn} aria-label="Sign out"><LogOut className="size-3.5" strokeWidth={1.5} /><span className="hidden sm:inline">Sign out</span></button>
+          </div>
         </div>
-        <button onClick={onSignOut} className={btn}>Sign out</button>
       </header>
-      {children}
+      <div className="mx-auto max-w-[90rem] px-4 pt-6 md:px-10 md:pt-10">{children}</div>
     </main>
   );
+}
+
+type Tab = "shoots" | "library" | "home" | "review" | "clients" | "reviews" | "settings";
+const NAV: { group: string; items: { id: Tab; label: string; hint: string; Icon: LucideIcon }[] }[] = [
+  {
+    group: "Website",
+    items: [
+      { id: "shoots", label: "Photoshoots", hint: "The stacks shown in each discipline — order, covers, publishing.", Icon: Layers },
+      { id: "home", label: "Homepage", hint: "Hero slides, the About portrait and Selected works.", Icon: LayoutTemplate },
+      { id: "library", label: "Media library", hint: "Every photo uploaded to the site.", Icon: Images },
+      { id: "review", label: "Import review", hint: "Albums brought over from Wfolio, waiting for a decision.", Icon: Inbox },
+    ],
+  },
+  {
+    group: "Clients",
+    items: [
+      { id: "clients", label: "Client delivery", hint: "Private galleries: upload, share the link, see picks and activity.", Icon: Send },
+      { id: "reviews", label: "Reviews", hint: "Approve, edit or hide what clients wrote.", Icon: MessageSquareQuote },
+    ],
+  },
+  { group: "Studio", items: [{ id: "settings", label: "Settings", hint: "Contact links used across the site.", Icon: Settings2 }] },
+];
+const ALL_TABS = NAV.flatMap((g) => g.items);
+
+function usePendingReviews() {
+  return useQuery({
+    queryKey: ["admin", "reviews-pending"],
+    queryFn: async () => {
+      const { count, error } = await supabase.from("reviews").select("id", { count: "exact", head: true }).eq("status", "pending");
+      return error ? 0 : (count ?? 0);
+    },
+    refetchInterval: 60_000,
+  });
 }
 
 function Studio() {
   const q = useData();
   const qc = useQueryClient();
   const runImport = useServerFn(importWfolio);
-  const [tab, setTab] = useState<"shoots" | "library" | "home" | "review" | "clients" | "reviews">("shoots");
+  const [tab, setTabState] = useState<Tab>("shoots");
   const [cat, setCat] = useState(photoCats[0]!.slug);
   const [selected, setSelected] = useState<string | null>(null);
+  const pendingReviews = usePendingReviews();
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "portfolio"] });
+
+  // Remember the open section between visits.
+  useEffect(() => {
+    try { const t = localStorage.getItem("studio-tab") as Tab | null; if (t && ALL_TABS.some((x) => x.id === t)) setTabState(t); } catch { /* ignore */ }
+  }, []);
+  const setTab = (t: Tab) => {
+    setTabState(t);
+    try { localStorage.setItem("studio-tab", t); } catch { /* ignore */ }
+    window.scrollTo({ top: 0 });
+  };
 
   const imp = useMutation({
     mutationFn: () => runImport(),
@@ -164,42 +214,88 @@ function Studio() {
   if (q.error || !q.data) return <p className="text-sm text-destructive">Could not load the portfolio.</p>;
   const { media, shoots, links } = q.data;
   const hasImport = media.some((m) => m.origin_category);
+  const badges: Partial<Record<Tab, number>> = {
+    reviews: pendingReviews.data ?? 0,
+    review: shoots.filter((s) => s.import_batch && (s.review_status ?? "pending") === "pending").length,
+  };
+  const current = ALL_TABS.find((t) => t.id === tab)!;
+
+  const Badge = ({ n, active }: { n?: number; active?: boolean }) =>
+    n ? <span className={cn("ml-auto min-w-5 rounded-full px-1.5 text-center text-[0.625rem] font-medium leading-5", active ? "bg-ink/10 text-ink" : "bg-paper/15 text-paper")}>{n}</span> : null;
 
   return (
-    <div>
-      <div className="mb-8 flex flex-wrap items-center gap-3">
-        <div className="glass flex flex-wrap rounded-3xl p-1 sm:rounded-full">
-          {(["shoots", "review", "library", "home", "clients", "reviews"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={cn("meta rounded-full px-4 py-2", tab === t ? "bg-paper text-ink" : "text-paper/75")}>
-              {t === "shoots" ? "Photoshoots" : t === "review" ? "Import review" : t === "library" ? "Media library" : t === "home" ? "Homepage" : t === "clients" ? "Client delivery" : "Reviews"}
+    <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
+      <nav aria-label="Studio sections" className="sticky top-24 hidden self-start lg:block">
+        {NAV.map((g) => (
+          <div key={g.group} className="mb-7">
+            <p className="meta mb-2 px-3 text-[0.5625rem] text-muted-foreground/70">{g.group}</p>
+            <ul className="space-y-0.5">
+              {g.items.map(({ id, label, Icon }) => (
+                <li key={id}>
+                  <button
+                    onClick={() => setTab(id)}
+                    aria-current={tab === id ? "page" : undefined}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm transition-colors",
+                      tab === id ? "bg-paper text-ink" : "text-paper/70 hover:bg-paper/[0.06] hover:text-paper",
+                    )}
+                  >
+                    <Icon className="size-4 shrink-0" strokeWidth={1.5} />
+                    {label}
+                    <Badge n={badges[id]} active={tab === id} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
+      <div className="-mx-4 mb-6 overflow-x-auto px-4 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
+        <div className="glass inline-flex gap-1 rounded-full p-1">
+          {ALL_TABS.map(({ id, label, Icon }) => (
+            <button key={id} onClick={() => setTab(id)} className={cn("meta inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-2", tab === id ? "bg-paper text-ink" : "text-paper/75")}>
+              <Icon className="size-3.5" strokeWidth={1.5} />
+              {label}
+              {badges[id] ? <span className="rounded-full bg-current/15 px-1.5 text-[0.55rem]">{badges[id]}</span> : null}
             </button>
           ))}
         </div>
-        {!hasImport && (
-          <button className={btnPrimary} disabled={imp.isPending} onClick={() => imp.mutate()}>
-            {imp.isPending ? "Importing…" : "Import original Wfolio photos"}
-          </button>
-        )}
       </div>
 
-      <WhatsAppSetting />
-      {tab === "clients" ? (
-        <DeliveriesTab />
-      ) : tab === "reviews" ? (
-        <ReviewsTab />
-      ) : tab === "review" ? (
-        <ReviewTab shoots={shoots} links={links} media={media} refresh={refresh} onEdit={(sh) => { setTab("shoots"); setCat(sh.category); setSelected(sh.id); }} />
-      ) : tab === "home" ? (
-        <HomeTab media={media} refresh={refresh} />
-      ) : tab === "shoots" ? (
-        <ShootsTab
-          cat={cat} setCat={(c) => { setCat(c); setSelected(null); }}
-          shoots={shoots} links={links} media={media}
-          selected={selected} setSelected={setSelected} refresh={refresh}
-        />
-      ) : (
-        <LibraryTab shoots={shoots} links={links} media={media} refresh={refresh} />
-      )}
+      <section className="min-w-0">
+        <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-6 md:mb-10">
+          <div>
+            <h1 className="display text-4xl text-paper md:text-5xl">{current.label}.</h1>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">{current.hint}</p>
+          </div>
+          {!hasImport && tab === "library" && (
+            <button className={btnPrimary} disabled={imp.isPending} onClick={() => imp.mutate()}>
+              {imp.isPending ? "Importing…" : "Import original Wfolio photos"}
+            </button>
+          )}
+        </header>
+
+        {tab === "settings" ? (
+          <WhatsAppSetting />
+        ) : tab === "clients" ? (
+          <DeliveriesTab />
+        ) : tab === "reviews" ? (
+          <ReviewsTab />
+        ) : tab === "review" ? (
+          <ReviewTab shoots={shoots} links={links} media={media} refresh={refresh} onEdit={(sh) => { setTab("shoots"); setCat(sh.category); setSelected(sh.id); }} />
+        ) : tab === "home" ? (
+          <HomeTab media={media} refresh={refresh} />
+        ) : tab === "shoots" ? (
+          <ShootsTab
+            cat={cat} setCat={(c) => { setCat(c); setSelected(null); }}
+            shoots={shoots} links={links} media={media}
+            selected={selected} setSelected={setSelected} refresh={refresh}
+          />
+        ) : (
+          <LibraryTab shoots={shoots} links={links} media={media} refresh={refresh} />
+        )}
+      </section>
     </div>
   );
 }
@@ -220,8 +316,8 @@ function WhatsAppSetting() {
     onError: (e) => toast.error(e.message),
   });
   return (
-    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="mb-8 flex flex-wrap items-center gap-3">
-      <label htmlFor="wa" className="meta text-muted-foreground">WhatsApp link</label>
+    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="flex max-w-2xl flex-wrap items-center gap-3 rounded-3xl border border-border/60 bg-card/30 p-5">
+      <label htmlFor="wa" className="meta w-full text-muted-foreground">WhatsApp link</label>
       <input id="wa" value={value} onChange={(e) => setVal(e.target.value)} placeholder="https://wa.me/372…" maxLength={200}
         className="min-w-0 flex-1 rounded-full border border-border bg-transparent px-4 py-2 text-sm text-paper placeholder:text-muted-foreground sm:max-w-sm" />
       <button className={btn} disabled={save.isPending}>{save.isPending ? "Saving…" : "Save"}</button>
@@ -285,7 +381,7 @@ function ReviewTab({ shoots, links, media, refresh, onEdit }: { shoots: Shoot[];
       </div>
 
       {report && (
-        <div className="rounded-2xl border border-border p-4 text-sm text-paper/80">
+        <div className="rounded-3xl border border-border/60 bg-card/30 p-5 text-sm text-paper/80">
           <p className="meta mb-2 text-paper">Last run</p>
           <p>
             {report.results.filter((r) => r.status === "imported").length} imported ·{" "}
@@ -1081,7 +1177,7 @@ function WfolioMigration({ refresh }: { refresh: () => void }) {
   if (!left && !q.data.settingsMissing && !run) return null;
 
   return (
-    <div className="mb-8 space-y-3 rounded-2xl border border-border p-4">
+    <div className="mb-8 space-y-3 rounded-3xl border border-border/60 bg-card/30 p-5">
       <p className="meta text-muted-foreground">Photos hosted on Wfolio</p>
       <p className="text-sm text-paper/80">
         {left

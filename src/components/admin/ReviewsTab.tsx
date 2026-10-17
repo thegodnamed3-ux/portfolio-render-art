@@ -91,7 +91,7 @@ function ReviewItem({ r, refresh }: { r: Review; refresh: () => void }) {
   };
 
   return (
-    <li className="flex flex-col gap-3 rounded-2xl border border-border p-4">
+    <li className="flex flex-col gap-3 rounded-3xl border border-border/60 bg-card/30 p-5">
       <div className="flex items-baseline justify-between gap-3">
         <p className="flex min-w-0 items-center gap-2 truncate text-sm text-paper">
           {r.avatar_url && <img src={r.avatar_url} alt="" className="size-7 shrink-0 rounded-full object-cover" />}
@@ -144,7 +144,7 @@ function TelegramPanel() {
     setBusy(false);
   };
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border p-4">
+    <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-border/60 bg-card/30 p-5">
       <p className="meta text-muted-foreground">Telegram</p>
       {!q.data.configured ? (
         <p className="text-xs text-muted-foreground">Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in Lovable Cloud to get review alerts.</p>

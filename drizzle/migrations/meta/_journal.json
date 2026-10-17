@@ -141,6 +141,13 @@
       "when": 1792290000000,
       "tag": "0019_delivery_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792279851363,
+      "tag": "0020_delivery_reminders",
+      "breakpoints": true
     }
   ]
 }

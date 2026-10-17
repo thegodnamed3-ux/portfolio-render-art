@@ -16,10 +16,10 @@ export type Database = {
     Tables: {
       client_deliveries: {
         Row: {
-          expiry_reminded_at: string | null
           client_name: string | null
           created_at: string
           expires_at: string | null
+          expiry_reminded_at: string | null
           id: string
           is_active: boolean
           message: string | null
@@ -30,10 +30,10 @@ export type Database = {
           watermark: boolean
         }
         Insert: {
-          expiry_reminded_at?: string | null
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
+          expiry_reminded_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
@@ -44,10 +44,10 @@ export type Database = {
           watermark?: boolean
         }
         Update: {
-          expiry_reminded_at?: string | null
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
+          expiry_reminded_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
@@ -364,34 +364,34 @@ export type Database = {
       }
       site_settings: {
         Row: {
-          reminders_checked_at: string | null
           about_image: Json | null
           featured_columns: number | null
           featured_work: Json | null
           hero_slides: Json | null
           id: number
+          reminders_checked_at: string | null
           report_week: string | null
           updated_at: string
           whatsapp_url: string | null
         }
         Insert: {
-          reminders_checked_at?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
+          reminders_checked_at?: string | null
           report_week?: string | null
           updated_at?: string
           whatsapp_url?: string | null
         }
         Update: {
-          reminders_checked_at?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
+          reminders_checked_at?: string | null
           report_week?: string | null
           updated_at?: string
           whatsapp_url?: string | null

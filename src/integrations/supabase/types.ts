@@ -275,8 +275,6 @@ export type Database = {
       site_settings: {
         Row: {
           about_image: Json | null
-          featured_columns: number | null
-          featured_work: Json | null
           hero_slides: Json | null
           id: number
           updated_at: string
@@ -284,8 +282,6 @@ export type Database = {
         }
         Insert: {
           about_image?: Json | null
-          featured_columns?: number | null
-          featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
           updated_at?: string
@@ -293,8 +289,6 @@ export type Database = {
         }
         Update: {
           about_image?: Json | null
-          featured_columns?: number | null
-          featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
           updated_at?: string

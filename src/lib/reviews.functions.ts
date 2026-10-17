@@ -45,14 +45,14 @@ export const submitReview = createServerFn({ method: "POST" })
       const stars = data.rating ? `${"★".repeat(data.rating)}${"☆".repeat(5 - data.rating)}` : null;
       await sendTelegram(
         [
-          "⭐ <b>New review</b> · waiting for approval",
+          "<b>New review</b> · awaiting approval",
           "",
-          `👤 <b>${esc(data.name)}</b>${stars ? `  ${stars}` : ""}`,
-          `🗂 ${esc(d.title)}`,
+          `<b>${esc(data.name)}</b>${stars ? `  ${stars}` : ""}`,
+          esc(d.title),
           "",
           `<blockquote>${esc(data.body)}</blockquote>`,
         ].join("\n"),
-        origin ? [{ text: "✏️ Edit & publish in the studio", url: `${origin}/admin` }] : [],
+        origin ? [{ text: "Edit & publish", url: `${origin}/admin` }] : [],
       );
     } catch (e) {
       console.error("submitReview telegram", e);

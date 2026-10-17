@@ -23,16 +23,16 @@ export const submitBooking = createServerFn({ method: "POST" })
     if (data.bot) return { ok: true };
     const { sendTelegram, esc, replyButton, siteOrigin } = await import("@/lib/telegram.server");
     const html = [
-      "📸 <b>New booking request</b>",
+      "<b>New booking request</b>",
       "",
-      `👤 <b>${esc(data.name)}</b>`,
-      `📞 ${esc(data.contact)}`,
-      `🎞 ${esc(data.type)}${data.date ? `  ·  📅 ${esc(data.date)}` : ""}`,
+      `<b>${esc(data.name)}</b>`,
+      esc(data.contact),
+      `${esc(data.type)}${data.date ? ` · ${esc(data.date)}` : ""}`,
       data.message ? `\n<blockquote>${esc(data.message)}</blockquote>` : null,
     ].filter((l) => l !== null).join("\n");
     const origin = await siteOrigin();
     const reply = replyButton(data.contact);
-    const ok = await sendTelegram(html, [...(reply ? [reply] : []), ...(origin ? [{ text: "🌐 Open website", url: origin }] : [])]);
+    const ok = await sendTelegram(html, [...(reply ? [reply] : []), ...(origin ? [{ text: "Open website", url: origin }] : [])]);
     if (!ok) {
       throw new Error("Could not send the request — please message me on Telegram or WhatsApp.");
     }

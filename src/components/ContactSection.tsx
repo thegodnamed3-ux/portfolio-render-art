@@ -78,10 +78,10 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             <ContactLinks tone="light" className="mt-8 md:mt-12" />
             </div>
           </div>
-          <div aria-hidden={!onReviews} className={cn("w-1/2 shrink-0 transition-[visibility] duration-700", !onReviews && "invisible")}>
-            <div ref={panes[1]}>
+          <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col transition-[visibility] duration-700", !onReviews && "invisible")}>
+            <div ref={panes[1]} className="lg:flex lg:flex-1 lg:flex-col">
             {has && (
-              <div data-reviews-window>
+              <div data-reviews-window className="lg:flex lg:flex-1 lg:flex-col">
                 <ReviewsCarousel reviews={reviews} active={onReviews} />
               </div>
             )}
@@ -90,7 +90,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
         </div>
       </div>
 
-      <footer className="meta mt-12 border-t border-ink/15 pt-5 text-ink-muted md:mt-16">
+      <footer className="meta mt-12 border-t border-ink/15 pt-5 text-ink-muted">
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" hash="top" className="wordmark text-ink transition-opacity hover:opacity-60">thegodnamed</Link>
           <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">

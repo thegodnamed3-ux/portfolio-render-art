@@ -14,6 +14,12 @@ export const telegramStatus = createServerFn({ method: "GET" })
     const { tgApi } = await import("@/lib/telegram.server");
     if (!process.env["TELEGRAM_BOT_TOKEN"] || !process.env["TELEGRAM_CHAT_ID"]) return { configured: false, webhook: null as string | null };
     const info = await tgApi("getWebhookInfo", {});
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { checkExpiryReminders } = await import("@/lib/reminders.server");
+      const { siteOrigin } = await import("@/lib/telegram.server");
+      await checkExpiryReminders(supabaseAdmin, await siteOrigin());
+    } catch { /* best effort */ }
     return { configured: true, webhook: (info?.result?.url as string) || null };
   });
 

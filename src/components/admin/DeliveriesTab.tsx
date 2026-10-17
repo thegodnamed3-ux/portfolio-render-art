@@ -461,7 +461,12 @@ function AccessAndStats({ d, rows, refresh }: { d: DeliveryRow; rows: FileRow[];
   };
   const clearPassword = () => run(() => supabase.from("client_deliveries").update({ password_hash: null }).eq("id", d.id), "Password removed");
   const saveExpiry = (value: string) => run(
-    () => supabase.from("client_deliveries").update({ expires_at: value ? new Date(`${value}T23:59:59`).toISOString() : null }).eq("id", d.id),
+    async () => {
+      const r = await supabase.from("client_deliveries").update({ expires_at: value ? new Date(`${value}T23:59:59`).toISOString() : null }).eq("id", d.id);
+      // A new date means a new reminder (ignored if that column isn't there yet).
+      if (!r.error) await supabase.from("client_deliveries").update({ expiry_reminded_at: null }).eq("id", d.id);
+      return r;
+    },
     value ? `Link works until ${new Date(`${value}T12:00:00`).toLocaleDateString()}` : "No expiry date",
   );
   const expired = d.expires_at && new Date(d.expires_at).getTime() < Date.now();

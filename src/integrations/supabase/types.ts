@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       client_deliveries: {
         Row: {
+          expiry_reminded_at: string | null
           client_name: string | null
           created_at: string
           expires_at: string | null
@@ -29,6 +30,7 @@ export type Database = {
           watermark: boolean
         }
         Insert: {
+          expiry_reminded_at?: string | null
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -42,6 +44,7 @@ export type Database = {
           watermark?: boolean
         }
         Update: {
+          expiry_reminded_at?: string | null
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -361,6 +364,7 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          reminders_checked_at: string | null
           about_image: Json | null
           featured_columns: number | null
           featured_work: Json | null
@@ -371,6 +375,7 @@ export type Database = {
           whatsapp_url: string | null
         }
         Insert: {
+          reminders_checked_at?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null
@@ -381,6 +386,7 @@ export type Database = {
           whatsapp_url?: string | null
         }
         Update: {
+          reminders_checked_at?: string | null
           about_image?: Json | null
           featured_columns?: number | null
           featured_work?: Json | null

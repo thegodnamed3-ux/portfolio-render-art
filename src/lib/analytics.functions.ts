@@ -69,6 +69,8 @@ export const trackView = createServerFn({ method: "POST" })
         visitor,
       });
       await maybeSendWeekly(supabaseAdmin, `https://${host}`);
+      const { checkExpiryReminders } = await import("@/lib/reminders.server");
+      await checkExpiryReminders(supabaseAdmin, `https://${host}`);
     } catch (e) {
       console.error("trackView", e);
     }

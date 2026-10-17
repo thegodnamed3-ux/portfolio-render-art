@@ -21,6 +21,31 @@ export async function handleTelegramUpdate(request: Request): Promise<Response> 
     return ok();
   }
 
+  // Delivery link: extend by two weeks.
+  const x = /^dl:x:([0-9a-f-]{36})$/.exec(String(cb.data ?? ""));
+  if (x) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { formatDate } = await import("@/lib/reminders.server");
+    const { esc } = await import("@/lib/telegram.server");
+    const { data: d } = await supabaseAdmin.from("client_deliveries").select("id, title, client_name, expires_at").eq("id", x[1]!).maybeSingle();
+    if (!d) {
+      await tgApi("answerCallbackQuery", { callback_query_id: cb.id, text: "Delivery not found", show_alert: true });
+      return ok();
+    }
+    const base = Math.max(Date.now(), d.expires_at ? new Date(d.expires_at).getTime() : 0);
+    const until = new Date(base + 14 * 86400_000).toISOString();
+    await supabaseAdmin.from("client_deliveries").update({ expires_at: until, expiry_reminded_at: null, is_active: true }).eq("id", d.id);
+    await tgApi("answerCallbackQuery", { callback_query_id: cb.id, text: `Extended until ${formatDate(until)}` });
+    await tgApi("editMessageText", {
+      chat_id: cb.message.chat.id,
+      message_id: cb.message.message_id,
+      text: [`<b>Link extended</b>`, "", `<b>${esc(d.client_name || d.title)}</b>`, d.client_name ? esc(d.title) : null, `Works until ${formatDate(until)}`].filter((l) => l !== null).join("\n"),
+      parse_mode: "HTML",
+      reply_markup: { inline_keyboard: [[{ text: "Extend 2 more weeks", callback_data: `dl:x:${d.id}` }]] },
+    });
+    return ok();
+  }
+
   const m = /^rv:([ph]):([0-9a-f-]{36})$/.exec(String(cb.data ?? ""));
   if (!m) {
     await tgApi("answerCallbackQuery", { callback_query_id: cb.id });

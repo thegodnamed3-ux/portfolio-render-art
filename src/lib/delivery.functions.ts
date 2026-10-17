@@ -145,7 +145,23 @@ export const logDeliveryEvent = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const a = await checkAccess(data.token, data.password);
       if (a.state !== "ok") return { ok: false };
-      await supabaseAdmin.from("client_delivery_events").insert({ delivery_id: a.delivery.id, kind: data.kind, file_id: data.fileId });
+      const d = a.delivery;
+      // First time the client opens the gallery, and every ZIP download, ping the studio.
+      let first = false;
+      if (data.kind === "view") {
+        const { count } = await supabaseAdmin.from("client_delivery_events").select("id", { count: "exact", head: true }).eq("delivery_id", d.id).eq("kind", "view");
+        first = (count ?? 0) === 0;
+      }
+      await supabaseAdmin.from("client_delivery_events").insert({ delivery_id: d.id, kind: data.kind, file_id: data.fileId });
+      if (first || data.kind === "zip") {
+        const { sendTelegram, esc, siteOrigin } = await import("@/lib/telegram.server");
+        const who = esc(d.client_name || d.title);
+        const html = first
+          ? `<b>Gallery opened</b>\n\n<b>${who}</b>${d.client_name ? `\n${esc(d.title)}` : ""}\nThe client just opened the link for the first time.`
+          : `<b>Archive downloaded</b>\n\n<b>${who}</b>${d.client_name ? `\n${esc(d.title)}` : ""}\nAll photos were downloaded as a ZIP.`;
+        const origin = await siteOrigin();
+        await sendTelegram(html, origin ? [{ text: "Open in studio", url: `${origin}/admin` }] : []);
+      }
     } catch (e) {
       console.error("logDeliveryEvent", e);
     }

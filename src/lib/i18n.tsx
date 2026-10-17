@@ -56,7 +56,17 @@ const D = {
   "work.lead2": { en: "and in between.", et: "ja kõikjal vahepeal.", ru: "и везде между ними." },
   "disciplines.title": { en: "Disciplines.", et: "Suunad.", ru: "Направления." },
   "about.title": { en: "About.", et: "Minust.", ru: "Обо мне." },
-  "about.role": { en: "Photographer & filmmaker · Tallinn", et: "Fotograaf ja filmitegija · Tallinn", ru: "Фотограф и видеограф · Таллин" },
+  "about.role": { en: "Photographer & content creator · Tallinn", et: "Fotograaf ja sisulooja · Tallinn", ru: "Фотограф и контент-креатор · Таллин" },
+  "about.p1": {
+    en: "I make pictures for people, places and brands — homes that feel lived-in before anyone moves in, faces that forget the camera is there, ads that don’t look like ads.",
+    et: "Teen pilte inimestele, kohtadele ja brändidele — kodud, mis tunduvad elatud juba enne sissekolimist, näod, mis unustavad kaamera, reklaamid, mis ei näe välja nagu reklaam.",
+    ru: "Снимаю людей, места и бренды — квартиры, в которых хочется жить ещё до переезда, лица, которые забывают о камере, рекламу, которая не выглядит как реклама.",
+  },
+  "about.p2": {
+    en: "Real estate, portraits, interviews, short films for dentists, barbers and furniture makers. Same rule everywhere: find the frame everyone else walked past.",
+    et: "Kinnisvara, portreed, intervjuud, lühifilmid hambaarstidele, juuksuritele ja mööblitegijatele. Reegel on igal pool sama: leida kaader, millest teised mööda kõndisid.",
+    ru: "Недвижимость, портреты, интервью, ролики для стоматологий, барберов и мебельщиков. Правило везде одно: найти кадр, мимо которого все прошли.",
+  },
   "contact.title": { en: "Contact.", et: "Kontakt.", ru: "Контакты." },
   "reviews.title": { en: "Reviews.", et: "Arvustused.", ru: "Отзывы." },
   "reviews.pill": { en: "Reviews", et: "Arvustused", ru: "Отзывы" },

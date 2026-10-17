@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ContactSection } from "@/components/ContactSection";
-import { useLightbox } from "@/components/Lightbox";
+import { originOf, useLightbox, type ViewerOrigin } from "@/components/Lightbox";
+import { useFadeIn } from "@/components/Frame";
 import { getDelivery, logDeliveryEvent, markDeliveryFile, submitPicks, type Delivery, type DeliveryFile, type DeliveryResult } from "@/lib/delivery.functions";
 import { submitReview } from "@/lib/reviews.functions";
 import { ZipWriter } from "@/lib/zip";
@@ -322,7 +323,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
     setProgress(null);
   };
 
-  const view = (i: number) => open(shown.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { action: { label: t("g.leaveReview"), onClick: () => setReviewOpen(true) } });
+  const view = (i: number, origin?: ViewerOrigin) => open(shown.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { origin, action: { label: t("g.leaveReview"), onClick: () => setReviewOpen(true) } });
 
   return (
     <>
@@ -410,7 +411,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
                   key={f.id}
                   f={f}
                   mark={marks[f.id] ?? { favorite: false, note: null }}
-                  onOpen={() => view(i)}
+                  onOpen={(origin) => view(i, origin)}
                   onFavorite={() => void save(f.id, { favorite: !marks[f.id]?.favorite })}
                   onNote={() => setNoteFor(f)}
                   onDownload={() => void log({ data: { ...access, kind: "download", fileId: f.id } }).catch(() => {})}
@@ -462,15 +463,19 @@ function NoteDialog({ file, initial, onClose, onSave }: { file: DeliveryFile; in
 
 function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
   f: DeliveryFile; mark: { favorite: boolean; note: string | null };
-  onOpen: () => void; onFavorite: () => void; onNote: () => void; onDownload: () => void;
+  onOpen: (origin?: ViewerOrigin) => void; onFavorite: () => void; onNote: () => void; onDownload: () => void;
 }) {
   const portrait = f.h > f.w * 1.05;
   const [src, setSrc] = useState(f.preview);
+  const fade = useFadeIn();
   const reveal = "md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100";
   return (
     <li className={cn("group relative overflow-hidden rounded-sm bg-charcoal", portrait && "row-span-2")}>
-      <button type="button" onClick={onOpen} className="absolute inset-0 z-0 block cursor-zoom-in" aria-label={`Open ${f.name}`}>
+      <button type="button" onClick={(e) => onOpen(originOf(e.currentTarget))} className="absolute inset-0 z-0 block cursor-zoom-in" aria-label={`Open ${f.name}`}>
         <img
+          ref={fade.ref}
+          onLoad={fade.onLoad}
+          data-fade=""
           src={src}
           alt={f.name}
           width={f.w}
@@ -479,8 +484,8 @@ function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
           decoding="async"
           draggable={false}
           // If the web preview is missing, fall back to the original file.
-          onError={() => { if (f.download && src !== f.download) setSrc(f.download); }}
-          className="pointer-events-none block h-full w-full object-cover"
+          onError={() => { if (f.download && src !== f.download) setSrc(f.download); else fade.onError(); }}
+          className={cn("pointer-events-none block h-full w-full object-cover transition-opacity duration-500 ease-out", fade.loaded ? "opacity-100" : "opacity-0")}
         />
         {f.overlay && (
           <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">

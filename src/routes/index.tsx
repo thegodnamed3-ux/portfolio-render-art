@@ -14,6 +14,7 @@ import { photos } from "@/lib/photos";
 import { getHomeMedia, type HomeImage } from "@/lib/portfolio.functions";
 import { defaultHero, defaultAbout, defaultWork, defaultWorkColumns, type WorkItem } from "@/content/home";
 import { WorkGrid } from "@/components/WorkGrid";
+import { useFadeIn } from "@/components/Frame";
 import { useCategoryTitle, useI18n } from "@/lib/i18n";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 
@@ -50,13 +51,15 @@ function Hero({ slides }: { slides: HomeImage[] }) {
       <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
       <div className="pointer-events-none relative flex min-h-[100svh] flex-col justify-end px-5 pb-5 md:px-10 md:pb-8">
         <div className="flex items-end justify-between gap-4">
-          <h1
-            className="display reveal text-[clamp(2.75rem,11vw,8rem)] leading-[0.92] text-paper"
-            style={{ animationDelay: "0.14s" }}
-          >
-            <span className="block">{t("hero.l1")}</span>
-            <span className="block md:pl-[0.6em]">
-              {t("hero.l2a") && <>{t("hero.l2a")} </>}<em>{t("hero.l2b")}</em>
+          <h1 className="display text-[clamp(2.75rem,11vw,8rem)] leading-[0.92] text-paper">
+            {/* Each line rises out of its own mask, like a title card. */}
+            <span className="line-mask">
+              <span className="line-up" style={{ animationDelay: "0.2s" }}>{t("hero.l1")}</span>
+            </span>
+            <span className="line-mask">
+              <span className="line-up md:pl-[0.6em]" style={{ animationDelay: "0.36s" }}>
+                {t("hero.l2a") && <>{t("hero.l2a")} </>}<em>{t("hero.l2b")}</em>
+              </span>
             </span>
           </h1>
           <div ref={setArrows} className="pointer-events-auto relative z-10 shrink-0" />
@@ -145,14 +148,19 @@ function Index_Disciplines() {
 
 function About({ image }: { image: HomeImage }) {
   const { t } = useI18n();
+  const fade = useFadeIn();
   return (
     <section id="about" className="relative isolate flex min-h-[68svh] flex-col justify-between overflow-hidden px-5 py-14 md:min-h-[70vh] md:px-10 md:py-20">
       <img
+        ref={fade.ref}
+        onLoad={fade.onLoad}
+        onError={fade.onError}
+        data-fade=""
         src={image.src}
         alt="Portrait of Gor Arsakjan"
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 -z-10 h-full w-full max-w-none object-cover"
+        className={`absolute inset-0 -z-10 h-full w-full max-w-none object-cover transition-opacity duration-700 ease-out ${fade.loaded ? "opacity-100" : "opacity-0"}`}
         style={{ objectPosition: image.pos ?? "50% 50%" }}
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-background/95 via-background/45 to-background/50" />

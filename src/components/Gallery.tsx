@@ -105,7 +105,7 @@ export function PhotoGallery({ photos }: { photos: GalleryPhoto[] }) {
   const { open } = useLightbox();
   const items = photos.map((p) => ({ src: p.full, w: p.w, h: p.h, alt: p.project }));
   const frame = (i: number, className: string, sizes: string) => (
-    <Frame key={i} photo={photos[i]!} caption={photos[i]!.project} index={String(i + 1).padStart(2, "0")} className={className} sizes={sizes} eager={i < 2} onOpen={() => open(items, i)} />
+    <Frame key={i} photo={photos[i]!} caption={photos[i]!.project} index={String(i + 1).padStart(2, "0")} className={className} sizes={sizes} eager={i < 2} onOpen={(origin) => open(items, i, undefined, { origin })} />
   );
   let w = 0;
   let pr = 0;

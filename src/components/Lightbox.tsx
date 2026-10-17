@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "framer-motion";
 import { ContactLinks } from "./ContactLinks";
 import { useI18n } from "@/lib/i18n";
@@ -6,14 +6,21 @@ import { useI18n } from "@/lib/i18n";
 export type ViewerItem = { src: string; w: number; h: number; alt?: string };
 
 export type ViewerAction = { label: string; onClick: () => void };
-type ViewerOptions = { hideBook?: boolean; action?: ViewerAction };
+/** Where the photo sat on the page, so the viewer can grow out of it and shrink back. */
+export type ViewerOrigin = { x: number; y: number; w: number; h: number };
+export const originOf = (el: Element | null | undefined): ViewerOrigin | undefined => {
+  if (!el) return undefined;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : undefined;
+};
+type ViewerOptions = { hideBook?: boolean; action?: ViewerAction; origin?: ViewerOrigin | undefined };
 type Ctx = { open: (items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => void };
 const LightboxContext = createContext<Ctx>({ open: () => {} });
 export const useLightbox = () => useContext(LightboxContext);
 
 export function LightboxProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string | undefined; hideBook?: boolean | undefined; action?: ViewerAction | undefined } | null>(null);
-  const open = useCallback((items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => setState({ items, index, title, hideBook: options?.hideBook, action: options?.action }), []);
+  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string | undefined; hideBook?: boolean | undefined; action?: ViewerAction | undefined; origin?: ViewerOrigin | undefined } | null>(null);
+  const open = useCallback((items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => setState({ items, index, title, hideBook: options?.hideBook, action: options?.action, origin: options?.origin }), []);
   const close = useCallback(() => setState(null), []);
   return (
     <LightboxContext.Provider value={{ open }}>
@@ -34,7 +41,7 @@ const THRESHOLD = 90;
 const spring = { type: "spring", stiffness: 260, damping: 32, mass: 0.9 } as const;
 
 function useViewport() {
-  const [vp, setVp] = useState({ w: 1024, h: 768 });
+  const [vp, setVp] = useState(() => (typeof window === "undefined" ? { w: 1024, h: 768 } : { w: window.innerWidth, h: window.innerHeight }));
   useEffect(() => {
     const on = () => setVp({ w: window.innerWidth, h: window.innerHeight });
     on();
@@ -44,7 +51,7 @@ function useViewport() {
   return vp;
 }
 
-export function Viewer({ items, index: start, title, onClose, onBack, embedded, hideBook, action }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean; hideBook?: boolean | undefined; action?: ViewerAction | undefined }) {
+export function Viewer({ items, index: start, title, onClose, onBack, embedded, hideBook, action, origin }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean; hideBook?: boolean | undefined; action?: ViewerAction | undefined; origin?: ViewerOrigin | undefined }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(start);
   const [dir, setDir] = useState<1 | -1>(1);
@@ -121,6 +128,28 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
     return { w: Math.round(it.w * s), h: Math.round(it.h * s) };
   };
 
+  // Zoom from the page: the stack starts at the clicked photo's spot and size, then grows into place.
+  const zx = useMotionValue(0);
+  const zy = useMotionValue(0);
+  const zs = useMotionValue(1);
+  const back = useRef<{ x: number; y: number; scale: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!origin || embedded || reduce || !area.current) return;
+    const a = area.current.getBoundingClientRect();
+    const box = size(items[start] ?? { src: "", w: stageW, h: stageH });
+    const cx = a.left + a.width / 2 - (OFFSET * DEPTH) / 2;
+    const cy = a.top + a.height / 2 - (OFFSET * DEPTH) / 2;
+    const from = { x: origin.x + origin.w / 2 - cx, y: origin.y + origin.h / 2 - cy, scale: Math.max(0.05, Math.min(origin.w / box.w, origin.h / box.h)) };
+    back.current = from;
+    zx.set(from.x); zy.set(from.y); zs.set(from.scale);
+    const ease = [0.2, 0.8, 0.2, 1] as const;
+    animate(zx, 0, { duration: 0.5, ease });
+    animate(zy, 0, { duration: 0.5, ease });
+    animate(zs, 1, { duration: 0.5, ease });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const zoomBack = index === start && back.current ? back.current : null;
+
   const visible = items.slice(index, index + DEPTH + 1);
   // Every print in the stack shares the front print's footprint, so a portrait never
   // peeks out above or below a landscape card — the stack stays one straight pile.
@@ -153,6 +182,10 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
 
       <div ref={area} className={`relative flex min-h-0 min-w-0 w-full flex-1 items-center justify-center ${embedded ? "overflow-hidden" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
         <motion.div
+          style={{ x: zx, y: zy, scale: zs }}
+          exit={zoomBack ? { ...zoomBack, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] } } : { opacity: 1 }}
+        >
+        <motion.div
           key={bump}
           className="relative"
           style={{ width: stageW + OFFSET * DEPTH, height: stageH + OFFSET * DEPTH }}
@@ -177,6 +210,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
               />
             )).reverse()}
           </AnimatePresence>
+        </motion.div>
         </motion.div>
       </div>
 

@@ -31,3 +31,10 @@
 - 404 / error components in `__root.tsx` share `Fallback` (dark, display serif, localized keys `nf.*`, `err.*`). `src/lib/error-page.ts` is the raw-HTML SSR fallback in the same look.
 - `/auth` loads `getHomeMedia()` and uses the first hero photo, blurred, behind a glass sign-in panel.
 - Speed: first hero frame is preloaded (`links` in `/` head) with fetchPriority high; `HomeImage.sm` (600px) is saved from the library and backfilled in `getHomeMedia` for older featured_work entries so `Frame` gets a srcSet.
+
+## Motion (Oct 2026)
+- Photos fade in once loaded (`useFadeIn` in `Frame.tsx`, `data-fade`; a `<noscript>` rule in `__root.tsx` keeps them visible without JS).
+- Selected works rise into view on scroll (`Frame` `reveal` delay, staggered by column); hover = slight zoom + brighter caption (`hover` prop; desktop only via Tailwind hover).
+- Hero title lines slide up out of masks (`line-mask` / `line-up` utilities in `styles.css`, CSS-only so it runs before hydration).
+- The viewer grows out of the clicked photo and shrinks back on close if still on it: callers pass `origin` (`originOf(el)`) in `open(..., { origin })`.
+- Everything respects prefers-reduced-motion.

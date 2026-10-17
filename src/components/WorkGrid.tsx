@@ -44,6 +44,8 @@ export function WorkGrid({ items, columns, force }: { items: WorkItem[]; columns
           <Frame
             key={`${it.src}-${i}`}
             static
+            hover
+            reveal={(i % cols) * 0.08}
             photo={it}
             {...(it.caption ? { caption: it.caption } : {})}
             index={String(i + 1).padStart(2, "0")}

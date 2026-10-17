@@ -103,6 +103,8 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        {/* Without scripts, photos that wait to fade in must still show. */}
+        <noscript><style>{"[data-fade]{opacity:1!important}"}</style></noscript>
       </head>
       <body>
         {children}

@@ -235,3 +235,12 @@
   border: 1px solid color-mix(in oklab, var(--paper) 13%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--paper) 18%, transparent), 0 40px 90px -30px oklch(0 0 0 / 75%), 0 8px 24px -12px oklch(0 0 0 / 50%);
 }
+
+/* Reviews joystick: a short left-right nudge so visitors see the knob can be dragged. */
+@keyframes joystick-hint {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-22px); }
+  42% { transform: translateX(22px); }
+  64% { transform: translateX(-12px); }
+  82% { transform: translateX(7px); }
+}

@@ -18,9 +18,11 @@ export type Database = {
         Row: {
           client_name: string | null
           created_at: string
+          expires_at: string | null
           id: string
           is_active: boolean
           message: string | null
+          password_hash: string | null
           title: string
           token: string
           updated_at: string
@@ -28,9 +30,11 @@ export type Database = {
         Insert: {
           client_name?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
+          password_hash?: string | null
           title?: string
           token: string
           updated_at?: string
@@ -38,19 +42,62 @@ export type Database = {
         Update: {
           client_name?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
+          password_hash?: string | null
           title?: string
           token?: string
           updated_at?: string
         }
         Relationships: []
       }
-      client_delivery_files: {
+      client_delivery_events: {
         Row: {
           created_at: string
           delivery_id: string
+          file_id: string | null
+          id: string
+          kind: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_id: string
+          file_id?: string | null
+          id?: string
+          kind: string
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string
+          file_id?: string | null
+          id?: string
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_delivery_events_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "client_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_delivery_events_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "client_delivery_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_delivery_files: {
+        Row: {
+          client_note: string | null
+          created_at: string
+          delivery_id: string
+          favorite: boolean
           file_name: string
           h: number | null
           id: string
@@ -61,8 +108,10 @@ export type Database = {
           w: number | null
         }
         Insert: {
+          client_note?: string | null
           created_at?: string
           delivery_id: string
+          favorite?: boolean
           file_name: string
           h?: number | null
           id?: string
@@ -73,8 +122,10 @@ export type Database = {
           w?: number | null
         }
         Update: {
+          client_note?: string | null
           created_at?: string
           delivery_id?: string
+          favorite?: boolean
           file_name?: string
           h?: number | null
           id?: string

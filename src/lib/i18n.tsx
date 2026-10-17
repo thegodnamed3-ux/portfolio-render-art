@@ -63,9 +63,9 @@ const D = {
     ru: "Снимаю людей, места и бренды — квартиры, в которых хочется жить ещё до переезда, лица, которые забывают о камере, рекламу, которая не выглядит как реклама.",
   },
   "about.p2": {
-    en: "Real estate, portraits, interviews, short films for dentists, barbers and furniture makers. Same rule everywhere: find the frame everyone else walked past.",
-    et: "Kinnisvara, portreed, intervjuud, lühifilmid hambaarstidele, juuksuritele ja mööblitegijatele. Reegel on igal pool sama: leida kaader, millest teised mööda kõndisid.",
-    ru: "Недвижимость, портреты, интервью, ролики для стоматологий, барберов и мебельщиков. Правило везде одно: найти кадр, мимо которого все прошли.",
+    en: "Real estate, portraits, people and brands. Photo and video — from the first frame to the final edit.",
+    et: "Kinnisvara, portreed, inimesed ja brändid. Foto ja video — esimesest kaadrist viimase montaažini.",
+    ru: "Недвижимость, портреты, люди и бренды. Фото и видео — от первого кадра до финального монтажа.",
   },
   "contact.title": { en: "Contact.", et: "Kontakt.", ru: "Контакты." },
   "reviews.title": { en: "Reviews.", et: "Arvustused.", ru: "Отзывы." },

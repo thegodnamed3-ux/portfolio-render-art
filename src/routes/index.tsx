@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
@@ -37,21 +38,26 @@ const num = (n: number) => String(n).padStart(2, "0");
 
 
 function Hero({ slides }: { slides: HomeImage[] }) {
+  // The slide arrows are rendered into the headline row, so they share its bottom edge.
+  const [arrows, setArrows] = useState<HTMLDivElement | null>(null);
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden">
-      <HeroSlideshow slides={slides} controlsClassName="absolute bottom-[3.5rem] right-5 z-10 md:bottom-[4.5rem] md:right-10" />
+      <HeroSlideshow slides={slides} controlsContainer={arrows} />
       <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
       <div className="pointer-events-none relative flex min-h-[100svh] flex-col justify-end px-5 pb-5 md:px-10 md:pb-8">
-        <h1
-          className="display reveal text-[clamp(2.75rem,11vw,8rem)] text-paper"
-          style={{ animationDelay: "0.14s" }}
-        >
-          <span className="block">Beyond</span>
-          <span className="block md:pl-[0.6em]">
-            the <em>obvious.</em>
-          </span>
-        </h1>
-        <div className="meta mt-6 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-9">
+        <div className="flex items-end justify-between gap-4">
+          <h1
+            className="display reveal text-[clamp(2.75rem,11vw,8rem)] leading-[0.92] text-paper"
+            style={{ animationDelay: "0.14s" }}
+          >
+            <span className="block">Beyond</span>
+            <span className="block md:pl-[0.6em]">
+              the <em>obvious.</em>
+            </span>
+          </h1>
+          <div ref={setArrows} className="pointer-events-auto relative z-10 shrink-0" />
+        </div>
+        <div className="meta mt-5 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-8">
           <span>Tallinn, Estonia</span>
           <span className="hidden md:inline">Photography · Visual storytelling</span>
           <a href="#work" className="pointer-events-auto transition-colors hover:text-paper">Scroll ↓</a>

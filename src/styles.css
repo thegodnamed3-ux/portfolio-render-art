@@ -189,25 +189,19 @@
 
 /* Liquid Glass for light (paper) surfaces. */
 @utility glass-ink {
-  /* Visible glass on flat paper: a light sheen over a faint ink tint, crisp rim and soft lift. */
-  background:
-    linear-gradient(180deg, color-mix(in oklab, white 55%, transparent), color-mix(in oklab, white 0%, transparent) 60%),
-    color-mix(in oklab, var(--ink) 7%, transparent);
-  backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, white 85%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--ink) 6%, transparent);
+  /* Frosted glass on paper: milky translucent fill, hairline light rim, nothing dark. */
+  background: color-mix(in oklab, white 42%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid color-mix(in oklab, white 85%, transparent);
+  box-shadow: 0 0 0 0.5px color-mix(in oklab, var(--ink) 10%, transparent);
   transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, scale 160ms ease, opacity 300ms ease;
   &:where(button, a, label):hover {
-    background:
-      linear-gradient(180deg, color-mix(in oklab, white 45%, transparent), color-mix(in oklab, white 0%, transparent) 60%),
-      color-mix(in oklab, var(--ink) 12%, transparent);
-    border-color: color-mix(in oklab, var(--ink) 24%, transparent);
+    background: color-mix(in oklab, white 70%, transparent);
   }
   &:where(button, a, label):active {
-    scale: 0.93;
-    background: color-mix(in oklab, var(--ink) 17%, transparent);
+    scale: 0.94;
+    background: color-mix(in oklab, white 85%, transparent);
   }
 }
 
@@ -239,8 +233,8 @@
 /* Reviews joystick: a short left-right nudge so visitors see the knob can be dragged. */
 @keyframes joystick-hint {
   0%, 100% { transform: translateX(0); }
-  18% { transform: translateX(-22px); }
-  42% { transform: translateX(22px); }
-  64% { transform: translateX(-12px); }
-  82% { transform: translateX(7px); }
+  25% { transform: translateX(16px); }
+  50% { transform: translateX(0); }
+  75% { transform: translateX(-16px); }
 }
+

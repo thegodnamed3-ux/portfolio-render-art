@@ -114,7 +114,7 @@ function Joystick({ scroller, hint }: { scroller: React.RefObject<HTMLDivElement
           className={cn(
             "relative size-6 rounded-full border border-white/90 bg-white/70 shadow-[inset_0_1px_0_white,0_2px_8px_-3px_oklch(0_0_0/0.35)] backdrop-blur",
             !dragging && "transition-transform duration-300 ease-[cubic-bezier(0.3,1.6,0.5,1)]",
-            hint > 0 && !dragging && offset === 0 && "animate-[joystick-hint_2s_ease-in-out_1]",
+            hint > 0 && !dragging && offset === 0 && "animate-[joystick-hint_2.4s_cubic-bezier(0.45,0,0.55,1)_1]",
           )}
           style={offset ? { transform: `translateX(${offset}px)` } : undefined}
         />

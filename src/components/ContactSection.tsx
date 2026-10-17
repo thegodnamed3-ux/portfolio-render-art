@@ -23,7 +23,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const has = withReviews && reviews.length > 0;
   const onReviews = has && view === "reviews";
 
-  // The track takes the height of whichever pane is showing.
+  // The band keeps one height — the taller pane's — so switching never resizes the page.
   const panes = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)] as const;
   const [heights, setHeights] = useState<[number, number]>([0, 0]);
   useEffect(() => {
@@ -32,7 +32,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
     return () => ro.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [has]);
-  const height = heights[onReviews ? 1 : 0];
+  const height = Math.max(heights[0], heights[1]);
 
   // Switching panes brings the whole band into view, so the reviews window is never cut off.
   const section = useRef<HTMLElement>(null);
@@ -42,11 +42,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
     const el = section.current;
     if (!el) return;
     const behavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-    // Bring the band's top into view right away…
-    const top = el.getBoundingClientRect().top + window.scrollY - 8;
-    if (Math.abs(window.scrollY - top) > 4) window.scrollTo({ top, behavior });
     if (!opening) return;
-    // …and once the window has grown, make sure its bottom edge is on screen too.
+    // Once the reviews have slid in, make sure the whole window is on screen.
     setTimeout(() => {
       const win = el.querySelector<HTMLElement>("[data-reviews-window]");
       if (!win) return;
@@ -76,7 +73,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
       </div>
 
       <div
-        className="-mx-2 overflow-hidden px-2 pb-2 transition-[height] duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
+        className="-mx-2 overflow-hidden px-2 pb-2"
         style={has && height ? { height: height + 8 } : undefined}
       >
         <div

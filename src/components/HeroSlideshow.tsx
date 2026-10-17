@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { HomeImage } from "@/lib/portfolio.functions";
 import { cn } from "@/lib/utils";
@@ -6,7 +7,7 @@ import { cn } from "@/lib/utils";
 const INTERVAL = 5500;
 
 /** Full-bleed crossfading background slides with discreet glass arrows. */
-export function HeroSlideshow({ slides, controlsClassName }: { slides: HomeImage[]; controlsClassName?: string }) {
+export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: { slides: HomeImage[]; controlsClassName?: string; controlsContainer?: HTMLElement | null }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const [tick, setTick] = useState(0);
@@ -30,6 +31,9 @@ export function HeroSlideshow({ slides, controlsClassName }: { slides: HomeImage
 
   const go = useCallback((d: number) => { setManual(true); setI((v) => (v + d + n) % n); setTick((t) => t + 1); }, [n]);
 
+  // Arrows go into the page's own slot when one is given (portal), else sit where styled.
+  const wrap = (node: React.ReactNode) => (controlsContainer ? createPortal(node, controlsContainer) : node);
+
   return (
     <>
       <div className="absolute inset-0" aria-hidden>
@@ -52,7 +56,7 @@ export function HeroSlideshow({ slides, controlsClassName }: { slides: HomeImage
           );
         })}
       </div>
-      {n > 1 && (
+      {n > 1 && (controlsContainer || controlsClassName) && wrap(
         <div
           className={cn("flex gap-2", controlsClassName)}
           onPointerEnter={() => setPaused(true)}

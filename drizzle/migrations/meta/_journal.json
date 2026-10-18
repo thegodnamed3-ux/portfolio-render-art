@@ -169,6 +169,13 @@
       "when": 1792340000000,
       "tag": "0023_featured_spotlight",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792333823064,
+      "tag": "0024_featured_spotlight",
+      "breakpoints": true
     }
   ]
 }

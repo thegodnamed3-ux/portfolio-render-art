@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -24,6 +25,16 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const [view, setView] = useState<"contact" | "reviews">("contact");
   const [booking, setBooking] = useState(false);
   const { t } = useI18n();
+  const reduce = useReducedMotion();
+  // "Book a session." and the button slide in from the right, one after another, while their
+  // colours invert: the words darken out of the paper, the button turns from paper to ink.
+  const ease = [0.16, 0.8, 0.1, 1] as const;
+  const PAPER = "#f1efea";
+  const INK = "#1b1b1b";
+  const step = (extra: object = {}) => ({
+    variants: { hidden: { opacity: 0, x: 80, color: PAPER, ...extra }, shown: { opacity: 1, x: 0, color: INK } },
+    transition: reduce ? { duration: 0 } : { duration: 1.2, ease },
+  });
   const has = withReviews && reviews.length > 0;
   const onReviews = has && view === "reviews";
 
@@ -51,10 +62,15 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
       <div className="flex items-center justify-between gap-4">
         <h2 className="display text-3xl leading-none md:text-4xl">{onReviews ? t("reviews.title") : t("contact.title")}</h2>
         {has && (
-          <button
+          <motion.button
             type="button"
             onClick={toggle}
             aria-expanded={onReviews}
+            // Blinks once with a black outline when the band comes into view, to hint at the reviews.
+            style={{ outline: "1.5px solid transparent", outlineOffset: 3 }}
+            whileInView={reduce ? {} : { outlineColor: ["rgba(27,27,27,0)", "rgba(27,27,27,1)", "rgba(27,27,27,0)"] }}
+            viewport={{ once: true, amount: 1 }}
+            transition={{ duration: 1.1, delay: 1.3, ease: "easeInOut", times: [0, 0.35, 1] }}
             className="glass-ink hit group meta inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.625rem] text-ink"
           >
             {onReviews ? (
@@ -62,7 +78,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             ) : (
               <>{t("reviews.pill")}<span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span></>
             )}
-          </button>
+          </motion.button>
         )}
       </div>
 
@@ -75,21 +91,39 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
           style={{ transform: onReviews ? "translateX(-50%)" : "translateX(0)" }}
         >
           <div aria-hidden={onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center pr-8 transition-[visibility] duration-700", onReviews && "invisible")}>
-            <div ref={panes[0]} className="py-8 md:py-10">
+            <motion.div
+              ref={panes[0]}
+              className="py-8 md:py-10"
+              initial="hidden"
+              whileInView="shown"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={{ hidden: {}, shown: { transition: { staggerChildren: reduce ? 0 : 0.14 } } }}
+            >
             <p className="display text-[15vw] leading-[0.95] md:text-[9vw]">
-              {t("book.l1")} <em>{t("book.l2")}</em>
+              <motion.span className="inline-block" {...step()}>{t("book.l1")}</motion.span>{" "}
+              <motion.em className="inline-block" {...step()}>{t("book.l2")}</motion.em>
             </p>
-            <button
+            <motion.button
               type="button"
               onClick={() => setBooking(true)}
               tabIndex={onReviews ? -1 : 0}
-              className="hit group meta mt-8 inline-flex items-center gap-2.5 rounded-full bg-ink px-4 py-2.5 text-[0.625rem] text-paper transition-[opacity,scale] duration-150 hover:opacity-85 active:scale-[0.96] md:mt-12"
+              variants={{
+                hidden: { opacity: 0, x: 80, backgroundColor: PAPER, color: INK },
+                shown: { opacity: 1, x: 0, backgroundColor: INK, color: PAPER },
+              }}
+              transition={reduce ? { duration: 0 } : { duration: 1.2, ease }}
+              className="hit group meta mt-8 inline-flex items-center gap-2.5 rounded-full border border-ink px-4 py-2.5 text-[0.625rem] transition-[opacity,scale] duration-150 hover:opacity-85 active:scale-[0.96] md:mt-12"
             >
               {t("book.send")}
               <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
-            </button>
-            <ContactLinks tone="light" className="mt-3" />
-            </div>
+            </motion.button>
+            <motion.div
+              variants={{ hidden: { opacity: 0, x: 80 }, shown: { opacity: 1, x: 0 } }}
+              transition={reduce ? { duration: 0 } : { duration: 1.2, ease }}
+            >
+              <ContactLinks tone="light" className="mt-3" />
+            </motion.div>
+            </motion.div>
           </div>
           <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center transition-[visibility] duration-700", !onReviews && "invisible")}>
             {/* Both panes are centred in the same height, so they share one centre line. */}

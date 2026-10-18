@@ -51,7 +51,7 @@ function Archive() {
           <CollapseIcon />
         </Link>
       </div>
-      <nav className="flex gap-1 overflow-x-auto px-1 pb-3 pt-3 [scrollbar-width:none] md:px-5" aria-label={t("ar.cats")}>
+      <nav className="flex gap-1 overflow-x-auto px-4 pb-3 pt-3 [scrollbar-width:none] md:px-8" aria-label={t("ar.cats")}>
         {internalCategories.map((x) => (
           <Link
             key={x.slug}

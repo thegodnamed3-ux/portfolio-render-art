@@ -103,13 +103,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               <motion.span className="inline-block" {...step()}>{t("book.l1")}</motion.span>{" "}
               <motion.em className="inline-block" {...step()}>{t("book.l2")}</motion.em>
             </p>
-            {/* Movement lives on a wrapper: the button's own opacity stays free for its CSS hover/press
-                transitions — sharing it with the animation made the button flicker. */}
-            <motion.div
-              className="mt-8 w-fit md:mt-12"
-              variants={{ hidden: { opacity: 0, x: 80 }, shown: { opacity: 1, x: 0 } }}
-              transition={reduce ? { duration: 0 } : { duration: 1.2, ease }}
-            >
+            {/* The button stays put and only inverts its colours (opacity is left to its CSS hover). */}
+            <div className="mt-8 w-fit md:mt-12">
             <motion.button
               type="button"
               onClick={() => setBooking(true)}
@@ -124,7 +119,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               {t("book.send")}
               <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
             </motion.button>
-            </motion.div>
+            </div>
             <ContactLinks tone="light" className="mt-3" />
             </motion.div>
           </div>

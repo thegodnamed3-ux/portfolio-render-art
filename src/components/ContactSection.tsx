@@ -103,26 +103,29 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               <motion.span className="inline-block" {...step()}>{t("book.l1")}</motion.span>{" "}
               <motion.em className="inline-block" {...step()}>{t("book.l2")}</motion.em>
             </p>
+            {/* Movement lives on a wrapper: the button's own opacity stays free for its CSS hover/press
+                transitions — sharing it with the animation made the button flicker. */}
+            <motion.div
+              className="mt-8 w-fit md:mt-12"
+              variants={{ hidden: { opacity: 0, x: 80 }, shown: { opacity: 1, x: 0 } }}
+              transition={reduce ? { duration: 0 } : { duration: 1.2, ease }}
+            >
             <motion.button
               type="button"
               onClick={() => setBooking(true)}
               tabIndex={onReviews ? -1 : 0}
               variants={{
-                hidden: { opacity: 0, x: 80, backgroundColor: PAPER, color: INK },
-                shown: { opacity: 1, x: 0, backgroundColor: INK, color: PAPER },
+                hidden: { backgroundColor: PAPER, color: INK },
+                shown: { backgroundColor: INK, color: PAPER },
               }}
               transition={reduce ? { duration: 0 } : { duration: 1.2, ease }}
-              className="hit group meta mt-8 inline-flex items-center gap-2.5 rounded-full border border-ink px-4 py-2.5 text-[0.625rem] transition-[opacity,scale] duration-150 hover:opacity-85 active:scale-[0.96] md:mt-12"
+              className="hit group meta inline-flex items-center gap-2.5 rounded-full border border-ink px-4 py-2.5 text-[0.625rem] transition-[opacity,scale] duration-150 hover:opacity-85 active:scale-[0.96] md:mt-12"
             >
               {t("book.send")}
               <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
             </motion.button>
-            <motion.div
-              variants={{ hidden: { opacity: 0, x: 80 }, shown: { opacity: 1, x: 0 } }}
-              transition={reduce ? { duration: 0 } : { duration: 1.2, ease }}
-            >
-              <ContactLinks tone="light" className="mt-3" />
             </motion.div>
+            <ContactLinks tone="light" className="mt-3" />
             </motion.div>
           </div>
           <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center transition-[visibility] duration-700", !onReviews && "invisible")}>

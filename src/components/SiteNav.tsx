@@ -181,20 +181,18 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             aria-label={open ? t("nav.closeMenu") : t("nav.openMenu")}
             // The button never swaps classes: glass and solid-ink layers (and their shades) cross-fade
             // slowly, and the lines stay paper-coloured, so passing a light band is a soft fade, not a blink.
-            className="hit relative inline-flex size-10 items-center justify-center rounded-full text-paper"
-            initial={{ scale: 0.4, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.4, opacity: 0 }}
+            // No frame: just the word, on a soft radial shade so it reads over photos and paper alike.
+            className={`hit relative inline-grid place-items-end px-1 py-2 text-[0.75rem] transition-colors duration-700 hover:opacity-60 ${light ? "text-ink" : "text-paper"}`}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
             transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : 0.18, ease }}
           >
-            <span aria-hidden className={`pointer-events-none absolute -inset-5 -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(0_0_0/0.55),transparent)] transition-opacity duration-700 ${light ? "opacity-0" : "opacity-100"}`} />
-            <span aria-hidden className={`pointer-events-none absolute -inset-5 -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
-            <span aria-hidden className="glass pointer-events-none absolute inset-0 rounded-full" style={{ opacity: light ? 0 : 1, transition: "opacity 700ms ease" }} />
-            <span aria-hidden className="pointer-events-none absolute inset-0 rounded-full bg-ink" style={{ opacity: light ? 1 : 0, transition: "opacity 700ms ease" }} />
-            <span aria-hidden className="relative block h-2 w-3.5">
-              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${open ? "top-1 rotate-45" : "top-0"}`} />
-              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${open ? "top-1 -rotate-45" : "top-2"}`} />
-            </span>
+            <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 bg-[radial-gradient(closest-side,rgb(0_0_0/0.55),transparent)] transition-opacity duration-700 ${light ? "opacity-0" : "opacity-100"}`} />
+            <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
+            {/* Both words share one cell, so swapping Menu ↔ Close never shifts the layout. */}
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${open ? "-translate-y-1 opacity-0" : "opacity-100"}`}>{t("nav.menu")}</span>
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${open ? "opacity-100" : "translate-y-1 opacity-0"}`}>{t("nav.close")}</span>
           </motion.button>
         )}
       </AnimatePresence>

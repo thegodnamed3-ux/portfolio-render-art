@@ -46,6 +46,8 @@ const D = {
   "sp.show": { en: "Show photo", et: "Näita fotot", ru: "Показать фото" },
   "pf.full": { en: "Open full screen", et: "Ava täisekraanil", ru: "Открыть на весь экран" },
   "nav.contact": { en: "Contact", et: "Kontakt", ru: "Контакты" },
+  "nav.menu": { en: "Menu", et: "Menüü", ru: "Меню" },
+  "nav.close": { en: "Close", et: "Sulge", ru: "Закрыть" },
   "nav.openMenu": { en: "Open menu", et: "Ava menüü", ru: "Открыть меню" },
   "nav.closeMenu": { en: "Close menu", et: "Sulge menüü", ru: "Закрыть меню" },
   "nav.subtitle": { en: "PHOTOGRAPHY · VISUALS", et: "FOTOGRAAFIA · VISUAALID", ru: "ФОТОГРАФИЯ · ВИЗУАЛ" },

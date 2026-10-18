@@ -1,5 +1,12 @@
 export type TgButton = { text: string; url: string } | { text: string; callback_data: string };
 
+/**
+ * The same bot and chat also receive messages from the HŌRA Studios site, so every message starts
+ * with the site's name on its own line.
+ */
+export const SITE_TAG = "THEGODNAMED";
+export const withSite = (html: string) => `<b>${SITE_TAG}</b>\n${html}`;
+
 /** Escapes user text for Telegram's HTML formatting. */
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -24,7 +31,7 @@ export async function sendTelegram(html: string, buttons: TgButton[] = [], layou
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         chat_id: chat,
-        text: html,
+        text: withSite(html),
         parse_mode: "HTML",
         link_preview_options: { is_disabled: true },
         ...(rows.length ? { reply_markup: { inline_keyboard: rows } } : {}),

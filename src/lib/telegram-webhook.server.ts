@@ -1,4 +1,4 @@
-import { reviewMessage, tgApi, webhookSecret } from "@/lib/telegram.server";
+import { reviewMessage, tgApi, webhookSecret, withSite } from "@/lib/telegram.server";
 
 /**
  * Telegram calls this when a button under a bot message is pressed.
@@ -39,7 +39,7 @@ export async function handleTelegramUpdate(request: Request): Promise<Response> 
     await tgApi("editMessageText", {
       chat_id: cb.message.chat.id,
       message_id: cb.message.message_id,
-      text: [`<b>Link extended</b>`, "", `<b>${esc(d.client_name || d.title)}</b>`, d.client_name ? esc(d.title) : null, `Works until ${formatDate(until)}`].filter((l) => l !== null).join("\n"),
+      text: withSite([`<b>Link extended</b>`, "", `<b>${esc(d.client_name || d.title)}</b>`, d.client_name ? esc(d.title) : null, `Works until ${formatDate(until)}`].filter((l) => l !== null).join("\n")),
       parse_mode: "HTML",
       reply_markup: { inline_keyboard: [[{ text: "Extend 2 more weeks", callback_data: `dl:x:${d.id}` }]] },
     });
@@ -73,7 +73,7 @@ export async function handleTelegramUpdate(request: Request): Promise<Response> 
   await tgApi("editMessageText", {
     chat_id: cb.message.chat.id,
     message_id: cb.message.message_id,
-    text: html,
+    text: withSite(html),
     parse_mode: "HTML",
     link_preview_options: { is_disabled: true },
     reply_markup: { inline_keyboard: layout },

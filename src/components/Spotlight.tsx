@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { WorkItem } from "@/content/home";
 import { useFadeIn } from "@/components/Frame";
+import { LongArrow } from "@/components/LongArrow";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -99,11 +100,11 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
 
         {n > 1 && (
           <div className="meta flex items-center gap-6 text-paper/70">
-            <button type="button" onClick={() => go(-1)} aria-label={t("sp.prev")} className="hit text-lg leading-none transition-colors hover:text-paper">←</button>
+            <button type="button" onClick={() => go(-1)} aria-label={t("sp.prev")} className="hit flex w-10 items-center py-3 transition-colors hover:text-paper"><LongArrow left /></button>
             <span className="h-px flex-1 bg-paper/15" aria-hidden>
               <span className="block h-px bg-paper/70 transition-[width] duration-500" style={{ width: `${((i + 1) / n) * 100}%` }} />
             </span>
-            <button type="button" onClick={() => go(1)} aria-label={t("sp.next")} className="hit text-lg leading-none transition-colors hover:text-paper">→</button>
+            <button type="button" onClick={() => go(1)} aria-label={t("sp.next")} className="hit flex w-10 items-center py-3 transition-colors hover:text-paper"><LongArrow left={false} /></button>
           </div>
         )}
       </div>

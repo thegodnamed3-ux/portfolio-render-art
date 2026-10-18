@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion, useTransform, type PanInfo } from "framer-motion";
 import { ContactLinks } from "./ContactLinks";
 import { useI18n } from "@/lib/i18n";
+import { LongArrow } from "./LongArrow";
 
 export type ViewerItem = { src: string; w: number; h: number; alt?: string };
 
@@ -212,9 +213,10 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
       </div>
 
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
-        <div className="flex items-center gap-5">
-          <button onClick={() => go(-1)} disabled={index === 0} aria-label={t("lb.prev")} className="hit meta py-2 text-base text-paper/80 transition-colors hover:text-paper disabled:opacity-25">←</button>
-          <button onClick={() => go(1)} disabled={atEnd} aria-label={t("lb.next")} className="hit meta py-2 text-base text-paper/80 transition-colors hover:text-paper disabled:opacity-25">→</button>
+        {/* Same long one-stroke arrows as the homepage slides. */}
+        <div className="flex w-28 items-center gap-5 md:w-32">
+          <button onClick={() => go(-1)} disabled={index === 0} aria-label={t("lb.prev")} className="hit flex flex-1 items-center py-3 text-paper/80 transition-colors hover:text-paper disabled:opacity-25"><LongArrow left /></button>
+          <button onClick={() => go(1)} disabled={atEnd} aria-label={t("lb.next")} className="hit flex flex-1 items-center py-3 text-paper/80 transition-colors hover:text-paper disabled:opacity-25"><LongArrow left={false} /></button>
         </div>
         <AnimatePresence>
           {hint && !atEnd && (

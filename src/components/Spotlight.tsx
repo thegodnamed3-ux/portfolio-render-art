@@ -46,7 +46,7 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
             src={cur.src}
             alt={cur.caption ?? "Photograph"}
             className="absolute inset-0 h-full w-full object-contain"
-            style={cur.pos ? { objectPosition: cur.pos } : undefined}
+            style={{ objectPosition: cur.pos ?? "50% 50%" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

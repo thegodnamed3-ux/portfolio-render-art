@@ -179,12 +179,12 @@ function About({ image }: { image: HomeImage }) {
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-background/95 via-background/45 to-background/50" />
       <h2 className="display text-3xl text-paper md:text-4xl">{t("about.title")}</h2>
-      <div className="grid gap-8 md:grid-cols-[1fr_minmax(0,26rem)] md:items-end md:gap-16">
+      <div className="grid gap-8 md:grid-cols-[1fr_minmax(0,34rem)] md:items-end md:gap-16">
         <div>
           <p className="display text-4xl text-paper md:text-6xl">Gor Arsakjan.</p>
           <p className="meta mt-5 text-paper/75">{t("about.role")}</p>
         </div>
-        <div className="max-w-md space-y-4 text-[0.9375rem] leading-relaxed text-paper/85 md:text-base">
+        <div className="max-w-md space-y-4 md:max-w-[34rem] text-[0.9375rem] leading-relaxed text-paper/85 md:text-base">
           <p>{t("about.p1")}</p>
           <p className="text-paper/65">{t("about.p2")}</p>
         </div>

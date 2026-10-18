@@ -15,6 +15,15 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
   const [manual, setManual] = useState(false);
   const reduced = useRef(false);
   const n = slides.length;
+  // First visit: only the first frame downloads. The next one starts once the page has finished
+  // loading, so it never competes with the first picture people actually see.
+  const [warm, setWarm] = useState(false);
+  useEffect(() => {
+    const go = () => setTimeout(() => setWarm(true), 400);
+    if (document.readyState === "complete") { go(); return; }
+    window.addEventListener("load", go, { once: true });
+    return () => window.removeEventListener("load", go);
+  }, []);
 
   useEffect(() => {
     reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -38,7 +47,7 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
     <>
       <div className="absolute inset-0" aria-hidden>
         {slides.map((s, k) => {
-          const near = k === i || k === (i + 1) % n;
+          const near = k === i || (warm && k === (i + 1) % n);
           return (
             <img
               key={s.src + k}

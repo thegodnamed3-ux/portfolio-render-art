@@ -32,8 +32,10 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
   const cur = items[i % n]!;
   const go = (d: number) => setI((v) => (v + d + n) % n);
 
-  // Warm the next frame so arrows never wait on the network.
+  // Warm the next frame so arrows never wait — but only after the visitor starts browsing,
+  // so the first page load isn't spent on photos further down.
   useEffect(() => {
+    if (i === 0) return;
     const next = items[(i + 1) % n];
     if (next) { const img = new Image(); img.src = next.src; }
   }, [i, n, items]);
@@ -46,6 +48,8 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
             key={cur.src + i}
             src={cur.src}
             alt={cur.caption ?? "Photograph"}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-contain"
             style={{ objectPosition: cur.pos ?? "50% 50%" }}
             initial={{ opacity: 0 }}

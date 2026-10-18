@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
@@ -130,17 +131,30 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
 
 function Index_Disciplines() {
   const { t } = useI18n();
+  const reduce = useReducedMotion();
   return (
-    <section id="disciplines" data-nav-light className="scroll-mt-0 bg-paper px-5 py-14 text-ink md:px-10 md:py-20">
+    <section id="disciplines" data-nav-light className="scroll-mt-0 overflow-x-clip bg-paper px-5 py-14 text-ink md:px-10 md:py-20">
       <div className="grid gap-10 md:grid-cols-12">
         <h2 className="display text-3xl md:col-span-3 md:text-4xl">{t("disciplines.title")}</h2>
-        <ol className="md:col-span-9">
+        {/* Rows slide in from the right, one after another. */}
+        <motion.ol
+          className="md:col-span-9"
+          initial="hidden"
+          whileInView="shown"
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ staggerChildren: reduce ? 0 : 0.11 }}
+        >
           {categories.map((c, i) => (
-            <li key={c.slug} className="border-t border-ink/15 last:border-b">
+            <motion.li
+              key={c.slug}
+              className="border-t border-ink/15 last:border-b"
+              variants={{ hidden: { opacity: 0, x: 80 }, shown: { opacity: 1, x: 0 } }}
+              transition={reduce ? { duration: 0 } : { duration: 1.1, ease: [0.16, 0.8, 0.1, 1] }}
+            >
               <DisciplineRow c={c} n={num(i + 1)} />
-            </li>
+            </motion.li>
           ))}
-        </ol>
+        </motion.ol>
       </div>
     </section>
   );

@@ -51,7 +51,7 @@ function Archive() {
           <CollapseIcon />
         </Link>
       </div>
-      <nav className="flex gap-1 overflow-x-auto px-4 pb-3 pt-3 [scrollbar-width:none] md:px-8" aria-label={t("ar.cats")}>
+      <nav className="flex overflow-x-auto px-4 pb-3 pt-3 [scrollbar-width:none] md:px-8" aria-label={t("ar.cats")}>
         {internalCategories.map((x) => (
           <Link
             key={x.slug}
@@ -59,7 +59,7 @@ function Archive() {
             params={{ category: x.slug }}
             replace
             aria-current={x.slug === slug ? "page" : undefined}
-            className={cn("meta shrink-0 rounded-full px-3 py-1.5 text-[0.625rem] transition-colors", x.slug === slug ? "bg-paper/15 text-paper" : "text-paper/55 hover:text-paper")}
+            className={cn("link-u meta mx-3 shrink-0 py-1.5 text-[0.625rem] first:ml-0", x.slug === slug ? "link-on text-paper" : "text-paper/55 hover:text-paper")}
           >
             {title(x.slug, x.title)}
           </Link>

@@ -30,10 +30,6 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const CloseIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 stroke-current" strokeWidth="1.5" fill="none"><path d="M5 5l14 14M19 5 5 19" /></svg>
-);
-
 /** Stack geometry: depth offsets are pure translation — never rotation. */
 const OFFSET = 7;
 const DEPTH = 3;
@@ -171,13 +167,14 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
     >
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
         <div className="flex min-w-0 items-center gap-2">
-        {onBack && <button onClick={onBack} aria-label={t("pf.back")} className="glass hit meta inline-flex h-9 items-center rounded-full px-3.5 text-paper/80 hover:text-paper">{t("pf.back")}</button>}
-        <span className="glass meta truncate rounded-full px-3.5 py-1.5 text-paper/80">
-          {title && <span className="mr-2.5 text-paper">{title}</span>}
-          {String(index + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+        {onBack && <button onClick={onBack} aria-label={t("pf.back")} className="link-u hit meta mr-3 py-1 text-paper/80 hover:text-paper">{t("pf.back")}</button>}
+        {/* Typographic header: title in caps, the counter set like a caption in serif italic. */}
+        <span className="flex min-w-0 items-baseline gap-3 text-paper">
+          {title && <span className="meta truncate text-paper/80">{title}</span>}
+          <span className="display shrink-0 text-lg italic leading-none tabular-nums md:text-2xl">{String(index + 1).padStart(2, "0")}<span className="text-paper/45"> / {String(n).padStart(2, "0")}</span></span>
         </span>
         </div>
-        <button onClick={onClose} aria-label="Close viewer" className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>
+        <button onClick={onClose} aria-label="Close viewer" className="link-u hit meta py-1 text-paper/80 hover:text-paper">{t("nav.close")}</button>
       </div>
 
       <div ref={area} className={`relative flex min-h-0 min-w-0 w-full flex-1 items-center justify-center ${embedded ? "overflow-hidden" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -215,10 +212,9 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
       </div>
 
       <div className="relative z-20 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
-        <div className="glass flex items-center rounded-full">
-          <button onClick={() => go(-1)} disabled={index === 0} aria-label={t("lb.prev")} className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">←</button>
-          <span className="h-3.5 w-px bg-paper/15" />
-          <button onClick={() => go(1)} disabled={atEnd} aria-label={t("lb.next")} className="hit meta px-3.5 py-2 text-paper/80 transition-colors hover:text-paper disabled:opacity-30">→</button>
+        <div className="flex items-center gap-5">
+          <button onClick={() => go(-1)} disabled={index === 0} aria-label={t("lb.prev")} className="hit meta py-2 text-base text-paper/80 transition-colors hover:text-paper disabled:opacity-25">←</button>
+          <button onClick={() => go(1)} disabled={atEnd} aria-label={t("lb.next")} className="hit meta py-2 text-base text-paper/80 transition-colors hover:text-paper disabled:opacity-25">→</button>
         </div>
         <AnimatePresence>
           {hint && !atEnd && (
@@ -228,7 +224,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">{t("lb.end")}</motion.span>
           )}
         </AnimatePresence>
-        {action ? <button onClick={action.onClick} className="glass hit meta rounded-full px-4 py-2 text-paper">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="glass hit meta rounded-full px-4 py-2 text-paper">{t("lb.book")}</button>}
+        {action ? <button onClick={action.onClick} className="link-u link-on hit meta py-1 text-paper">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="link-u link-on hit meta py-1 text-paper">{t("lb.book")}</button>}
       </div>
 
       <AnimatePresence>

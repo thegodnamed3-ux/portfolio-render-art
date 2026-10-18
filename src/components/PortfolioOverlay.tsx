@@ -133,20 +133,20 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
                 onClick={onClose}
                 aria-label={t("pf.full")}
                 title={t("pf.full")}
-                className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 hover:text-paper"
+                className="hit inline-flex size-9 items-center justify-center text-paper/75 transition-colors hover:text-paper"
               >
                 <ExpandIcon />
               </Link>
-              <button onClick={onClose} aria-label="Close portfolio" className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>
+              <button onClick={onClose} aria-label="Close portfolio" className="link-u hit meta py-1 text-paper/80 hover:text-paper">{t("nav.close")}</button>
             </div>
           </div>
-          <div className="flex gap-1 overflow-x-auto px-3 pb-3 [scrollbar-width:none] md:px-7">
+          <div className="flex overflow-x-auto px-4 pb-3 [scrollbar-width:none] md:px-8">
             {internalCategories.map((x) => (
               <button
                 key={x.slug}
                 onClick={() => pick(x.slug)}
                 aria-pressed={x.slug === cat}
-                className={`meta shrink-0 rounded-full px-3 py-1.5 text-[0.625rem] transition-colors ${x.slug === cat ? "bg-paper/15 text-paper" : "text-paper/55 hover:text-paper"}`}
+                className={`link-u meta mx-3 shrink-0 py-1.5 text-[0.625rem] first:ml-0 ${x.slug === cat ? "link-on text-paper" : "text-paper/55 hover:text-paper"}`}
               >
                 {catTitle(x.slug, x.title)}
               </button>

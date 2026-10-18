@@ -94,7 +94,7 @@ function Work({ items, columns, mobileColumns, spotlight }: { items: WorkItem[];
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
       <div className="mb-10 grid gap-6 md:mb-16 md:grid-cols-12">
-        <h2 className="display text-3xl md:col-span-3 md:text-4xl">{t("work.title")}</h2>
+        <h2 className="display text-3xl md:col-span-3 md:text-4xl"><span className="meta mb-2 block text-muted-foreground">01 —</span>{t("work.title")}</h2>
         <p className="display text-4xl md:col-span-9 md:text-6xl">
           {t("work.lead1")} <em className="text-muted-foreground">{t("work.lead2")}</em>
         </p>
@@ -110,7 +110,7 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
   const inner = (
     <>
       <span className="flex items-center gap-3 md:gap-5">
-        <span className="display text-4xl transition-transform duration-300 group-hover:translate-x-2 md:text-6xl">
+        <span className="display text-4xl transition-transform duration-300 group-hover:translate-x-2 group-hover:italic md:text-6xl">
           {title}
         </span>
         {c.external && (
@@ -150,7 +150,7 @@ function Index_Disciplines() {
   return (
     <section id="disciplines" data-nav-light className="scroll-mt-0 overflow-x-clip bg-paper px-5 py-14 text-ink md:px-10 md:py-20">
       <div className="grid gap-10 md:grid-cols-12">
-        <h2 className="display text-3xl md:col-span-3 md:text-4xl">{t("disciplines.title")}</h2>
+        <h2 className="display text-3xl md:col-span-3 md:text-4xl"><span className="meta mb-2 block text-ink/45">02 —</span>{t("disciplines.title")}</h2>
         {/* Rows slide in from the right, one after another. */}
         <motion.ol
           className="md:col-span-9"
@@ -193,7 +193,7 @@ function About({ image }: { image: HomeImage }) {
         style={{ objectPosition: image.pos ?? "50% 50%" }}
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-background/95 via-background/45 to-background/50" />
-      <h2 className="display text-3xl text-paper md:text-4xl">{t("about.title")}</h2>
+      <h2 className="display text-3xl text-paper md:text-4xl"><span className="meta mb-2 block text-paper/55">03 —</span>{t("about.title")}</h2>
       <div className="grid gap-8 md:grid-cols-[1fr_minmax(0,34rem)] md:items-end md:gap-16">
         <div>
           <p className="display text-4xl text-paper md:text-6xl">Gor Arsakjan.</p>

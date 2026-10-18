@@ -60,18 +60,20 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   return (
     <section ref={section} {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="display text-3xl leading-none md:text-4xl">{onReviews ? t("reviews.title") : t("contact.title")}</h2>
+        <div>
+          <p className="meta mb-2 text-ink/45">04 —</p>
+          <h2 className="display text-3xl leading-none md:text-4xl">{onReviews ? t("reviews.title") : t("contact.title")}</h2>
+        </div>
         {has && (
           <motion.button
             type="button"
             onClick={toggle}
             aria-expanded={onReviews}
-            // Blinks once with a black outline when the band comes into view, to hint at the reviews.
-            style={{ outline: "1.5px solid transparent", outlineOffset: 3 }}
-            whileInView={reduce ? {} : { outlineColor: ["rgba(27,27,27,0)", "rgba(27,27,27,1)", "rgba(27,27,27,0)"] }}
+            // A plain word: when the band comes into view its underline sweeps through once, hinting at the reviews.
+            whileInView={reduce ? {} : { backgroundSize: ["0% 1px", "100% 1px", "100% 1px", "0% 1px"] }}
             viewport={{ once: true, amount: 1 }}
-            transition={{ duration: 1.1, delay: 1.3, ease: "easeInOut", times: [0, 0.35, 1] }}
-            className="glass-ink hit group meta inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.625rem] text-ink"
+            transition={{ duration: 1.6, delay: 1.3, ease: "easeInOut", times: [0, 0.4, 0.7, 1] }}
+            className="link-u hit group meta inline-flex items-center gap-2 self-end py-1 text-[0.6875rem] text-ink"
           >
             {onReviews ? (
               <><span aria-hidden className="transition-transform duration-300 group-hover:-translate-x-0.5">←</span>{t("contact.pill")}</>
@@ -103,21 +105,18 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               <motion.span className="inline-block" {...step()}>{t("book.l1")}</motion.span>{" "}
               <motion.em className="inline-block" {...step()}>{t("book.l2")}</motion.em>
             </p>
-            {/* The button stays put and only inverts its colours (opacity is left to its CSS hover). */}
+            {/* A typographic link, always underlined, instead of a pill button. */}
             <div className="mt-8 w-fit md:mt-12">
             <motion.button
               type="button"
               onClick={() => setBooking(true)}
               tabIndex={onReviews ? -1 : 0}
-              variants={{
-                hidden: { backgroundColor: PAPER, color: INK },
-                shown: { backgroundColor: INK, color: PAPER },
-              }}
+              variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }}
               transition={reduce ? { duration: 0 } : { duration: 1.2, ease }}
-              className="hit group meta inline-flex items-center gap-2.5 rounded-full border border-ink px-4 py-2.5 text-[0.625rem] transition-[opacity,scale] duration-150 hover:opacity-85 active:scale-[0.96] md:mt-12"
+              className="link-u link-on hit group meta inline-flex items-center gap-2.5 py-1 text-[0.75rem] text-ink"
             >
               {t("book.send")}
-              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
             </motion.button>
             </div>
             <ContactLinks tone="light" className="mt-3" />
@@ -138,9 +137,14 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
 
       {booking && <BookingDialog onClose={() => setBooking(false)} />}
 
-      <footer className="meta mt-12 border-t border-ink/15 pt-5 text-ink-muted">
-        <div className="flex items-baseline justify-between gap-4">
-          <Link to="/" hash="top" className="wordmark text-ink transition-opacity hover:opacity-60">thegodnamed</Link>
+      <footer className="meta mt-12 border-t border-ink/15 pt-6 text-ink-muted md:pt-10">
+        {/* The closing line of the page: the wordmark set edge to edge, like a magazine's last spread. */}
+        <Link to="/" hash="top" aria-label="thegodnamed" className="block text-ink transition-opacity hover:opacity-70">
+          <svg viewBox="0 0 1000 150" aria-hidden className="block h-auto w-full overflow-visible">
+            <text x="0" y="122" textLength="1000" lengthAdjust="spacingAndGlyphs" className="wordmark" style={{ fontSize: 168, fill: "currentColor" }}>thegodnamed</text>
+          </svg>
+        </Link>
+        <div className="mt-4 flex items-baseline justify-end gap-4 md:mt-6">
           <span className="flex items-baseline gap-2.5 whitespace-nowrap font-[Inter,sans-serif] text-[0.6875rem] font-medium uppercase leading-none tracking-[0.06em] text-ink-muted/65 md:text-xs">
             <Link to="/privacy" className="transition-colors hover:text-ink">{t("footer.privacy")}</Link>
             <span>{t("footer.city")}</span>

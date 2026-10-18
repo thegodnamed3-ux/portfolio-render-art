@@ -157,7 +157,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
   const close = () => { setOpen(false); if (resting) setTucked(true); };
 
   const item = (l: (typeof links)[number]) => {
-    const cls = "relative inline-block px-1 py-1.5 transition-opacity hover:opacity-60";
+    const cls = "link-u relative inline-block py-1.5";
     const label = (
       <>
         <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 ${shade}`} />

@@ -985,11 +985,14 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
     queryFn: async () => {
       const { data, error } = await supabase.from("site_settings").select("featured_work, featured_columns").eq("id", 1).maybeSingle();
       if (error) throw error;
-      return data;
+      // Separate read: works before the phone-size column exists.
+      const { data: m } = await supabase.from("site_settings").select("featured_columns_mobile").eq("id", 1).maybeSingle();
+      return { ...data, featured_columns_mobile: m?.featured_columns_mobile ?? null };
     },
   });
   const [items, setItems] = useState<WorkItem[] | null>(null);
   const [cols, setCols] = useState<number | null>(null);
+  const [colsM, setColsM] = useState<number | null>(null);
   const [sel, setSel] = useState(0);
   const [picker, setPicker] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -1002,7 +1005,8 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
   const saved = Array.isArray(q.data?.featured_work) && q.data.featured_work.length ? (q.data.featured_work as unknown as WorkItem[]) : defaultWork;
   const list = items ?? saved;
   const columns = cols ?? q.data?.featured_columns ?? defaultWorkColumns;
-  const dirty = items !== null || cols !== null;
+  const columnsM = colsM ?? q.data?.featured_columns_mobile ?? 2;
+  const dirty = items !== null || cols !== null || colsM !== null;
   const ids = list.map((w, i) => `${i}|${w.src}`);
   const current = list[Math.min(sel, list.length - 1)];
 
@@ -1024,10 +1028,14 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
     if (!list.length) { toast.error("Add at least one photo"); return; }
     setBusy(true);
     const { error } = await supabase.from("site_settings").upsert({ id: 1, featured_work: list as never, featured_columns: columns, updated_at: new Date().toISOString() });
+    if (error) { setBusy(false); toast.error(error.message); return; }
+    if (colsM !== null) {
+      const { error: e2 } = await supabase.from("site_settings").update({ featured_columns_mobile: columnsM }).eq("id", 1);
+      if (e2) toast.error("Phone size needs a database update first (0021_featured_columns_mobile).");
+    }
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("Selected works published");
-    setItems(null); setCols(null);
+    setItems(null); setCols(null); setColsM(null);
     qc.invalidateQueries({ queryKey: ["admin", "work"] });
   };
 
@@ -1037,7 +1045,7 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
         <h2 className="display text-3xl text-paper">Selected works</h2>
         <span className="meta text-muted-foreground">{list.length} photos · drag to reorder</span>
         <button className={btnPrimary} disabled={!dirty || busy} onClick={save}>{busy ? "Saving…" : "Save & publish"}</button>
-        {dirty && <button className={btn} onClick={() => { setItems(null); setCols(null); }}>Discard changes</button>}
+        {dirty && <button className={btn} onClick={() => { setItems(null); setCols(null); setColsM(null); }}>Discard changes</button>}
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -1066,13 +1074,26 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
         )}
       </div>
 
+      {/* The slider follows the preview: desktop size, or phone size. */}
       <div className="max-w-md">
-        <label htmlFor="work-cols" className="meta mb-2 block text-muted-foreground">Size on desktop — {columns} per row</label>
-        <input id="work-cols" type="range" min={2} max={6} step={1} value={columns} onChange={(e) => setCols(Number(e.target.value))} className="w-full accent-[var(--paper)]" />
-        <div className="meta mt-1 flex justify-between px-1 text-[0.55rem] text-muted-foreground" aria-hidden>
-          {[2, 3, 4, 5, 6].map((n) => <span key={n} className={cn("flex flex-col items-center gap-1", n === columns && "text-paper")}><span className="h-2 w-px bg-current" />{n}</span>)}
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">Fewer per row = bigger photos. An unfinished last row is centred automatically. Phones always show two per row.</p>
+        {view === "desktop" ? (
+          <>
+            <label htmlFor="work-cols" className="meta mb-2 block text-muted-foreground">Size on desktop — {columns} per row</label>
+            <input id="work-cols" type="range" min={2} max={6} step={1} value={columns} onChange={(e) => setCols(Number(e.target.value))} className="w-full accent-[var(--paper)]" />
+            <div className="meta mt-1 flex justify-between px-1 text-[0.55rem] text-muted-foreground" aria-hidden>
+              {[2, 3, 4, 5, 6].map((n) => <span key={n} className={cn("flex flex-col items-center gap-1", n === columns && "text-paper")}><span className="h-2 w-px bg-current" />{n}</span>)}
+            </div>
+          </>
+        ) : (
+          <>
+            <label htmlFor="work-cols-m" className="meta mb-2 block text-muted-foreground">Size on phones — {columnsM} per row</label>
+            <input id="work-cols-m" type="range" min={1} max={3} step={1} value={columnsM} onChange={(e) => setColsM(Number(e.target.value))} className="w-full accent-[var(--paper)]" />
+            <div className="meta mt-1 flex justify-between px-1 text-[0.55rem] text-muted-foreground" aria-hidden>
+              {[1, 2, 3].map((n) => <span key={n} className={cn("flex flex-col items-center gap-1", n === columnsM && "text-paper")}><span className="h-2 w-px bg-current" />{n}</span>)}
+            </div>
+          </>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">Fewer per row = bigger photos. Switch the preview to Phone to set the size on phones separately.</p>
       </div>
 
       <div>
@@ -1085,7 +1106,7 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
           </div>
         </div>
         <div className={cn("overflow-hidden rounded-2xl border border-border bg-background p-4 md:p-6", view === "mobile" ? "mx-0 w-[375px] max-w-full" : "w-full")}>
-          <WorkGrid items={list} columns={columns} force={view} />
+          <WorkGrid items={list} columns={columns} mobileColumns={columnsM} force={view} />
         </div>
       </div>
 

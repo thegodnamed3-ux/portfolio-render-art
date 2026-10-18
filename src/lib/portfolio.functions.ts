@@ -104,6 +104,8 @@ export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () =
   const { data: w } = await sb.from("site_settings").select("featured_work, featured_columns").eq("id", 1).maybeSingle();
   const work = Array.isArray(w?.featured_work) && w.featured_work.length ? (w.featured_work as unknown as (HomeImage & { caption?: string })[]) : null;
   const columns = typeof w?.featured_columns === "number" ? w.featured_columns : null;
+  const { data: wm } = await sb.from("site_settings").select("featured_columns_mobile").eq("id", 1).maybeSingle();
+  const columnsMobile = typeof wm?.featured_columns_mobile === "number" ? wm.featured_columns_mobile : null;
   // Older selections were saved without the small copy — look it up so grids can use srcSet.
   if (work?.some((x) => !x.sm)) {
     const srcs = work.filter((x) => !x.sm).map((x) => x.src).slice(0, 200);
@@ -111,5 +113,5 @@ export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () =
     const bySrc = new Map((rows ?? []).filter((r) => r.sm && r.sm !== r.src).map((r) => [r.src, r.sm as string]));
     work.forEach((x) => { const sm = bySrc.get(x.src); if (!x.sm && sm) x.sm = sm; });
   }
-  return { hero, about, work, columns };
+  return { hero, about, work, columns, columnsMobile };
 });

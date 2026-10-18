@@ -75,7 +75,7 @@ function Hero({ slides }: { slides: HomeImage[] }) {
   );
 }
 
-function Work({ items, columns }: { items: WorkItem[]; columns: number }) {
+function Work({ items, columns, mobileColumns }: { items: WorkItem[]; columns: number; mobileColumns: number }) {
   const { t } = useI18n();
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
@@ -85,7 +85,7 @@ function Work({ items, columns }: { items: WorkItem[]; columns: number }) {
           {t("work.lead1")} <em className="text-muted-foreground">{t("work.lead2")}</em>
         </p>
       </div>
-      <WorkGrid items={items} columns={columns} />
+      <WorkGrid items={items} columns={columns} mobileColumns={mobileColumns} />
     </section>
   );
 }
@@ -195,12 +195,12 @@ function About({ image }: { image: HomeImage }) {
 
 
 function Index() {
-  const { hero, about, work, columns } = Route.useLoaderData();
+  const { hero, about, work, columns, columnsMobile } = Route.useLoaderData();
   return (
     <main>
       <SiteNav />
       <Hero slides={hero ?? defaultHero} />
-      <Work items={work ?? defaultWork} columns={columns ?? defaultWorkColumns} />
+      <Work items={work ?? defaultWork} columns={columns ?? defaultWorkColumns} mobileColumns={columnsMobile ?? 2} />
       <Index_Disciplines />
       <About image={about ?? defaultAbout} />
       <ContactSection id="contact" />

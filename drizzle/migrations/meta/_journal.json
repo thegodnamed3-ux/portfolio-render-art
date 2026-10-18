@@ -148,6 +148,13 @@
       "when": 1792279851363,
       "tag": "0020_delivery_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792300000000,
+      "tag": "0021_featured_columns_mobile",
+      "breakpoints": true
     }
   ]
 }

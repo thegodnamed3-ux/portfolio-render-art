@@ -38,3 +38,4 @@
 - Hero title lines slide up out of masks (`line-mask` / `line-up` utilities in `styles.css`, CSS-only so it runs before hydration).
 - The viewer grows out of the clicked photo and shrinks back on close if still on it: callers pass `origin` (`originOf(el)`) in `open(..., { origin })`.
 - Everything respects prefers-reduced-motion.
+- Selected works on phones: `site_settings.featured_columns_mobile` (1–3, NULL = 2), set by the studio slider while the preview is on Phone (migration 0021).

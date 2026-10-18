@@ -41,7 +41,8 @@ export const wfolioMigrationStatus = createServerFn({ method: "GET" })
     const { supabaseAdmin: sb } = await import("@/integrations/supabase/client.server");
     const { count } = await sb.from("media").select("id", { count: "exact", head: true }).or(WFOLIO_HOSTS);
     const { data: s } = await sb.from("site_settings").select("hero_slides, about_image, featured_work").eq("id", 1).maybeSingle();
-    const settings = JSON.stringify(s ?? {});
+    const { data: sp } = await sb.from("site_settings").select("featured_spotlight").eq("id", 1).maybeSingle();
+    const settings = JSON.stringify(s ?? {}) + JSON.stringify(sp ?? {});
     const settingsLeft = (settings.match(/wfolio\.(com|pro)\//g) ?? []).length;
     const settingsMissing = !s || !s.hero_slides || !s.about_image || !s.featured_work;
     return { media: count ?? 0, settings: settingsLeft, settingsMissing };
@@ -124,5 +125,16 @@ export const migrateWfolioSettings = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     });
     if (error) throw new Error(error.message);
+
+    // Spotlight (newer column; skipped quietly if it doesn't exist yet).
+    const { data: sp, error: spErr } = await sb.from("site_settings").select("featured_spotlight").eq("id", 1).maybeSingle();
+    if (!spErr && Array.isArray(sp?.featured_spotlight) && sp.featured_spotlight.length) {
+      const next = [];
+      for (const w of sp.featured_spotlight as { src: string; sm?: string }[]) {
+        const moved = await move(w);
+        next.push(moved.sm && isWfolio(moved.sm) ? { ...moved, sm: moved.src } : moved);
+      }
+      await sb.from("site_settings").update({ featured_spotlight: next as never }).eq("id", 1);
+    }
     return { moved: n };
   });

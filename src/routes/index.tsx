@@ -67,11 +67,13 @@ function Hero({ slides }: { slides: HomeImage[] }) {
           <div ref={setArrows} className="pointer-events-auto relative z-10 shrink-0" />
         </div>
         {/* Place on the left, tagline in the middle (desktop), "Scroll ↓" on the right — arrow centred on the text. */}
-        <div className="meta mt-5 flex items-center justify-between gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-8">
-          <span>{t("hero.place")}</span>
-          <span className="hidden md:inline">{t("hero.tag")}</span>
-          <a href="#work" className="pointer-events-auto inline-flex items-center gap-1.5 transition-colors hover:text-paper">
-            {t("hero.scroll")}<span aria-hidden className="text-[0.85em] leading-none">↓</span>
+        <div className="meta mt-5 flex items-center justify-between gap-4 border-t border-paper/25 pt-4 leading-none text-paper/70 md:mt-8">
+          <span className="leading-none">{t("hero.place")}</span>
+          <span className="hidden leading-none md:inline">{t("hero.tag")}</span>
+          <a href="#work" className="pointer-events-auto inline-flex items-center gap-1.5 leading-none transition-colors hover:text-paper">
+            {t("hero.scroll")}
+            {/* Drawn arrow: the font's ↓ sits low, this one is centred on the text's middle line. */}
+            <svg viewBox="0 0 10 12" aria-hidden className="h-[0.9em] w-[0.75em] shrink-0 fill-none stroke-current" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"><path d="M5 1v10M1.5 7.5 5 11l3.5-3.5" /></svg>
           </a>
         </div>
       </div>

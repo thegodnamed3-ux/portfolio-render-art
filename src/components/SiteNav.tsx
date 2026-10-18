@@ -201,7 +201,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
         {shown && (
           <motion.ul
             key="column"
-            className={`absolute right-0 flex flex-col items-end gap-1 text-right text-[0.75rem] ${resting ? "top-0" : "top-14"}`}
+            className={`absolute right-0 flex flex-col items-end gap-1 text-right text-[0.75rem] ${resting ? "top-0" : "top-10"}`}
             initial="tucked"
             animate="shown"
             exit="tucked"

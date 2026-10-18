@@ -120,7 +120,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             </motion.button>
             </div>
             {/* Messengers sit on the right edge of the band, opposite the request link. */}
-            <ContactLinks tone="light" align="end" className="mt-6 md:-mt-10" />
+            {/* Instagram / Behance reach the band's right edge (past the pane's inner padding). */}
+            <ContactLinks tone="light" align="end" className="mt-6 md:-mt-10" iconsClassName="-mr-8" />
             </motion.div>
           </div>
           <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center transition-[visibility] duration-700", !onReviews && "invisible")}>

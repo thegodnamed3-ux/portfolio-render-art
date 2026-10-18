@@ -17,10 +17,10 @@ const BehanceIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 fill-current"><path d="M8.2 11.3c.9-.4 1.4-1.1 1.4-2.1 0-2-1.5-2.7-3.4-2.7H1v11h5.4c2 0 3.9-1 3.9-3.2 0-1.4-.7-2.5-2.1-3zM3.4 8.4h2.3c.9 0 1.6.2 1.6 1.2s-.6 1.2-1.4 1.2H3.4zm2.5 7.2H3.4v-3h2.6c1 0 1.7.4 1.7 1.5s-.8 1.5-1.8 1.5zM15 7h5.4v1.3H15zm2.8 2.4c-2.6 0-4.3 1.9-4.3 4.4 0 2.6 1.6 4.4 4.3 4.4 2 0 3.3-.9 4-2.9h-2c-.2.7-1.1 1.1-1.9 1.1-1.3 0-2-.8-2-2h6c.2-2.6-1.2-5-4.1-5zm-1.9 3.6c.1-1 .8-1.7 1.9-1.7s1.6.6 1.7 1.7z" /></svg>
 );
 
-type Props = { tone?: "light" | "dark" | "glass"; className?: string; align?: "start" | "end" };
+type Props = { tone?: "light" | "dark" | "glass"; className?: string; align?: "start" | "end"; iconsClassName?: string };
 
 /** Compact Liquid Glass pills (Telegram / WhatsApp) + small icon buttons. */
-export function ContactLinks({ tone = "light", className, align = "start" }: Props) {
+export function ContactLinks({ tone = "light", className, align = "start", iconsClassName }: Props) {
   const glass = tone !== "light";
   const fetchSettings = useServerFn(getSiteSettings);
   const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
@@ -43,7 +43,7 @@ export function ContactLinks({ tone = "light", className, align = "start" }: Pro
         </a>
       ))}
       {(contact.instagram || contact.behance) && (
-        <div className={cn("flex w-full items-center gap-2.5 md:w-auto", align === "end" && "justify-end")}>
+        <div className={cn("flex w-full items-center gap-2.5 md:w-auto", align === "end" && "justify-end", iconsClassName)}>
           {contact.instagram && (
             <a href={contact.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}><InstagramIcon /></a>
           )}

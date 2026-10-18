@@ -16,8 +16,9 @@ export const Route = createFileRoute("/gallery/$category")({
     const c = getCategory(params.category);
     if (!c) throw notFound();
     const sessions = c.videos.length ? [] : await getPublishedSessions({ data: { category: c.slug } });
-    const photos = sessions.flatMap((s) => s.images.map((p) => ({ ...p, project: s.title })));
-    return { slug: c.slug, photos, cover: sessions[0]?.cover.src ?? null };
+    // Grouped by shoot, in the studio's order.
+    const shoots = sessions.map((s) => ({ id: s.id, title: s.title, photos: s.images.map((p) => ({ ...p, project: s.title })) }));
+    return { slug: c.slug, shoots, total: shoots.reduce((n, s) => n + s.photos.length, 0), cover: sessions[0]?.cover.src ?? null };
   },
   head: ({ loaderData }) => {
     const c = loaderData ? getCategory(loaderData.slug) : undefined;
@@ -33,13 +34,12 @@ const CollapseIcon = () => (
 );
 
 function FullGallery() {
-  const { slug, photos, cover } = Route.useLoaderData();
+  const { slug, shoots, total, cover } = Route.useLoaderData();
   const c = getCategory(slug)!;
   const title = useCategoryTitle();
   const { t, p } = useI18n();
   const navigate = useNavigate();
   const { open } = useLightbox();
-  const items = photos.map((ph) => ({ src: ph.full, w: ph.w, h: ph.h, alt: ph.project }));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !document.querySelector('[role="dialog"]')) void navigate({ to: "/", hash: "disciplines" }); };
@@ -59,7 +59,7 @@ function FullGallery() {
                 <span className="meta mr-3 align-middle text-[0.625rem] text-paper/50 md:text-[0.6875rem]">{t("ar.title")}</span>
                 {title(c.slug, c.title)}.
               </h1>
-              {photos.length > 0 && <span className="meta hidden shrink-0 text-paper/50 sm:inline">{String(photos.length).padStart(2, "0")} {p(photos.length, FRAMES)}</span>}
+              {total > 0 && <span className="meta hidden shrink-0 text-paper/50 sm:inline">{String(total).padStart(2, "0")} {p(total, FRAMES)}</span>}
             </div>
             <Link to="/" hash="disciplines" aria-label={t("ar.back")} title={t("ar.back")} className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper">
               <CollapseIcon />
@@ -84,11 +84,24 @@ function FullGallery() {
         <section key={slug} className="px-3 pb-16 pt-4 md:px-8 md:pt-8">
           {c.videos.length > 0 ? (
             <div className="px-1 pt-6 md:px-0"><VideoGallery videos={c.videos} /></div>
-          ) : photos.length ? (
-            <div className="columns-2 gap-2 md:columns-3 md:gap-3 xl:columns-4">
-              {photos.map((ph, i) => (
-                <Tile key={`${ph.src}-${i}`} ph={ph} i={i} label={t("ar.open")} onOpen={(el) => open(items, i, title(c.slug, c.title), { origin: originOf(el) })} />
-              ))}
+          ) : shoots.length ? (
+            <div className="space-y-14 md:space-y-24">
+              {shoots.map((s, k) => {
+                const items = s.photos.map((ph) => ({ src: ph.full, w: ph.w, h: ph.h, alt: s.title }));
+                return (
+                  <section key={s.id} aria-labelledby={`shoot-${s.id}`}>
+                    <div className="mb-4 flex items-baseline justify-between gap-4 border-b border-paper/10 px-1 pb-3 md:mb-6 md:px-0">
+                      <h2 id={`shoot-${s.id}`} className="display truncate text-2xl md:text-4xl">{s.title}</h2>
+                      <span className="meta shrink-0 text-paper/50">{String(k + 1).padStart(2, "0")} · {String(s.photos.length).padStart(2, "0")} {p(s.photos.length, FRAMES)}</span>
+                    </div>
+                    <div className="columns-2 gap-2 md:columns-3 md:gap-3 xl:columns-4">
+                      {s.photos.map((ph, i) => (
+                        <Tile key={`${ph.src}-${i}`} ph={ph} i={i} label={t("ar.open")} onOpen={(el) => open(items, i, s.title, { origin: originOf(el) })} />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           ) : (
             <p className="meta py-24 text-center text-paper/40">{t("ar.none")}</p>

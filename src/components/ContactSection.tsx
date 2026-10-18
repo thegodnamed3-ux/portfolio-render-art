@@ -107,7 +107,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             </p>
             {/* A typographic link, always underlined, instead of a pill button. Nudged in so its first
                 letter lines up optically with the big serif "B" above (serif capitals carry a side bearing). */}
-            <div className="mt-8 w-fit pl-[0.15vw] md:mt-12 md:pl-[0.12vw]">
+            <div className="mt-8 w-fit pl-[0.6vw] md:mt-12 md:pl-[0.36vw]">
             <motion.button
               type="button"
               onClick={() => setBooking(true)}

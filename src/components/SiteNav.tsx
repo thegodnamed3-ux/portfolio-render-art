@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LangSwitch, useI18n, type Key } from "@/lib/i18n";
 import { internalCategories } from "@/content/categories";
 
@@ -63,15 +64,7 @@ export function SiteNav() {
               PHOTOGRAPHY · VISUALS
             </span>
           </Link>
-          <div className="hidden items-center gap-8 text-[0.6875rem] md:flex">
-            {links.map((l) => (
-              l.hash === ARCHIVE
-                ? <Link key={l.hash} to="/gallery/$category" params={{ category: archiveSlug }} className="transition-opacity hover:opacity-60">{t(l.key)}</Link>
-                : <Link key={l.hash} to="/" hash={l.hash} className="transition-opacity hover:opacity-60">{t(l.key)}</Link>
-            ))}
-            <span aria-hidden className="ml-2 h-3 w-px self-center bg-current opacity-30" />
-            <LangSwitch className="whitespace-nowrap" />
-          </div>
+          <DockMenu light={light} pathname={pathname} />
           <div className="flex items-center gap-4 md:hidden">
           <LangSwitch className="whitespace-nowrap text-[0.625rem]" />
           <button
@@ -115,5 +108,138 @@ export function SiteNav() {
         </ul>
       </div>
     </header>
+  );
+}
+
+/**
+ * Desktop menu. On the first screen of the homepage the items stand in a column on the right and
+ * fade in one by one. Scrolling down (or pressing "—") flows them into one round glass button; the
+ * button opens the same column again, every item on its own soft radial shade so it reads on any photo.
+ */
+function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
+  const { t } = useI18n();
+  const reduce = useReducedMotion();
+  const home = pathname === "/";
+  const [atTop, setAtTop] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [tucked, setTucked] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const on = () => {
+      const top = window.scrollY < window.innerHeight * 0.35;
+      setAtTop(top);
+      if (!top) setOpen(false);
+      if (top && window.scrollY < 8) setTucked(false);
+    };
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, [pathname]);
+
+  // Click outside or Escape closes an opened menu.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("pointerdown", onDown); window.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const resting = home && atTop && !tucked; // the big column on the first screen
+  const shown = resting || open;
+  const shade = light
+    ? "bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)]"
+    : "bg-[radial-gradient(closest-side,rgb(0_0_0/0.55),transparent)]";
+  const ease = [0.2, 0.8, 0.2, 1] as const;
+  const close = () => { setOpen(false); if (resting) setTucked(true); };
+
+  const item = (l: (typeof links)[number]) => {
+    const cls = "relative inline-block px-1 py-1.5 transition-opacity hover:opacity-60";
+    const label = (
+      <>
+        <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 ${shade}`} />
+        {t(l.key)}
+      </>
+    );
+    return l.hash === ARCHIVE
+      ? <Link to="/gallery/$category" params={{ category: archiveSlug }} onClick={() => setOpen(false)} className={cls}>{label}</Link>
+      : <Link to="/" hash={l.hash} onClick={() => setOpen(false)} className={cls}>{label}</Link>;
+  };
+
+  return (
+    <div ref={box} className="relative hidden md:block md:self-start">
+      {/* The round button the column flows into. */}
+      <AnimatePresence initial={false}>
+        {!resting && (
+          <motion.button
+            key="dock"
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-label={open ? t("nav.closeMenu") : t("nav.openMenu")}
+            className={`hit relative inline-flex size-10 items-center justify-center rounded-full ${light ? "glass-ink" : "glass"}`}
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.4, opacity: 0 }}
+            transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : 0.18, ease }}
+          >
+            <span aria-hidden className={`pointer-events-none absolute -inset-5 -z-10 rounded-full ${shade}`} />
+            <span aria-hidden className="relative block h-2 w-3.5">
+              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${open ? "top-1 rotate-45" : "top-0"}`} />
+              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${open ? "top-1 -rotate-45" : "top-2"}`} />
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {shown && (
+          <motion.ul
+            key="column"
+            className={`absolute right-0 flex flex-col items-end gap-1 text-right text-[0.75rem] ${resting ? "top-0" : "top-14"}`}
+            initial="tucked"
+            animate="shown"
+            exit="tucked"
+            variants={{
+              shown: { transition: { staggerChildren: reduce ? 0 : 0.06, delayChildren: reduce ? 0 : 0.08 } },
+              tucked: { transition: { staggerChildren: reduce ? 0 : 0.035, staggerDirection: -1 } },
+            }}
+          >
+            {links.map((l, k) => (
+              <motion.li
+                key={l.hash}
+                style={{ transformOrigin: "100% 0%" }}
+                variants={{
+                  shown: { opacity: 1, x: 0, y: 0, scale: 1, filter: "blur(0px)" },
+                  // Each item shrinks toward the top-right corner, where the button lives.
+                  tucked: { opacity: 0, x: 6, y: -10 - k * 14, scale: 0.55, filter: "blur(4px)" },
+                }}
+                transition={{ duration: reduce ? 0 : 0.5, ease }}
+              >
+                {item(l)}
+              </motion.li>
+            ))}
+            <motion.li
+              className="relative mt-2"
+              variants={{ shown: { opacity: 1, y: 0 }, tucked: { opacity: 0, y: -60 } }}
+              transition={{ duration: reduce ? 0 : 0.5, ease }}
+            >
+              <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 ${shade}`} />
+              <LangSwitch className="whitespace-nowrap px-1 py-1.5" />
+            </motion.li>
+            {resting && (
+              <motion.li
+                variants={{ shown: { opacity: 1 }, tucked: { opacity: 0 } }}
+                transition={{ duration: reduce ? 0 : 0.4 }}
+              >
+                <button type="button" onClick={close} aria-label={t("nav.closeMenu")} title={t("nav.closeMenu")} className="hit mt-1 px-1 py-1 opacity-60 transition-opacity hover:opacity-100">—</button>
+              </motion.li>
+            )}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

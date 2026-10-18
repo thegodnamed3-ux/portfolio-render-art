@@ -11,6 +11,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const BUCKET = "portfolio";
 const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 const isWfolio = (u: unknown): u is string => typeof u === "string" && /(^|\/\/)([a-z0-9-]+\.)*wfolio\.(com|pro)\//i.test(u);
+/** Rows still on Wfolio's servers. Matches the host ("wfolio.com/", "wfolio.pro/"), never our
+ *  own copies, which sit in a "wfolio/" folder of the bucket and would otherwise loop forever. */
+const WFOLIO_HOSTS = ["src", "full_src", "sm"].flatMap((c) => [`${c}.ilike.%wfolio.com/%`, `${c}.ilike.%wfolio.pro/%`]).join(",");
 const abs = (u: string) => (u.startsWith("//") ? `https:${u}` : u);
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
@@ -36,7 +39,7 @@ export const wfolioMigrationStatus = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { supabaseAdmin: sb } = await import("@/integrations/supabase/client.server");
-    const { count } = await sb.from("media").select("id", { count: "exact", head: true }).or("src.ilike.%wfolio%,full_src.ilike.%wfolio%,sm.ilike.%wfolio%");
+    const { count } = await sb.from("media").select("id", { count: "exact", head: true }).or(WFOLIO_HOSTS);
     const { data: s } = await sb.from("site_settings").select("hero_slides, about_image, featured_work").eq("id", 1).maybeSingle();
     const settings = JSON.stringify(s ?? {});
     const settingsLeft = (settings.match(/wfolio\.(com|pro)\//g) ?? []).length;
@@ -54,7 +57,7 @@ export const migrateWfolioMedia = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin: sb } = await import("@/integrations/supabase/client.server");
-    let q = sb.from("media").select("id, sm, src, full_src").or("src.ilike.%wfolio%,full_src.ilike.%wfolio%,sm.ilike.%wfolio%").order("created_at").limit(data.batch);
+    let q = sb.from("media").select("id, sm, src, full_src").or(WFOLIO_HOSTS).order("created_at").limit(data.batch);
     if (data.skip.length) q = q.not("id", "in", `(${data.skip.join(",")})`);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);

@@ -1187,6 +1187,8 @@ function WfolioMigration({ refresh }: { refresh: () => void }) {
         failed.push(...r.failed);
         setRun({ done, total, failed: [...failed], step: "Copying photos" });
         if (r.done === 0 && r.failed.length === 0) break;
+        // Safety net: never run past the number that was left when we started.
+        if (done + failed.length >= total + 6) break;
       }
       setRun({ done, total, failed: [...failed], step: "Homepage images" });
       await runSettings();

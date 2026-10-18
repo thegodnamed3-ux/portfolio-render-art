@@ -180,7 +180,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             aria-expanded={open}
             aria-label={open ? t("nav.closeMenu") : t("nav.openMenu")}
             // On light bands the milky glass vanished into the paper, so it turns solid ink there.
-            className={`hit relative inline-flex size-10 items-center justify-center rounded-full transition-colors duration-500 ${light ? "bg-ink text-paper shadow-[0_6px_18px_-8px_rgb(0_0_0/0.45)]" : "glass"}`}
+            className={`hit relative inline-flex size-10 items-center justify-center rounded-full transition-colors duration-500 ${light ? "bg-ink text-paper" : "glass"}`}
             initial={{ scale: 0.4, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.4, opacity: 0 }}

@@ -39,3 +39,4 @@
 - The viewer grows out of the clicked photo and shrinks back on close if still on it: callers pass `origin` (`originOf(el)`) in `open(..., { origin })`.
 - Everything respects prefers-reduced-motion.
 - Selected works on phones: `site_settings.featured_columns_mobile` (1–3, NULL = 2), set by the studio slider while the preview is on Phone (migration 0021).
+- Full-screen gallery: `/gallery/$category` (expand icon in the glass explorer header) shows every photo of a category in a glass page with the same category pills; photos open the viewer with zoom-from-origin.

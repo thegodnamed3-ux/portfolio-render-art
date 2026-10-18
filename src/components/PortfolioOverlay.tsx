@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 import { internalCategories } from "@/content/categories";
 import type { Session } from "@/content/sessions";
 import type { VideoItem } from "@/content/types";
@@ -24,6 +25,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     </PortfolioContext.Provider>
   );
 }
+
+const ExpandIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 fill-none stroke-current" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 4h6v6M20 4l-6.5 6.5M10 20H4v-6M4 20l6.5-6.5" />
+  </svg>
+);
 
 const CloseIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 stroke-current" strokeWidth="1.5" fill="none"><path d="M5 5l14 14M19 5 5 19" /></svg>
@@ -118,7 +125,20 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
         >
           <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-4 md:px-8 md:pt-6">
             <h2 className="display text-3xl md:text-5xl">{catTitle(c.slug, c.title)}.</h2>
-            <button onClick={onClose} aria-label="Close portfolio" className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>
+            <div className="flex shrink-0 items-center gap-2">
+              {/* Full screen: the same explorer as its own page, every photo at once. */}
+              <Link
+                to="/gallery/$category"
+                params={{ category: cat }}
+                onClick={onClose}
+                aria-label="Open full screen"
+                title="Full screen"
+                className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 hover:text-paper"
+              >
+                <ExpandIcon />
+              </Link>
+              <button onClick={onClose} aria-label="Close portfolio" className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper"><CloseIcon /></button>
+            </div>
           </div>
           <div className="flex gap-1 overflow-x-auto px-3 pb-3 [scrollbar-width:none] md:px-7">
             {internalCategories.map((x) => (

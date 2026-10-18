@@ -119,7 +119,8 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
             </motion.button>
             </div>
-            <ContactLinks tone="light" className="mt-3" />
+            {/* Messengers sit on the right edge of the band, opposite the request link. */}
+            <ContactLinks tone="light" align="end" className="mt-6 md:-mt-10" />
             </motion.div>
           </div>
           <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center transition-[visibility] duration-700", !onReviews && "invisible")}>

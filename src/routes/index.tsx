@@ -142,7 +142,7 @@ function Index_Disciplines() {
           initial="hidden"
           whileInView="shown"
           viewport={{ once: true, amount: 0.25 }}
-          transition={{ staggerChildren: reduce ? 0 : 0.11 }}
+          variants={{ hidden: {}, shown: { transition: { staggerChildren: reduce ? 0 : 0.11 } } }}
         >
           {categories.map((c, i) => (
             <motion.li

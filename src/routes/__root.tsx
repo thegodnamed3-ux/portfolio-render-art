@@ -105,6 +105,14 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         {/* Without scripts, photos that wait to fade in must still show. */}
         <noscript><style>{"[data-fade]{opacity:1!important}"}</style></noscript>
+        {/* Safety net: if the page's scripts never start (a failed download, an old cached file), reveal
+            everything that was waiting for its fade-in animation instead of leaving blank blocks. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "setTimeout(function(){if(document.documentElement.dataset.hydrated)return;document.querySelectorAll('[style*=\"opacity\"],[data-fade]').forEach(function(e){e.style.opacity='1';e.style.transform='none';e.style.filter='none'})},3000)",
+          }}
+        />
       </head>
       <body>
         {children}
@@ -117,6 +125,8 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const lang = Route.useLoaderData() ?? "en";
+  // Tells the safety-net script in <head> that scripts are running and animations are in charge.
+  useEffect(() => { document.documentElement.dataset.hydrated = "1"; }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

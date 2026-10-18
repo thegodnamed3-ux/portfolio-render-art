@@ -105,8 +105,9 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               <motion.span className="inline-block" {...step()}>{t("book.l1")}</motion.span>{" "}
               <motion.em className="inline-block" {...step()}>{t("book.l2")}</motion.em>
             </p>
-            {/* A typographic link, always underlined, instead of a pill button. */}
-            <div className="mt-8 w-fit md:mt-12">
+            {/* A typographic link, always underlined, instead of a pill button. Nudged in so its first
+                letter lines up optically with the big serif "B" above (serif capitals carry a side bearing). */}
+            <div className="mt-8 w-fit pl-[0.15vw] md:mt-12 md:pl-[0.12vw]">
             <motion.button
               type="button"
               onClick={() => setBooking(true)}

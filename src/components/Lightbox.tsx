@@ -220,10 +220,10 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
         </div>
         <AnimatePresence>
           {hint && !atEnd && (
-            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.625rem] tracking-[0.28em] text-paper/55">{t("lb.swipe")}</motion.span>
+            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.625rem] tracking-[0.28em] text-paper/55 md:top-auto">{t("lb.swipe")}</motion.span>
           )}
           {atEnd && n > 1 && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta absolute left-1/2 -translate-x-1/2 text-paper/50">{t("lb.end")}</motion.span>
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-paper/50 md:top-auto">{t("lb.end")}</motion.span>
           )}
         </AnimatePresence>
         {action ? <button onClick={action.onClick} className="link-u link-on hit meta py-1 text-paper">{action.label}</button> : hideBook ? <span aria-hidden /> : <button onClick={() => setPanel((p) => !p)} aria-expanded={panel} className="link-u link-on hit meta py-1 text-paper">{t("lb.book")}</button>}

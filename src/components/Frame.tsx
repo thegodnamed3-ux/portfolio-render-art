@@ -93,7 +93,7 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen, 
   return (
     <motion.figure
       className={cls}
-      style={style}
+      style={style ?? {}}
       variants={{ hidden: { opacity: 0, y: 56 }, shown: { opacity: 1, y: 0 } }}
       initial="hidden"
       whileInView="shown"

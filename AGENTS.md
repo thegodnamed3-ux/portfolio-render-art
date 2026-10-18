@@ -40,3 +40,4 @@
 - Everything respects prefers-reduced-motion.
 - Selected works on phones: `site_settings.featured_columns_mobile` (1–3, NULL = 2), set by the studio slider while the preview is on Phone (migration 0021).
 - Full-screen gallery: `/gallery/$category` (expand icon in the glass explorer header) shows every photo of a category in a glass page with the same category pills; photos open the viewer with zoom-from-origin.
+- Selected works spotlight: `site_settings.featured_spotlight` (photos + captions, migration 0023) → `Spotlight.tsx` above the grid: desktop = large photo + caption, counter, thumbnails, arrows; phones = sideways strip. Edited in the studio above the grid editor.

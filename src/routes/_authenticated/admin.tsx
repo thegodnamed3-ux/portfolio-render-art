@@ -13,6 +13,7 @@ import { importWfolio, type HomeImage } from "@/lib/portfolio.functions";
 import { migrateWfolioMedia, migrateWfolioSettings, wfolioMigrationStatus } from "@/lib/wfolio-migrate.functions";
 import { defaultHero, defaultAbout, defaultWork, defaultWorkColumns, type WorkItem } from "@/content/home";
 import { WorkGrid } from "@/components/WorkGrid";
+import { Spotlight } from "@/components/Spotlight";
 import { useLightbox } from "@/components/Lightbox";
 import { SessionStack } from "@/components/Gallery";
 import { categories } from "@/content/categories";
@@ -971,12 +972,126 @@ function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
 
       {picker && <LibraryPicker media={media} single={picker === "about"} onPick={add} onClose={() => setPicker(null)} />}
 
+      <SpotlightEditor media={media} refresh={refresh} />
       <WorkEditor media={media} refresh={refresh} />
     </div>
   );
 }
 
 /* ---------------- Homepage "Selected works" ---------------- */
+
+/** Top of Selected works: the large photo with thumbnails (desktop) / sideways strip (phones). */
+function SpotlightEditor({ media, refresh }: { media: Media[]; refresh: () => void }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["admin", "spotlight"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("site_settings").select("featured_spotlight").eq("id", 1).maybeSingle();
+      if (error) return { missing: true as const, list: [] as WorkItem[] };
+      return { missing: false as const, list: (Array.isArray(data?.featured_spotlight) ? data.featured_spotlight : []) as unknown as WorkItem[] };
+    },
+  });
+  const [items, setItems] = useState<WorkItem[] | null>(null);
+  const [sel, setSel] = useState(0);
+  const [picker, setPicker] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [view, setView] = useState<"desktop" | "mobile">("desktop");
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }));
+
+  if (q.isLoading) return null;
+  if (q.data?.missing) {
+    return (
+      <section className="space-y-3 border-t border-border pt-10">
+        <h2 className="display text-3xl text-paper">Selected works — spotlight</h2>
+        <p className="text-sm text-muted-foreground">Apply the database update <code>0023_featured_spotlight.sql</code> in Lovable to turn this on.</p>
+      </section>
+    );
+  }
+  const list = items ?? q.data?.list ?? [];
+  const dirty = items !== null;
+  const ids = list.map((w, i) => `sp|${i}|${w.src}`);
+  const current = list[Math.min(sel, list.length - 1)];
+
+  const onDragEnd = (e: DragEndEvent) => {
+    if (!e.over || e.active.id === e.over.id) return;
+    const from = ids.indexOf(String(e.active.id)), to = ids.indexOf(String(e.over.id));
+    setItems(arrayMove(list, from, to)); setSel(to);
+  };
+  const add = (imgs: HomeImage[]) => { setItems([...list, ...imgs]); setSel(list.length); setPicker(false); };
+  const upload = (files: FileList | null) => {
+    if (!files?.length) return;
+    setBusy(true);
+    uploadFiles([...files])
+      .then((rows) => { setItems([...list, ...rows.map(toImg)]); setSel(list.length); refresh(); toast.success("Uploaded — remember to save"); })
+      .catch((e) => toast.error(e.message)).finally(() => setBusy(false));
+  };
+  const setCaption = (caption: string) => setItems(list.map((w, i) => (i === sel ? { ...w, caption } : w)));
+  const save = async () => {
+    setBusy(true);
+    const { error } = await supabase.from("site_settings").update({ featured_spotlight: (list.length ? list : null) as never, updated_at: new Date().toISOString() }).eq("id", 1);
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(list.length ? "Spotlight published" : "Spotlight removed from the site");
+    setItems(null);
+    qc.invalidateQueries({ queryKey: ["admin", "spotlight"] });
+  };
+
+  return (
+    <section className="space-y-6 border-t border-border pt-10">
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="display text-3xl text-paper">Selected works — spotlight</h2>
+        <span className="meta text-muted-foreground">{list.length} photos · drag to reorder · shown above the grid</span>
+        <button className={btnPrimary} disabled={!dirty || busy} onClick={save}>{busy ? "Saving…" : "Save & publish"}</button>
+        {dirty && <button className={btn} onClick={() => setItems(null)}>Discard changes</button>}
+      </div>
+      <p className="text-xs text-muted-foreground">Desktop: one large photo with thumbnails and arrows beside it. Phones: the same photos as a sideways strip. Leave empty to hide it.</p>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={ids} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-8">
+            {list.map((w, i) => (
+              <SortableThumb key={ids[i]} id={ids[i]!}>
+                <div className={cn("relative aspect-square overflow-hidden rounded-lg bg-charcoal ring-2", sel === i ? "ring-paper" : "ring-transparent")}>
+                  <button type="button" onClick={() => setSel(i)} className="absolute inset-0" aria-label={`Edit photo ${i + 1}`}>
+                    <img src={w.sm ?? w.src} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  </button>
+                  <span className="meta pointer-events-none absolute left-1 top-1 rounded-full bg-viewer/70 px-1.5 text-[0.55rem] text-paper">{String(i + 1).padStart(2, "0")}</span>
+                  <button type="button" onClick={() => { setItems(list.filter((_, k) => k !== i)); setSel(0); }} className="meta absolute bottom-1 right-1 rounded-full bg-viewer/75 px-1.5 py-0.5 text-[0.55rem] text-paper" aria-label="Remove photo">✕</button>
+                </div>
+              </SortableThumb>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className={cn(btn, "cursor-pointer", busy && "opacity-50")}>+ Upload<input type="file" accept="image/*" multiple className="hidden" disabled={busy} onChange={(e) => { upload(e.target.files); e.target.value = ""; }} /></label>
+        <button className={btn} onClick={() => setPicker(true)}>Add from library</button>
+        {current && (
+          <input className={cn(input, "max-w-xs")} value={current.caption ?? ""} onChange={(e) => setCaption(e.target.value)} placeholder={`Caption for photo ${Math.min(sel, list.length - 1) + 1}`} maxLength={60} aria-label="Caption" />
+        )}
+      </div>
+
+      {list.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-3">
+            <span className="meta text-muted-foreground">Live preview</span>
+            <div className="glass inline-flex rounded-full p-1">
+              {(["desktop", "mobile"] as const).map((v) => (
+                <button key={v} onClick={() => setView(v)} className={cn("meta rounded-full px-3 py-1", view === v ? "bg-paper text-ink" : "text-paper/75")}>{v === "desktop" ? "Desktop" : "Phone"}</button>
+              ))}
+            </div>
+          </div>
+          <div className={cn("overflow-hidden rounded-2xl border border-border bg-background p-4 md:p-6", view === "mobile" ? "w-[375px] max-w-full" : "w-full")}>
+            <Spotlight items={list} force={view} />
+          </div>
+        </div>
+      )}
+
+      {picker && <LibraryPicker media={media} single={false} onPick={add} onClose={() => setPicker(false)} />}
+    </section>
+  );
+}
 
 function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void }) {
   const qc = useQueryClient();

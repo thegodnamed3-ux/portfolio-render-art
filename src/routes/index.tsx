@@ -15,6 +15,7 @@ import { photos } from "@/lib/photos";
 import { getHomeMedia, type HomeImage } from "@/lib/portfolio.functions";
 import { defaultHero, defaultAbout, defaultWork, defaultWorkColumns, type WorkItem } from "@/content/home";
 import { WorkGrid } from "@/components/WorkGrid";
+import { Spotlight } from "@/components/Spotlight";
 import { useFadeIn } from "@/components/Frame";
 import { useCategoryTitle, useI18n } from "@/lib/i18n";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
@@ -75,7 +76,7 @@ function Hero({ slides }: { slides: HomeImage[] }) {
   );
 }
 
-function Work({ items, columns, mobileColumns }: { items: WorkItem[]; columns: number; mobileColumns: number }) {
+function Work({ items, columns, mobileColumns, spotlight }: { items: WorkItem[]; columns: number; mobileColumns: number; spotlight: WorkItem[] }) {
   const { t } = useI18n();
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
@@ -85,6 +86,7 @@ function Work({ items, columns, mobileColumns }: { items: WorkItem[]; columns: n
           {t("work.lead1")} <em className="text-muted-foreground">{t("work.lead2")}</em>
         </p>
       </div>
+      {spotlight.length > 0 && <div className="mb-16 md:mb-28"><Spotlight items={spotlight} /></div>}
       <WorkGrid items={items} columns={columns} mobileColumns={mobileColumns} />
     </section>
   );
@@ -195,12 +197,12 @@ function About({ image }: { image: HomeImage }) {
 
 
 function Index() {
-  const { hero, about, work, columns, columnsMobile } = Route.useLoaderData();
+  const { hero, about, work, columns, columnsMobile, spotlight } = Route.useLoaderData();
   return (
     <main>
       <SiteNav />
       <Hero slides={hero ?? defaultHero} />
-      <Work items={work ?? defaultWork} columns={columns ?? defaultWorkColumns} mobileColumns={columnsMobile ?? 2} />
+      <Work items={work ?? defaultWork} columns={columns ?? defaultWorkColumns} mobileColumns={columnsMobile ?? 2} spotlight={spotlight ?? []} />
       <Index_Disciplines />
       <About image={about ?? defaultAbout} />
       <ContactSection id="contact" />

@@ -162,6 +162,13 @@
       "when": 1792332719248,
       "tag": "0022_featured_columns_mobile",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792340000000,
+      "tag": "0023_featured_spotlight",
+      "breakpoints": true
     }
   ]
 }

@@ -73,12 +73,13 @@ export function SiteNav() {
             aria-expanded={menu}
             aria-controls="mobile-menu"
             aria-label={menu ? t("nav.closeMenu") : t("nav.openMenu")}
-            className={`hit -my-1 inline-flex size-8 shrink-0 items-center justify-center self-center rounded-full md:hidden ${light ? "glass-ink" : "glass"}`}
+            // Same as desktop: the word Menu. / Close. on a soft shade, no frame.
+            className="hit relative inline-grid shrink-0 place-items-end self-center px-1 py-1.5 text-[0.6875rem] md:hidden"
           >
-            <span aria-hidden className="relative block h-2 w-3.5">
-              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${menu ? "top-1 rotate-45" : "top-0"}`} />
-              <span className={`absolute left-0 h-px w-full bg-current transition-transform duration-300 ${menu ? "top-1 -rotate-45" : "top-2"}`} />
-            </span>
+            <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(0_0_0/0.5),transparent)] transition-opacity duration-700 ${light || menu ? "opacity-0" : "opacity-100"}`} />
+            <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${menu ? "-translate-y-1 opacity-0" : "opacity-100"}`}>{t("nav.menu")}</span>
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${menu ? "opacity-100" : "translate-y-1 opacity-0"}`}>{t("nav.close")}</span>
           </button>
           </div>
         </div>

@@ -57,10 +57,10 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
         })}
       </div>
       {n > 1 && (controlsContainer || controlsClassName) && wrap(
-        // Frameless: two drawn arrows on one soft rectangular shade, spread across the width of
-        // the "Scroll ↓" label below them (the page sets the container's width).
+        // Frameless: two drawn arrows side by side on one soft rectangular shade; the left one starts
+        // where the "Scroll ↓" label below starts (the page sets the container's width).
         <div
-          className={cn("relative flex w-full items-center justify-between", controlsClassName)}
+          className={cn("relative flex w-full items-center gap-3", controlsClassName)}
           onPointerEnter={() => setPaused(true)}
           onPointerLeave={() => setPaused(false)}
           onFocus={() => setPaused(true)}

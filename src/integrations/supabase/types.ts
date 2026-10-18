@@ -367,6 +367,7 @@ export type Database = {
           about_image: Json | null
           featured_columns: number | null
           featured_columns_mobile: number | null
+          featured_spotlight: Json | null
           featured_work: Json | null
           hero_slides: Json | null
           id: number
@@ -379,6 +380,7 @@ export type Database = {
           about_image?: Json | null
           featured_columns?: number | null
           featured_columns_mobile?: number | null
+          featured_spotlight?: Json | null
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
@@ -391,6 +393,7 @@ export type Database = {
           about_image?: Json | null
           featured_columns?: number | null
           featured_columns_mobile?: number | null
+          featured_spotlight?: Json | null
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number

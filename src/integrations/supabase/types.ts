@@ -366,7 +366,6 @@ export type Database = {
         Row: {
           about_image: Json | null
           featured_columns: number | null
-          featured_columns_mobile: number | null
           featured_work: Json | null
           hero_slides: Json | null
           id: number
@@ -378,7 +377,6 @@ export type Database = {
         Insert: {
           about_image?: Json | null
           featured_columns?: number | null
-          featured_columns_mobile?: number | null
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number
@@ -390,7 +388,6 @@ export type Database = {
         Update: {
           about_image?: Json | null
           featured_columns?: number | null
-          featured_columns_mobile?: number | null
           featured_work?: Json | null
           hero_slides?: Json | null
           id?: number

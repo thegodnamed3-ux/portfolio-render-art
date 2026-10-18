@@ -74,7 +74,7 @@ export function SiteNav() {
             aria-controls="mobile-menu"
             aria-label={menu ? t("nav.closeMenu") : t("nav.openMenu")}
             // Same as desktop: the word Menu. / Close. on a soft shade, no frame.
-            className="hit relative inline-grid shrink-0 place-items-end self-center px-1 py-1.5 text-[0.6875rem] md:hidden"
+            className="hit relative isolate inline-grid shrink-0 place-items-end self-center px-1 py-1.5 text-[0.6875rem] md:hidden"
           >
             <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(0_0_0/0.5),transparent)] transition-opacity duration-700 ${light || menu ? "opacity-0" : "opacity-100"}`} />
             <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
@@ -183,7 +183,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             // The button never swaps classes: glass and solid-ink layers (and their shades) cross-fade
             // slowly, and the lines stay paper-coloured, so passing a light band is a soft fade, not a blink.
             // No frame: just the word, on a soft radial shade so it reads over photos and paper alike.
-            className={`hit relative inline-grid place-items-end px-1 py-2 text-[0.75rem] transition-colors duration-700 hover:opacity-60 ${light ? "text-ink" : "text-paper"}`}
+            className={`hit relative isolate inline-grid place-items-end px-1 py-2 text-[0.75rem] transition-colors duration-700 hover:opacity-60 ${light ? "text-ink" : "text-paper"}`}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}

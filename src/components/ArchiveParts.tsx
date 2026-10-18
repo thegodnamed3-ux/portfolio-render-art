@@ -51,7 +51,7 @@ function useImg(ph: { sm: string; src: string }, sizes: string, eager: boolean, 
 }
 
 /** One photo in a masonry column; opens the viewer from where it sits. */
-export function PhotoTile({ ph, i, label, onOpen }: { ph: GalleryPhoto; i: number; label: string; onOpen: (el: Element) => void }) {
+export function PhotoTile({ ph, i, label, onOpen }: { ph: Omit<GalleryPhoto, "project">; i: number; label: string; onOpen: (el: Element) => void }) {
   const reduce = useReducedMotion();
   const img = useImg(ph, "(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw", i < 8);
   return (
@@ -71,7 +71,7 @@ export function PhotoTile({ ph, i, label, onOpen }: { ph: GalleryPhoto; i: numbe
 }
 
 /** A shoot, folded: its cover, title and frame count. */
-export function ShootCard({ cover, title, meta, i, children }: { cover: GalleryPhoto; title: string; meta: string; i: number; children: (inner: ReactNode) => ReactNode }) {
+export function ShootCard({ cover, title, meta, i, children }: { cover: { sm: string; src: string }; title: string; meta: string; i: number; children: (inner: ReactNode) => ReactNode }) {
   const reduce = useReducedMotion();
   const img = useImg(cover, "(min-width: 1280px) 16vw, (min-width: 768px) 20vw, 33vw", i < 9);
   const inner = (

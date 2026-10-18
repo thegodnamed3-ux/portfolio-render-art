@@ -47,3 +47,4 @@
 ## Typographic pass (Oct 2026)
 - The previous "glass pills" design is saved as branch `backup/design-glass-2026-10-18` (commit c8f5825). To roll back, restore files from it in a NEW commit on main — never reset/force-push.
 - Controls are text now: `link-u` (hairline draws in on hover) / `link-on` (always underlined) utilities in `styles.css`; section indices "01 —"…"04 —"; edge-to-edge SVG wordmark in the Contact footer; Disciplines titles go italic on hover; viewer/spotlight counters in serif italic; reviews set as pull quotes.
+- Speed: `getHomeMedia` reads site_settings in one `select("*")` and backfills missing `sm` once (written back with the service role). Archive uses `getArchiveShoots` (title, cover, count only); a shoot page uses `getPublishedShoot(id)`.

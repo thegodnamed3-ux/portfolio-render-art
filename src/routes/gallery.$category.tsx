@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { VideoGallery } from "@/components/Gallery";
 import { CollapseIcon, GlassPage, ShootCard } from "@/components/ArchiveParts";
 import { getCategory, internalCategories } from "@/content/categories";
-import { getPublishedSessions } from "@/lib/portfolio.functions";
+import { getArchiveShoots } from "@/lib/portfolio.functions";
 import { FRAMES, useCategoryTitle, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -12,9 +12,8 @@ export const Route = createFileRoute("/gallery/$category")({
   loader: async ({ params }) => {
     const c = getCategory(params.category);
     if (!c) throw notFound();
-    const sessions = c.videos.length ? [] : await getPublishedSessions({ data: { category: c.slug } });
-    const shoots = sessions.map((s) => ({ id: s.id, title: s.title, cover: s.cover, count: s.images.length }));
-    return { slug: c.slug, shoots, total: shoots.reduce((n, s) => n + s.count, 0), cover: sessions[0]?.cover.src ?? null };
+    const shoots = c.videos.length ? [] : await getArchiveShoots({ data: { category: c.slug } });
+    return { slug: c.slug, shoots, total: shoots.reduce((n, s) => n + s.count, 0), cover: shoots[0]?.cover.sm ?? null };
   },
   head: ({ loaderData }) => {
     const c = loaderData ? getCategory(loaderData.slug) : undefined;

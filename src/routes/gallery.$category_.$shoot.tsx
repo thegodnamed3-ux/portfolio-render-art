@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { CollapseIcon, GlassPage, PhotoTile } from "@/components/ArchiveParts";
 import { originOf, useLightbox } from "@/components/Lightbox";
 import { getCategory } from "@/content/categories";
-import { getPublishedSessions } from "@/lib/portfolio.functions";
+import { getPublishedShoot } from "@/lib/portfolio.functions";
 import { FRAMES, useCategoryTitle, useI18n } from "@/lib/i18n";
 
 /** One shoot from the Archive, unfolded on its own full-screen glass page. */
@@ -11,10 +11,9 @@ export const Route = createFileRoute("/gallery/$category_/$shoot")({
   loader: async ({ params }) => {
     const c = getCategory(params.category);
     if (!c) throw notFound();
-    const sessions = await getPublishedSessions({ data: { category: c.slug } });
-    const s = sessions.find((x) => x.id === params.shoot);
-    if (!s) throw notFound();
-    return { slug: c.slug, shoot: { id: s.id, title: s.title, photos: s.images, cover: s.cover.src } };
+    const s = await getPublishedShoot({ data: { id: params.shoot } });
+    if (!s || s.category !== c.slug) throw notFound();
+    return { slug: c.slug, shoot: { id: s.id, title: s.title, photos: s.images, cover: s.cover.sm } };
   },
   head: ({ loaderData }) => ({ meta: [{ title: loaderData ? `${loaderData.shoot.title} — thegodnamed` : "thegodnamed" }] }),
   component: Shoot,

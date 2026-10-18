@@ -105,11 +105,14 @@ export const migrateWfolioSettings = createServerFn({ method: "POST" })
 
     const cache = new Map<string, string>();
     let n = 0;
-    const move = async <T extends { src: string }>(img: T): Promise<T> => {
-      if (!isWfolio(img.src)) return img;
+    // The small copy (`sm`) is dropped when it still points at Wfolio; the site then uses the main image.
+    const move = async <T extends { src: string; sm?: string }>(img: T): Promise<T> => {
+      const out = { ...img };
+      if (out.sm && isWfolio(out.sm)) delete out.sm;
+      if (!isWfolio(img.src)) return out;
       if (!cache.has(img.src)) cache.set(img.src, await copy(sb, img.src, `wfolio/home/${crypto.randomUUID()}.jpg`));
       n++;
-      return { ...img, src: cache.get(img.src)! };
+      return { ...out, src: cache.get(img.src)! };
     };
     const nextHero = [];
     for (const h of hero) nextHero.push(await move(h));
@@ -131,8 +134,7 @@ export const migrateWfolioSettings = createServerFn({ method: "POST" })
     if (!spErr && Array.isArray(sp?.featured_spotlight) && sp.featured_spotlight.length) {
       const next = [];
       for (const w of sp.featured_spotlight as { src: string; sm?: string }[]) {
-        const moved = await move(w);
-        next.push(moved.sm && isWfolio(moved.sm) ? { ...moved, sm: moved.src } : moved);
+        next.push(await move(w));
       }
       await sb.from("site_settings").update({ featured_spotlight: next as never }).eq("id", 1);
     }

@@ -21,7 +21,7 @@ export const Route = createFileRoute("/gallery/$category")({
   },
   head: ({ loaderData }) => {
     const c = loaderData ? getCategory(loaderData.slug) : undefined;
-    return { meta: [{ title: c ? `${c.title} — all photos — thegodnamed` : "thegodnamed" }] };
+    return { meta: [{ title: c ? `Archive · ${c.title} — thegodnamed` : "Archive — thegodnamed" }] };
   },
   component: FullGallery,
 });
@@ -36,7 +36,7 @@ function FullGallery() {
   const { slug, photos, cover } = Route.useLoaderData();
   const c = getCategory(slug)!;
   const title = useCategoryTitle();
-  const { p } = useI18n();
+  const { t, p } = useI18n();
   const navigate = useNavigate();
   const { open } = useLightbox();
   const items = photos.map((ph) => ({ src: ph.full, w: ph.w, h: ph.h, alt: ph.project }));
@@ -55,14 +55,17 @@ function FullGallery() {
         <header className="sticky top-0 z-20 border-b border-paper/10 bg-charcoal/40 backdrop-blur-2xl" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           <div className="flex items-center justify-between gap-3 px-4 pt-4 md:px-8 md:pt-6">
             <div className="flex min-w-0 items-baseline gap-4">
-              <h1 className="display truncate text-3xl md:text-5xl">{title(c.slug, c.title)}.</h1>
+              <h1 className="display truncate text-3xl md:text-5xl">
+                <span className="meta mr-3 align-middle text-[0.625rem] text-paper/50 md:text-[0.6875rem]">{t("ar.title")}</span>
+                {title(c.slug, c.title)}.
+              </h1>
               {photos.length > 0 && <span className="meta hidden shrink-0 text-paper/50 sm:inline">{String(photos.length).padStart(2, "0")} {p(photos.length, FRAMES)}</span>}
             </div>
-            <Link to="/" hash="disciplines" aria-label="Back to the website" className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper">
+            <Link to="/" hash="disciplines" aria-label={t("ar.back")} title={t("ar.back")} className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper">
               <CollapseIcon />
             </Link>
           </div>
-          <nav className="flex gap-1 overflow-x-auto px-3 pb-3 pt-2 [scrollbar-width:none] md:px-7" aria-label="Categories">
+          <nav className="flex gap-1 overflow-x-auto px-3 pb-3 pt-2 [scrollbar-width:none] md:px-7" aria-label={t("ar.cats")}>
             {internalCategories.map((x) => (
               <Link
                 key={x.slug}
@@ -84,11 +87,11 @@ function FullGallery() {
           ) : photos.length ? (
             <div className="columns-2 gap-2 md:columns-3 md:gap-3 xl:columns-4">
               {photos.map((ph, i) => (
-                <Tile key={`${ph.src}-${i}`} ph={ph} i={i} onOpen={(el) => open(items, i, title(c.slug, c.title), { origin: originOf(el) })} />
+                <Tile key={`${ph.src}-${i}`} ph={ph} i={i} label={t("ar.open")} onOpen={(el) => open(items, i, title(c.slug, c.title), { origin: originOf(el) })} />
               ))}
             </div>
           ) : (
-            <p className="meta py-24 text-center text-paper/40">—</p>
+            <p className="meta py-24 text-center text-paper/40">{t("ar.none")}</p>
           )}
         </section>
       </div>
@@ -96,14 +99,14 @@ function FullGallery() {
   );
 }
 
-function Tile({ ph, i, onOpen }: { ph: GalleryPhoto & { project: string }; i: number; onOpen: (el: Element) => void }) {
+function Tile({ ph, i, label, onOpen }: { ph: GalleryPhoto & { project: string }; i: number; label: string; onOpen: (el: Element) => void }) {
   const fade = useFadeIn();
   const reduce = useReducedMotion();
   return (
     <motion.button
       type="button"
       onClick={(e) => onOpen(e.currentTarget)}
-      aria-label={`Open ${ph.project} photo ${i + 1}`}
+      aria-label={`${label} ${i + 1} · ${ph.project}`}
       className="group mb-2 block w-full cursor-zoom-in break-inside-avoid overflow-hidden rounded-[12px] bg-charcoal md:mb-3"
       style={{ aspectRatio: `${ph.w} / ${ph.h}` }}
       initial={reduce ? false : { opacity: 0, y: 14 }}

@@ -131,8 +131,8 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
                 to="/gallery/$category"
                 params={{ category: cat }}
                 onClick={onClose}
-                aria-label="Open full screen"
-                title="Full screen"
+                aria-label={t("pf.full")}
+                title={t("pf.full")}
                 className="glass hit inline-flex size-9 items-center justify-center rounded-full text-paper/80 hover:text-paper"
               >
                 <ExpandIcon />

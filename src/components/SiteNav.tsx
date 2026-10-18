@@ -1,10 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LangSwitch, useI18n, type Key } from "@/lib/i18n";
+import { internalCategories } from "@/content/categories";
 
+/** `hash` items scroll the homepage; the Archive item opens the full-screen gallery. */
+const ARCHIVE = "archive";
+const archiveSlug = internalCategories[0]?.slug ?? "";
 const links: { hash: string; key: Key }[] = [
   { hash: "work", key: "nav.work" },
   { hash: "disciplines", key: "nav.explore" },
+  { hash: ARCHIVE, key: "nav.archive" },
   { hash: "about", key: "nav.about" },
   { hash: "contact", key: "nav.contact" },
 ];
@@ -60,7 +65,9 @@ export function SiteNav() {
           </Link>
           <div className="hidden items-center gap-8 text-[0.6875rem] md:flex">
             {links.map((l) => (
-              <Link key={l.hash} to="/" hash={l.hash} className="transition-opacity hover:opacity-60">{t(l.key)}</Link>
+              l.hash === ARCHIVE
+                ? <Link key={l.hash} to="/gallery/$category" params={{ category: archiveSlug }} className="transition-opacity hover:opacity-60">{t(l.key)}</Link>
+                : <Link key={l.hash} to="/" hash={l.hash} className="transition-opacity hover:opacity-60">{t(l.key)}</Link>
             ))}
             <span aria-hidden className="ml-2 h-3 w-px self-center bg-current opacity-30" />
             <LangSwitch className="whitespace-nowrap" />
@@ -91,10 +98,18 @@ export function SiteNav() {
         <ul className="border-t border-border">
           {links.map((l, i) => (
             <li key={l.hash} className="border-b border-border">
-              <Link to="/" hash={l.hash} onClick={() => setMenu(false)} className="flex items-baseline justify-between py-5 text-paper" tabIndex={menu ? 0 : -1}>
-                <span className="display text-5xl">{t(l.key)}</span>
-                <span className="meta text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
-              </Link>
+              {(() => {
+                const inner = (
+                  <>
+                    <span className="display text-5xl">{t(l.key)}</span>
+                    <span className="meta text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
+                  </>
+                );
+                const cls = "flex items-baseline justify-between py-5 text-paper";
+                return l.hash === ARCHIVE
+                  ? <Link to="/gallery/$category" params={{ category: archiveSlug }} onClick={() => setMenu(false)} className={cls} tabIndex={menu ? 0 : -1}>{inner}</Link>
+                  : <Link to="/" hash={l.hash} onClick={() => setMenu(false)} className={cls} tabIndex={menu ? 0 : -1}>{inner}</Link>;
+              })()}
             </li>
           ))}
         </ul>

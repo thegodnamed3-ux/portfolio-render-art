@@ -60,7 +60,7 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
         // Frameless: two drawn arrows side by side on one soft rectangular shade; the left one starts
         // where the "Scroll ↓" label below starts (the page sets the container's width).
         <div
-          className={cn("relative flex w-full items-center gap-3", controlsClassName)}
+          className={cn("relative flex w-full items-center gap-2.5", controlsClassName)}
           onPointerEnter={() => setPaused(true)}
           onPointerLeave={() => setPaused(false)}
           onFocus={() => setPaused(true)}
@@ -73,10 +73,12 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
               type="button"
               onClick={() => go(d)}
               aria-label={d < 0 ? "Previous photograph" : "Next photograph"}
-              className="hit cursor-pointer py-1.5 text-paper/80 transition-colors hover:text-paper"
+              // Each arrow takes half the width (long shaft, small head) and a tall tap area.
+              className={cn("hit flex flex-1 cursor-pointer items-center py-3 text-paper/80 transition-colors hover:text-paper", d < 0 && "flex-row-reverse")}
             >
-              <svg viewBox="0 0 12 10" aria-hidden className={cn("h-[0.6875rem] w-[0.8125rem] fill-none stroke-current", d < 0 && "rotate-180")} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 5h10M7.5 1.5 11 5 7.5 8.5" />
+              <span aria-hidden className="h-[1.1px] flex-1 rounded-full bg-current" />
+              <svg viewBox="0 0 6 10" aria-hidden className={cn("-ml-[1px] h-[0.6875rem] w-[0.4rem] shrink-0 fill-none stroke-current", d < 0 && "-mr-[1px] ml-0 rotate-180")} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1.5 1.5 5 5 1.5 8.5" />
               </svg>
             </button>
           ))}

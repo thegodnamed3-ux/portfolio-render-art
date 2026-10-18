@@ -78,8 +78,8 @@ export function SiteNav() {
           >
             <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(0_0_0/0.5),transparent)] transition-opacity duration-700 ${light || menu ? "opacity-0" : "opacity-100"}`} />
             <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
-            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${menu ? "-translate-y-1 opacity-0" : "opacity-100"}`}>{t("nav.menu")}</span>
-            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${menu ? "opacity-100" : "translate-y-1 opacity-0"}`}>{t("nav.close")}</span>
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
           </button>
           </div>
         </div>
@@ -192,8 +192,8 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 bg-[radial-gradient(closest-side,rgb(0_0_0/0.55),transparent)] transition-opacity duration-700 ${light ? "opacity-0" : "opacity-100"}`} />
             <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
             {/* Both words share one cell, so swapping Menu ↔ Close never shifts the layout. */}
-            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${open ? "-translate-y-1 opacity-0" : "opacity-100"}`}>{t("nav.menu")}</span>
-            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,transform] duration-300 ${open ? "opacity-100" : "translate-y-1 opacity-0"}`}>{t("nav.close")}</span>
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
+            <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
           </motion.button>
         )}
       </AnimatePresence>

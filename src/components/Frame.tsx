@@ -1,5 +1,5 @@
 import { useCallback, useState, type CSSProperties } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type MotionStyle } from "framer-motion";
 import { originOf, type ViewerOrigin } from "@/components/Lightbox";
 import { cn } from "@/lib/utils";
 
@@ -93,7 +93,7 @@ export function Frame({ photo, index, caption, className, eager, sizes, onOpen, 
   return (
     <motion.figure
       className={cls}
-      style={style}
+      style={style as MotionStyle}
       variants={{ hidden: { opacity: 0, y: 56 }, shown: { opacity: 1, y: 0 } }}
       initial="hidden"
       whileInView="shown"

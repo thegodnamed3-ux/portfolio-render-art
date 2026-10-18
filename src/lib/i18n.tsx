@@ -56,7 +56,7 @@ const D = {
   "hero.l2b": { en: "obvious.", et: "obvious.", ru: "obvious." },
   "hero.place": { en: "Tallinn, Estonia", et: "Tallinn, Eesti", ru: "Таллин, Эстония" },
   "hero.tag": { en: "Photography · Visuals", et: "Fotograafia · Visuaalid", ru: "Фотография · Визуал" },
-  "hero.scroll": { en: "Scroll ↓", et: "Keri ↓", ru: "Вниз ↓" },
+  "hero.scroll": { en: "Scroll", et: "Keri", ru: "Вниз" },
   "hero.prev": { en: "Previous photograph", et: "Eelmine foto", ru: "Предыдущее фото" },
   "hero.next": { en: "Next photograph", et: "Järgmine foto", ru: "Следующее фото" },
 

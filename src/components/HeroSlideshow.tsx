@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { HomeImage } from "@/lib/portfolio.functions";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +72,8 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
               aria-label={d < 0 ? "Previous photograph" : "Next photograph"}
               className="glass hit grid size-9 cursor-pointer place-items-center rounded-full text-paper/85 hover:text-paper"
             >
-              {d < 0 ? <ChevronLeft className="size-3.5" strokeWidth={1.5} /> : <ChevronRight className="size-3.5" strokeWidth={1.5} />}
+              {/* Same text arrows as everywhere else on the site. */}
+              <span aria-hidden className="text-[0.8125rem] leading-none">{d < 0 ? "←" : "→"}</span>
             </button>
           ))}
         </div>

@@ -66,10 +66,13 @@ function Hero({ slides }: { slides: HomeImage[] }) {
           </h1>
           <div ref={setArrows} className="pointer-events-auto relative z-10 shrink-0" />
         </div>
-        <div className="meta mt-5 flex items-baseline justify-between gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-8">
-          <span>{t("hero.place")}</span>
-          <span className="hidden md:inline">{t("hero.tag")}</span>
-          <a href="#work" className="pointer-events-auto transition-colors hover:text-paper">{t("hero.scroll")}</a>
+        {/* Place on the left, "Scroll ↓" in the exact middle, tagline on the right. */}
+        <div className="meta mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-paper/25 pt-4 text-paper/70 md:mt-8">
+          <span className="truncate">{t("hero.place")}</span>
+          <a href="#work" className="pointer-events-auto inline-flex items-center gap-1.5 transition-colors hover:text-paper">
+            {t("hero.scroll")}<span aria-hidden className="text-[0.85em] leading-none">↓</span>
+          </a>
+          <span className="hidden truncate text-right sm:inline">{t("hero.tag")}</span>
         </div>
       </div>
     </section>

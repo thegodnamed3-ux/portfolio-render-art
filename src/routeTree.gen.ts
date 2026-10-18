@@ -17,6 +17,8 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiTelegramRouteImport } from './routes/api/telegram'
 import { Route as GTokenRouteImport } from './routes/g.$token'
+import { Route as GalleryCategoryRouteImport } from './routes/gallery.$category'
+import { Route as GalleryCategoryShootRouteImport } from './routes/gallery.$category_.$shoot'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -57,6 +59,16 @@ const GTokenRoute = GTokenRouteImport.update({
   path: '/g/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GalleryCategoryRoute = GalleryCategoryRouteImport.update({
+  id: '/gallery/$category',
+  path: '/gallery/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryCategoryShootRoute = GalleryCategoryShootRouteImport.update({
+  id: '/gallery/$category_/$shoot',
+  path: '/gallery/$category/$shoot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +78,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/api/telegram': typeof ApiTelegramRoute
   '/g/$token': typeof GTokenRoute
+  '/gallery/$category': typeof GalleryCategoryRoute
+  '/gallery/$category/$shoot': typeof GalleryCategoryShootRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +89,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/api/telegram': typeof ApiTelegramRoute
   '/g/$token': typeof GTokenRoute
+  '/gallery/$category': typeof GalleryCategoryRoute
+  '/gallery/$category/$shoot': typeof GalleryCategoryShootRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +102,8 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/api/telegram': typeof ApiTelegramRoute
   '/g/$token': typeof GTokenRoute
+  '/gallery/$category': typeof GalleryCategoryRoute
+  '/gallery/$category_/$shoot': typeof GalleryCategoryShootRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +115,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api/telegram'
     | '/g/$token'
+    | '/gallery/$category'
+    | '/gallery/$category/$shoot'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +126,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api/telegram'
     | '/g/$token'
+    | '/gallery/$category'
+    | '/gallery/$category/$shoot'
   id:
     | '__root__'
     | '/'
@@ -116,6 +138,8 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/api/telegram'
     | '/g/$token'
+    | '/gallery/$category'
+    | '/gallery/$category_/$shoot'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -126,6 +150,8 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ApiTelegramRoute: typeof ApiTelegramRoute
   GTokenRoute: typeof GTokenRoute
+  GalleryCategoryRoute: typeof GalleryCategoryRoute
+  GalleryCategoryShootRoute: typeof GalleryCategoryShootRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -186,6 +212,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gallery/$category': {
+      id: '/gallery/$category'
+      path: '/gallery/$category'
+      fullPath: '/gallery/$category'
+      preLoaderRoute: typeof GalleryCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery/$category_/$shoot': {
+      id: '/gallery/$category_/$shoot'
+      path: '/gallery/$category/$shoot'
+      fullPath: '/gallery/$category/$shoot'
+      preLoaderRoute: typeof GalleryCategoryShootRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -208,6 +248,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ApiTelegramRoute: ApiTelegramRoute,
   GTokenRoute: GTokenRoute,
+  GalleryCategoryRoute: GalleryCategoryRoute,
+  GalleryCategoryShootRoute: GalleryCategoryShootRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

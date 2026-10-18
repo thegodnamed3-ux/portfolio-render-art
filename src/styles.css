@@ -64,7 +64,7 @@
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-charcoal: var(--card);
-  --font-display: "Instrument Serif", Georgia, serif;
+  --font-display: "Instrument Serif", "Noto Serif Display", Georgia, serif;
   --font-sans: "Manrope", system-ui, sans-serif;
   --font-wordmark: "Archivo", "Helvetica Neue", Arial, sans-serif;
 }
@@ -283,3 +283,9 @@
   75% { transform: translateX(-16px); }
 }
 
+
+/* Russian: Instrument Serif has no Cyrillic, so Cyrillic letters come from Noto Serif Display,
+   set condensed and light so it reads like Instrument Serif (same choice as on HŌRA). */
+@layer components {
+  html[lang="ru"] .display, html[lang="ru"] .display * { font-variation-settings: "wdth" 72; font-stretch: 72%; font-weight: 350; }
+}

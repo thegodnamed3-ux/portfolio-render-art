@@ -22,13 +22,15 @@ function ReviewCard({ r, onOpen }: { r: PublicReview; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="glass-card flex h-full min-w-0 snap-start flex-col gap-2 overflow-hidden rounded-[22px] px-4 py-3 text-left transition-[scale] duration-200 active:scale-[0.98]"
+      // Set like a pull quote: hairline on top, a big serif quote mark, the text in serif italic, the name in caps.
+      className="group flex h-full min-w-0 snap-start flex-col gap-2 overflow-hidden border-t border-ink/20 pb-1 pt-2.5 text-left transition-opacity duration-200 hover:opacity-75"
     >
-      <span className="flex w-full items-center gap-2">
-        <Avatar r={r} size="size-6" />
-        <span className="min-w-0 flex-1 truncate text-xs font-medium text-ink">{r.name}</span>
+      <span aria-hidden className="display -mb-3 text-4xl leading-none text-ink/30">“</span>
+      <span className="display line-clamp-4 text-[0.9375rem] italic leading-[1.25] text-ink/85">{r.body}</span>
+      <span className="meta mt-auto flex w-full items-center gap-2 pt-1 text-[0.5625rem] text-ink/55">
+        <Avatar r={r} size="size-5" />
+        <span className="min-w-0 flex-1 truncate">{r.name}</span>
       </span>
-      <span className="line-clamp-4 text-[0.6875rem] leading-snug text-ink/75 lg:line-clamp-4">{r.body}</span>
     </button>
   );
 }
@@ -70,18 +72,18 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
   useEffect(() => { if (!active) setOpen(null); }, [active]);
 
   return (
-    <div className="glass-window relative flex flex-col rounded-[28px] p-2.5 md:p-3">
+    <div className="relative flex flex-col">
       <div
         ref={scroller}
-        className="grid snap-x snap-mandatory auto-cols-[82%] grid-flow-col min-h-0 flex-1 grid-rows-[minmax(8.25rem,1fr)] gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-1 px-1 py-1 [scrollbar-width:none] sm:auto-cols-[calc((100%-0.75rem)/2)] sm:gap-3 lg:auto-cols-[calc((100%-2.25rem)/4)] lg:grid-rows-[repeat(2,minmax(7.25rem,1fr))] [&::-webkit-scrollbar]:hidden"
+        className="grid snap-x snap-mandatory auto-cols-[82%] grid-flow-col min-h-0 flex-1 grid-rows-[minmax(9rem,1fr)] gap-x-6 gap-y-6 overflow-x-auto overscroll-x-contain py-1 [scrollbar-width:none] sm:auto-cols-[calc((100%-1.5rem)/2)] lg:auto-cols-[calc((100%-4.5rem)/4)] lg:grid-rows-[repeat(2,minmax(8.5rem,1fr))] [&::-webkit-scrollbar]:hidden"
       >
         {reviews.map((r) => <ReviewCard key={r.id} r={r} onOpen={() => setOpen(r)} />)}
       </div>
 
       {overflow && (
-        <div className="mt-2.5 px-2 pb-1 md:mt-3" aria-hidden>
-          <div className="relative h-1 overflow-hidden rounded-full bg-ink/10">
-            <span className="absolute inset-y-0 left-0 rounded-full bg-ink/55 transition-[width] duration-200 ease-out" style={{ width: `${progress * 100}%` }} />
+        <div className="mt-4" aria-hidden>
+          <div className="relative h-px overflow-hidden bg-ink/15">
+            <span className="absolute inset-y-0 left-0 bg-ink/70 transition-[width] duration-200 ease-out" style={{ width: `${progress * 100}%` }} />
           </div>
         </div>
       )}
@@ -97,12 +99,13 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
           <figure className="glass-card flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-[32px] !bg-white/85 p-6 md:p-8">
             <figcaption className="flex items-center gap-3">
               <Avatar r={open} size="size-11" />
-              <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{open.name}</span>
+              <span className="meta min-w-0 flex-1 truncate text-ink/70">{open.name}</span>
               <button type="button" onClick={() => setOpen(null)} aria-label="Close review" className="glass-ink hit grid size-9 shrink-0 place-items-center self-center rounded-full text-ink/70 hover:text-ink">
                 <svg viewBox="0 0 24 24" aria-hidden className="size-3.5 fill-none stroke-current" strokeWidth="1.6" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
               </button>
             </figcaption>
-            <blockquote className="whitespace-pre-line text-sm leading-relaxed text-ink/80 md:text-base">{open.body}</blockquote>
+            <span aria-hidden className="display -mb-4 text-6xl leading-none text-ink/25">“</span>
+            <blockquote className="display whitespace-pre-line text-lg italic leading-snug text-ink/85 md:text-xl">{open.body}</blockquote>
           </figure>
         </div>,
         document.body,

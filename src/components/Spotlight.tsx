@@ -65,7 +65,7 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
 
       <div className="flex min-h-0 flex-col justify-between gap-6">
         <div>
-          <p className="meta text-muted-foreground">{pad(i + 1)} / {pad(n)}</p>
+          <p className="display text-2xl italic leading-none tabular-nums text-paper">{pad(i + 1)}<span className="text-paper/40"> / {pad(n)}</span></p>
           <AnimatePresence mode="wait" initial={false}>
             <motion.p
               key={i}

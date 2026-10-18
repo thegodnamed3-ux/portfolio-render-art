@@ -41,13 +41,13 @@ function Shoot() {
   const header = (
     <div className="flex items-start justify-between gap-3 px-4 pb-4 pt-4 md:px-8 md:pb-6 md:pt-6">
       <div className="min-w-0">
-        <Link to="/gallery/$category" params={{ category: slug }} className="glass hit meta -ml-0.5 inline-flex h-8 items-center gap-2 rounded-full px-3 text-[0.625rem] text-paper/80 hover:text-paper">
+        <Link to="/gallery/$category" params={{ category: slug }} className="link-u hit meta inline-flex items-center gap-2 py-1 text-[0.625rem] text-paper/80 hover:text-paper">
           <span aria-hidden>←</span>{t("ar.title")} · {title(c.slug, c.title)}
         </Link>
         <h1 className="display mt-3 truncate text-3xl leading-none md:text-5xl">{shoot.title}</h1>
         <p className="meta mt-2 text-[0.625rem] text-paper/50">{String(n).padStart(2, "0")} {p(n, FRAMES)}</p>
       </div>
-      <Link to="/" hash="disciplines" aria-label={t("ar.back")} title={t("ar.back")} className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper">
+      <Link to="/" hash="disciplines" aria-label={t("ar.back")} title={t("ar.back")} className="hit inline-flex size-9 shrink-0 items-center justify-center text-paper/75 transition-colors hover:text-paper">
         <CollapseIcon />
       </Link>
     </div>

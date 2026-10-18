@@ -47,7 +47,7 @@ function Archive() {
           </p>
           <h1 className="display mt-1.5 truncate text-3xl leading-none md:mt-2 md:text-5xl">{title(c.slug, c.title)}.</h1>
         </div>
-        <Link to="/" hash="disciplines" aria-label={t("ar.back")} title={t("ar.back")} className="glass hit inline-flex size-9 shrink-0 items-center justify-center rounded-full text-paper/80 hover:text-paper">
+        <Link to="/" hash="disciplines" aria-label={t("ar.back")} title={t("ar.back")} className="hit inline-flex size-9 shrink-0 items-center justify-center text-paper/75 transition-colors hover:text-paper">
           <CollapseIcon />
         </Link>
       </div>

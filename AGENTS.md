@@ -43,3 +43,7 @@
 - Selected works spotlight: `site_settings.featured_spotlight` (photos + captions, migration 0023) → `Spotlight.tsx` above the grid: desktop = large photo + caption, counter, thumbnails, arrows; phones = sideways strip. Edited in the studio above the grid editor.
 - Desktop menu = `DockMenu` in `SiteNav.tsx`: column on the right of the homepage first screen (staggered fade); scrolling or "—" flows it into a round glass button with a radial shade; the button reopens the column (click outside / Esc closes). Phones keep the hamburger.
 - Archive (`/gallery/$category`) shows each shoot folded as a small cover (3 per row on phones); a shoot opens on its own glass page `/gallery/$category/$shoot` (file `gallery.$category_.$shoot.tsx`, not nested) with a back pill to the Archive. Shared bits in `ArchiveParts.tsx`.
+
+## Typographic pass (Oct 2026)
+- The previous "glass pills" design is saved as branch `backup/design-glass-2026-10-18` (commit c8f5825). To roll back, restore files from it in a NEW commit on main — never reset/force-push.
+- Controls are text now: `link-u` (hairline draws in on hover) / `link-on` (always underlined) utilities in `styles.css`; section indices "01 —"…"04 —"; edge-to-edge SVG wordmark in the Contact footer; Disciplines titles go italic on hover; viewer/spotlight counters in serif italic; reviews set as pull quotes.

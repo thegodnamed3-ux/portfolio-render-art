@@ -336,3 +336,17 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
 .upload-dock-list li.is-failed .upload-dock-pct, .upload-dock-list li.is-failed small { color: #f2a28f; }
 .upload-dock-list li.is-done .upload-dock-pct { color: #a8d5a2; }
 .upload-dock-clear { display: block; width: 100%; padding: 10px; border: 0; border-top: 1px solid rgb(242 240 235 / 10%); background: none; color: rgb(242 240 235 / 70%); font: inherit; font-size: 12px; cursor: pointer; }
+
+/* Archive / gallery pages: light grey instead of a dark page tinted by the cover photo.
+   The colour tokens are flipped inside, so every "paper" text becomes dark ink. */
+.archive-light {
+  --background: oklch(0.935 0.004 95);
+  --paper: oklch(0.2 0.004 95);
+  --foreground: oklch(0.2 0.004 95);
+  --card: oklch(0.965 0.003 95);
+  --ink: oklch(0.97 0.003 95);
+  --muted-foreground: oklch(0.46 0.005 95);
+  --border: oklch(0.2 0.004 95 / 12%);
+  color-scheme: light;
+}
+.archive-light ::selection { background: oklch(0.2 0.004 95); color: oklch(0.97 0.003 95); }

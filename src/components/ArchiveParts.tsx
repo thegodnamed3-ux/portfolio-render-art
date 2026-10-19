@@ -15,8 +15,8 @@ export const CollapseIcon = () => (
 /** Full-screen glass page: blurred photo behind, sticky glass header, content below. */
 export function GlassPage({ cover, header, children }: { cover: string | null; header: ReactNode; children: ReactNode }) {
   return (
-    <main className="relative min-h-[100svh] bg-background text-paper">
-      {cover && <img src={cover} alt="" aria-hidden className="fixed inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl" />}
+    // Light, neutral grey page (it used to take its colour from a blurred cover photo — red on Portraits).
+    <main className="archive-light relative min-h-[100svh] bg-background text-paper" data-cover={cover ?? undefined}>
       <div className="glass-panel relative min-h-[100svh] !rounded-none !border-0">
         <header className="sticky top-0 z-20 border-b border-paper/10 bg-charcoal/85 backdrop-blur-2xl [-webkit-backdrop-filter:blur(40px)]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           {header}

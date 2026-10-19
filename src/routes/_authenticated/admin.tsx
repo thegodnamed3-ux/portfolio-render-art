@@ -547,7 +547,11 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
   const [busy, setBusy] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }));
 
-  const ordered = links.filter((l) => l.photoshoot_id === shoot.id).sort((a, b) => a.position - b.position).map((l) => byId.get(l.media_id)).filter((m): m is Media => !!m);
+  const saved = links.filter((l) => l.photoshoot_id === shoot.id).sort((a, b) => a.position - b.position).map((l) => byId.get(l.media_id)).filter((m): m is Media => !!m);
+  // The new order shows at once (it used to jump back until the save finished, so reordering looked broken).
+  const [localOrder, setLocalOrder] = useState<string[] | null>(null);
+  useEffect(() => setLocalOrder(null), [links]);
+  const ordered = localOrder ? localOrder.map((id) => byId.get(id)).filter((m): m is Media => !!m) : saved;
   const coverId = shoot.cover_media_id && ordered.some((m) => m.id === shoot.cover_media_id) ? shoot.cover_media_id : ordered[0]?.id;
   const dirty = title !== shoot.title || album !== (shoot.album ?? "") || category !== shoot.category;
 
@@ -569,11 +573,20 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
     check(await supabase.from("photoshoots").update(patch).eq("id", shoot.id));
   }, status === "published" ? "Published" : status === "draft" ? "Unpublished — saved as draft" : "Saved");
 
+  const saveOrder = (next: string[]) => {
+    setLocalOrder(next);
+    act(async () => check(await supabase.from("photoshoot_images").upsert(next.map((media_id, position) => ({ photoshoot_id: shoot.id, media_id, position })))), "Order saved");
+  };
   const reorder = (e: DragEndEvent) => {
     if (!e.over || e.active.id === e.over.id) return;
     const ids = ordered.map((m) => m.id);
-    const next = arrayMove(ids, ids.indexOf(String(e.active.id)), ids.indexOf(String(e.over.id)));
-    act(async () => check(await supabase.from("photoshoot_images").upsert(next.map((media_id, position) => ({ photoshoot_id: shoot.id, media_id, position })))));
+    saveOrder(arrayMove(ids, ids.indexOf(String(e.active.id)), ids.indexOf(String(e.over.id))));
+  };
+  const nudge = (id: string, d: number) => {
+    const ids = ordered.map((m) => m.id);
+    const i = ids.indexOf(id);
+    const j = Math.max(0, Math.min(ids.length - 1, i + d));
+    if (i !== j) saveOrder(arrayMove(ids, i, j));
   };
 
   const upload = (files: FileList | null) => {
@@ -672,8 +685,14 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
           <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-7">
             {ordered.map((m, i) => (
               <SortableThumb key={m.id} id={m.id}>
-                <Thumb m={m} picked={picked.has(m.id)} onToggle={() => toggle(m.id)} index={i + 1} cover={m.id === coverId}
-                  onCover={() => act(async () => check(await supabase.from("photoshoots").update({ cover_media_id: m.id }).eq("id", shoot.id)), "Cover updated")} />
+                <div className="group/move relative">
+                  <Thumb m={m} picked={picked.has(m.id)} onToggle={() => toggle(m.id)} index={i + 1} cover={m.id === coverId}
+                    onCover={() => act(async () => check(await supabase.from("photoshoots").update({ cover_media_id: m.id }).eq("id", shoot.id)), "Cover updated")} />
+                  <span className="absolute right-1 top-1 flex gap-1 opacity-100 md:opacity-0 md:group-hover/move:opacity-100">
+                    <button type="button" onPointerDown={(e) => e.stopPropagation()} onClick={() => nudge(m.id, -1)} disabled={i === 0} aria-label="Move earlier" className="meta grid size-6 place-items-center rounded-full bg-viewer/75 text-paper disabled:opacity-30">←</button>
+                    <button type="button" onPointerDown={(e) => e.stopPropagation()} onClick={() => nudge(m.id, 1)} disabled={i === ordered.length - 1} aria-label="Move later" className="meta grid size-6 place-items-center rounded-full bg-viewer/75 text-paper disabled:opacity-30">→</button>
+                  </span>
+                </div>
               </SortableThumb>
             ))}
           </div>

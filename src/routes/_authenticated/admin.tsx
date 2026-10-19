@@ -22,7 +22,8 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { DeliveriesTab } from "@/components/admin/DeliveriesTab";
+import { DeliveriesTab, createDeliveryFromFiles } from "@/components/admin/DeliveriesTab";
+import { ZipWriter } from "@/lib/zip";
 import { ReviewsTab } from "@/components/admin/ReviewsTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Media = { id: string; sm: string; src: string; full_src: string; w: number; h: number; album: string | null; origin_category: string | null; storage_path: string | null };
+type Media = { id: string; sm: string; src: string; full_src: string; w: number; h: number; album: string | null; origin_category: string | null; storage_path: string | null; created_at?: string; tags?: string[] };
 type Shoot = { id: string; category: string; title: string; album: string | null; cover_media_id: string | null; status: string; sort_order: number; source_url: string | null; source_album: string | null; import_batch: string | null; review_status: string | null };
 type Link_ = { photoshoot_id: string; media_id: string; position: number };
 
@@ -755,14 +756,70 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
     return map;
   }, [links]);
   const shootById = new Map(shoots.map((s) => [s.id, s]));
+  const [sort, setSort] = useState<"new" | "old" | "large" | "project">("new");
+  const [query, setQuery] = useState("");
+  const [tag, setTag] = useState("");
+  const [dropping, setDropping] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [sent, setSent] = useState<string | null>(null);
+  const allTags = useMemo(() => [...new Set(media.flatMap((m) => m.tags ?? []))].sort((a, b) => a.localeCompare(b)), [media]);
+  const shootTitle = (m: Media) => (linked.get(m.id) ?? []).map((id) => shootById.get(id)?.title ?? "").filter(Boolean)[0];
+  const q = query.trim().toLowerCase();
 
   const shown = media.filter((m) => {
     const ids = linked.get(m.id) ?? [];
+    if (q && !`${m.album ?? ""} ${(m.tags ?? []).join(" ")} ${ids.map((id) => shootById.get(id)?.title ?? "").join(" ")}`.toLowerCase().includes(q)) return false;
+    if (filter.startsWith("tag:")) return (m.tags ?? []).includes(filter.slice(4));
     if (filter === "all") return true;
     if (filter === "unassigned") return ids.length === 0;
     if (filter.startsWith("cat:")) return ids.some((id) => shootById.get(id)?.category === filter.slice(4)) || (ids.length === 0 && m.origin_category === filter.slice(4));
     return ids.includes(filter);
-  });
+  }).sort((a, b) => sort === "old" ? (a.created_at ?? "").localeCompare(b.created_at ?? "")
+    : sort === "large" ? b.w * b.h - a.w * a.h
+    : sort === "project" ? (shootTitle(a) ?? "\uffff").localeCompare(shootTitle(b) ?? "\uffff")
+    : (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+  const pickedList = media.filter((m) => picked.has(m.id));
+  const fileName = (m: Media, i: number) => `${(shootTitle(m) || m.album || "photo").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 70)} ${String(i + 1).padStart(3, "0")}.jpg`;
+  const original = async (m: Media) => {
+    if (m.storage_path) { const r = await supabase.storage.from("portfolio").download(m.storage_path); if (!r.error && r.data) return r.data; }
+    const res = await fetch(m.full_src || m.src);
+    if (!res.ok) throw new Error("Could not download a photo");
+    return res.blob();
+  };
+  const save = (blob: Blob, name: string) => { const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60_000); };
+  const download = async (items: Media[]) => {
+    if (!items.length) return;
+    try {
+      if (items.length === 1) { save(await original(items[0]!), fileName(items[0]!, 0)); return; }
+      const parts: BlobPart[] = [];
+      const zip = new ZipWriter(async (c) => { parts.push(c as BlobPart); });
+      for (let i = 0; i < items.length; i++) { setProgress(`Preparing ${i + 1} / ${items.length}…`); await zip.add(fileName(items[i]!, i), new Uint8Array(await (await original(items[i]!)).arrayBuffer())); }
+      await zip.finish();
+      save(new Blob(parts, { type: "application/zip" }), `thegodnamed (${items.length}).zip`);
+      toast.success(`${items.length} photos downloaded`);
+    } catch (e) { toast.error((e as Error).message); } finally { setProgress(null); }
+  };
+  const label = (add: boolean) => act(async () => {
+    const name = tag.trim().slice(0, 60);
+    if (!name) return;
+    for (const m of pickedList) {
+      const cur = m.tags ?? [];
+      const next = add ? [...new Set([...cur, name])] : cur.filter((x) => x !== name);
+      const r = await supabase.from("media").update({ tags: next } as never).eq("id", m.id);
+      if (r.error) throw new Error("Labels need migration 0024_media_tags — apply it in Lovable first.");
+    }
+  }, add ? `Labelled “${tag.trim()}”` : `Removed “${tag.trim()}”`);
+  const sendToClient = async () => {
+    try {
+      const files: File[] = [];
+      for (let i = 0; i < pickedList.length; i++) { setProgress(`Preparing ${i + 1} / ${pickedList.length}…`); const b = await original(pickedList[i]!); files.push(new File([b], fileName(pickedList[i]!, i), { type: b.type || "image/jpeg" })); }
+      const r = await createDeliveryFromFiles(`Selection — ${new Date().toLocaleDateString()}`, files, (n) => setProgress(`Sending ${n} / ${files.length}…`));
+      setSent(r.link);
+      try { await navigator.clipboard.writeText(r.link); toast.success("Client link created and copied"); } catch { toast.success("Client link created"); }
+      if (r.failed) toast.error(`${r.failed} photo(s) could not be added`);
+      setPicked(new Set());
+    } catch (e) { toast.error((e as Error).message); } finally { setProgress(null); }
+  };
 
   const act = async (fn: () => Promise<unknown>, ok: string) => {
     setBusy(true);
@@ -808,6 +865,7 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
         <select className="meta rounded-full border border-border bg-background px-4 py-2 text-paper" value={filter} onChange={(e) => { setFilter(e.target.value); setPicked(new Set()); }} aria-label="Filter">
           <option value="unassigned">Unassigned photos</option>
           <option value="all">All photos</option>
+          {allTags.length > 0 && <optgroup label="Labels">{allTags.map((t) => <option key={t} value={`tag:${t}`}>{t}</option>)}</optgroup>}
           <optgroup label="Category">{photoCats.map((c) => <option key={c.slug} value={`cat:${c.slug}`}>{c.title}</option>)}</optgroup>
           {photoCats.map((c) => (
             <optgroup key={c.slug} label={`Photoshoot — ${c.title}`}>
@@ -815,27 +873,49 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
             </optgroup>
           ))}
         </select>
+        <select className="meta rounded-full border border-border bg-background px-4 py-2 text-paper" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort">
+          <option value="new">Newest first</option><option value="old">Oldest first</option><option value="large">Largest first</option><option value="project">By photoshoot</option>
+        </select>
+        <input className="meta w-48 rounded-full border border-border bg-transparent px-4 py-2 text-paper outline-none" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" />
         <label className={cn(btnPrimary, "cursor-pointer", busy && "opacity-50")}>
           + Upload
           <input type="file" accept="image/*" multiple className="hidden" disabled={busy} onChange={(e) => { upload(e.target.files); e.target.value = ""; }} />
         </label>
-        <span className="meta text-muted-foreground">{shown.length} photos</span>
+        <span className="meta text-muted-foreground">{progress ?? `${shown.length} photos · drag photos here to upload`}</span>
+        {shown.length > 0 && !progress && <button className={btn} onClick={() => download(shown)}>Download {shown.length === media.length ? "all" : "these"} ({shown.length})</button>}
         {shown.length > 0 && <button className={btn} onClick={() => setPicked(picked.size === shown.length ? new Set() : new Set(shown.map((m) => m.id)))}>{picked.size === shown.length ? "Clear" : "Select all"}</button>}
         {picked.size > 0 && (
           <>
             <span className="meta text-muted-foreground">{picked.size} selected</span>
             <MoveSelect shoots={shoots} onPick={addTo} label="Add to photoshoot…" allowNew />
+            <button className={btnPrimary} disabled={!!progress} onClick={() => download(pickedList)}>Download</button>
+            <button className={btn} disabled={!!progress} onClick={sendToClient}>Send to client</button>
+            <input className="meta w-40 rounded-full border border-border bg-transparent px-4 py-2 text-paper outline-none" list="lib-tags" value={tag} onChange={(e) => setTag(e.target.value)} placeholder="Label" maxLength={60} />
+            <datalist id="lib-tags">{allTags.map((t) => <option key={t} value={t} />)}</datalist>
+            <button className={btn} disabled={!tag.trim() || busy} onClick={() => label(true)}>Label</button>
+            <button className={btn} disabled={!tag.trim() || busy} onClick={() => label(false)}>Unlabel</button>
             {!pickedAssigned && <button className={cn(btn, "text-destructive")} disabled={busy} onClick={() => setConfirm(true)}>Delete</button>}
           </>
         )}
       </div>
-      {shown.length === 0 && <p className="text-sm text-muted-foreground">Nothing here.</p>}
+      {sent && <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-border p-3 text-sm"><span>Client link:</span><a className="underline" href={sent} target="_blank" rel="noreferrer">{sent}</a><span className="meta text-muted-foreground">password & expiry — in Clients</span><button className={btn} onClick={() => setSent(null)}>Close</button></div>}
+      <div
+        className={cn("relative min-h-40 rounded-2xl outline-2 outline-offset-4 transition", dropping ? "outline-dashed outline-paper/70 bg-paper/5" : "outline-transparent")}
+        onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDropping(true); } }}
+        onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropping(false); }}
+        onDrop={(e) => { e.preventDefault(); setDropping(false); upload(e.dataTransfer.files); }}
+      >
+      {dropping && <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-2xl bg-viewer/70 text-sm text-paper">Drop photos to upload</div>}
+      {shown.length === 0 && <p className="text-sm text-muted-foreground">Nothing here — drag photos from your computer onto this area, or press Upload.</p>}
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 xl:grid-cols-9">
         {shown.map((m) => {
           const ids = linked.get(m.id) ?? [];
           const note = ids.length ? ids.map((id) => shootById.get(id)?.title).join(", ") : (m.album ?? undefined);
-          return <Thumb key={m.id} m={m} picked={picked.has(m.id)} onToggle={() => setPicked((p) => { const n = new Set(p); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} {...(note ? { note } : {})} />;
+          const tags = (m.tags ?? []).join(" · ");
+          const full = [note, tags].filter(Boolean).join(" · ");
+          return <Thumb key={m.id} m={m} picked={picked.has(m.id)} onToggle={() => setPicked((p) => { const n = new Set(p); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} {...(full ? { note: full } : {})} />;
         })}
+      </div>
       </div>
 
       <AlertDialog open={confirm} onOpenChange={setConfirm}>

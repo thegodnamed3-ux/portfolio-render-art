@@ -616,3 +616,30 @@ function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
     </div>
   );
 }
+
+/** New client delivery from files picked in the media library; returns the client link. */
+export async function createDeliveryFromFiles(title: string, files: File[], onProgress?: (done: number) => void) {
+  const { data: d, error } = await supabase.from("client_deliveries").insert({ token: newToken(), title }).select("id, token").single();
+  if (error || !d) throw new Error("Could not create the delivery");
+  let failed = 0;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]!;
+    try {
+      const folder = `${d.id}/${crypto.randomUUID()}`;
+      const original = `${folder}/${safeName(file.name)}`;
+      const up = await bucket().upload(original, file, { contentType: file.type || "application/octet-stream" });
+      if (up.error) throw up.error;
+      const { blob, w, h } = await makePreview(file, false);
+      let preview: string | null = null;
+      if (blob) {
+        const p = `${folder}/preview.jpg`;
+        const r = await bucket().upload(p, blob, { contentType: "image/jpeg", cacheControl: "86400" });
+        if (!r.error) preview = p;
+      }
+      const ins = await supabase.from("client_delivery_files").insert({ delivery_id: d.id, storage_path: original, preview_path: preview, file_name: file.name, size: file.size, w, h, position: i });
+      if (ins.error) throw ins.error;
+    } catch { failed++; }
+    onProgress?.(i + 1);
+  }
+  return { id: d.id as string, link: linkFor(d.token as string), failed };
+}

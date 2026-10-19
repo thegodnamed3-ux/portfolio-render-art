@@ -167,6 +167,7 @@ export type Database = {
           source_url: string | null
           src: string
           storage_path: string | null
+          tags: string[]
           w: number
         }
         Insert: {
@@ -181,6 +182,7 @@ export type Database = {
           source_url?: string | null
           src: string
           storage_path?: string | null
+          tags?: string[]
           w: number
         }
         Update: {
@@ -195,6 +197,7 @@ export type Database = {
           source_url?: string | null
           src?: string
           storage_path?: string | null
+          tags?: string[]
           w?: number
         }
         Relationships: []

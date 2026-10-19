@@ -302,3 +302,13 @@ html.slide-in::view-transition-group(root) { animation-duration: .75s; }
 html.slide-in::view-transition-old(root) { animation: page-sink .75s cubic-bezier(.65,0,.25,1) both; transform-origin: 50% 40%; }
 html.slide-in::view-transition-new(root) { animation: page-slide-in .75s cubic-bezier(.65,0,.25,1) both; box-shadow: -30px 0 70px rgb(0 0 0 / 25%); }
 @media (prefers-reduced-motion: reduce) { html.slide-in::view-transition-old(root), html.slide-in::view-transition-new(root) { animation: none; } a:active, button:active { transform: none; } }
+
+/* Softer motion: the next page floats in from a little to the right while fading in; the old one
+   sinks back gently. Presses are smaller and eased, not a snap. */
+@keyframes page-float-in { from { transform: translateX(24%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes page-sink-soft { from { transform: scale(1); opacity: 1; } to { transform: scale(.965); opacity: 0; } }
+html.slide-in::view-transition-old(root) { animation: page-sink-soft .9s cubic-bezier(.33,0,.2,1) both; transform-origin: 50% 35%; }
+html.slide-in::view-transition-new(root) { animation: page-float-in 1.05s cubic-bezier(.16,.84,.24,1) .08s both; box-shadow: none; }
+a, button, [role="button"] { transition-property: transform, opacity, color, background-color, border-color; transition-duration: .25s; transition-timing-function: cubic-bezier(.2,.7,.2,1); }
+a:active, button:active, [role="button"]:active { transform: scale(.985); }
+@media (prefers-reduced-motion: reduce) { html.slide-in::view-transition-old(root), html.slide-in::view-transition-new(root) { animation: none; } }

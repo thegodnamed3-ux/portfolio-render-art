@@ -6,7 +6,7 @@
 export function slideIn() {
   const root = document.documentElement;
   root.classList.add('slide-in');
-  window.setTimeout(() => root.classList.remove('slide-in'), 900);
+  window.setTimeout(() => root.classList.remove("slide-in"), 1400);
 }
 
 /** Every link to another page of the public site slides; skips admin, client galleries, new tabs, external and same-page links. */

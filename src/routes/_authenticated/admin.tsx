@@ -1490,9 +1490,30 @@ function WfolioMigration({ refresh }: { refresh: () => void }) {
           </div>
         )}
       </div>
-      {run && run.failed.length > 0 && (
-        <p className="text-xs text-destructive">{run.failed.length} could not be copied (e.g. {run.failed[0]!.error}). Run again later to retry.</p>
-      )}
+      {run && run.failed.length > 0 && (() => {
+        const gone = run.failed.filter((f) => /no longer on Wfolio|404/.test(f.error));
+        return (
+          <div className="space-y-2">
+            <p className="text-xs text-destructive">
+              {gone.length
+                ? `${gone.length} photo(s) no longer exist on Wfolio (404) — they were deleted there and can't be copied. Remove them so the site has no broken pictures.`
+                : `${run.failed.length} could not be copied (e.g. ${run.failed[0]!.error}). Run again later to retry.`}
+            </p>
+            {gone.length > 0 && (
+              <button className={btn} onClick={async () => {
+                const ids = gone.map((f) => f.id);
+                const a = await supabase.from("photoshoot_images").delete().in("media_id", ids);
+                const b = await supabase.from("media").delete().in("id", ids);
+                if (a.error || b.error) { toast.error("Could not remove them"); return; }
+                toast.success(`${ids.length} missing photo(s) removed`);
+                setRun((r) => r && { ...r, failed: r.failed.filter((f) => !ids.includes(f.id)) });
+                refresh();
+                void qc.invalidateQueries({ queryKey: ["admin", "wfolio-left"] });
+              }}>Remove {gone.length} missing photo{gone.length > 1 ? "s" : ""}</button>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

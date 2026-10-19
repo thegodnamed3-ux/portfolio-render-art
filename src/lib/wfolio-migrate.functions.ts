@@ -70,13 +70,18 @@ export const migrateWfolioMedia = createServerFn({ method: "POST" })
     await Promise.all((rows ?? []).map(async (m) => {
       try {
         // Same picture at three widths; reuse a copy when two sizes share one URL.
-        const made = new Map<string, Promise<string>>();
-        const get = (u: string, name: string): Promise<string> => {
+        const made = new Map<string, Promise<string | null>>();
+        // A size Wfolio no longer has (404) is replaced by another size of the same photo;
+        // only when none of the three sizes exists any more does the photo count as failed.
+        const get = (u: string, name: string): Promise<string | null> => {
           if (!isWfolio(u)) return Promise.resolve(u);
-          if (!made.has(u)) made.set(u, copy(sb, u, `wfolio/${m.id}-${name}.jpg`));
+          if (!made.has(u)) made.set(u, copy(sb, u, `wfolio/${m.id}-${name}.jpg`).catch((err: Error) => { if (/40[34]/.test(err.message)) return null; throw err; }));
           return made.get(u)!;
         };
-        const [full, src, smv] = await Promise.all([get(m.full_src, "full"), get(m.src, "src"), get(m.sm, "sm")]);
+        const got = await Promise.all([get(m.full_src, "full"), get(m.src, "src"), get(m.sm, "sm")]);
+        const any = got.find((x): x is string => !!x && !isWfolio(x));
+        if (!any) throw new Error("This photo is no longer on Wfolio (404) — it can't be copied; remove it from the library");
+        const [full, src, smv] = got.map((x) => (x && !isWfolio(x) ? x : any)) as [string, string, string];
         const { error: e } = await sb.from("media").update({ full_src: full, src, sm: smv, storage_path: `wfolio/${m.id}-full.jpg` }).eq("id", m.id);
         if (e) throw new Error(e.message);
         done++;

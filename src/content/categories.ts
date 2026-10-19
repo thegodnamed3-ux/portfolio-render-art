@@ -27,7 +27,7 @@ export const categories: Category[] = [
   cat("automotive", "Automotive", automotive),
   cat("video", "Video", [], videos),
   // Real estate is presented on its own site, so the row links straight out.
-  { ...cat("real-estate", "Real estate", []), external: "https://thehorastudios.wfolio.pro/" },
+  { ...cat("real-estate", "Real estate", []), external: "https://hora-editorial-showcase.lovable.app/" },
 ];
 
 /** Disciplines with a gallery inside this site — drives the $category route and previous/next navigation. */

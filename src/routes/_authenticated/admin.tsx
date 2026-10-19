@@ -1268,7 +1268,7 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
   if (q.isLoading) return <p className="meta text-muted-foreground">Loading…</p>;
   if (q.error) return <p className="text-sm text-destructive">Selected works can’t be edited yet — the database update for it hasn’t been applied.</p>;
 
-  const saved = Array.isArray(q.data?.featured_work) && q.data.featured_work.length ? (q.data.featured_work as unknown as WorkItem[]) : defaultWork;
+  const saved = Array.isArray(q.data?.featured_work) ? (q.data.featured_work as unknown as WorkItem[]) : defaultWork;
   const list = items ?? saved;
   const columns = cols ?? q.data?.featured_columns ?? defaultWorkColumns;
   const columnsM = colsM ?? q.data?.featured_columns_mobile ?? 2;
@@ -1291,7 +1291,7 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
   };
   const setCaption = (caption: string) => setItems(list.map((w, i) => (i === sel ? { ...w, caption } : w)));
   const save = async () => {
-    if (!list.length) { toast.error("Add at least one photo"); return; }
+    // Saving an empty list removes the grid from the homepage.
     setBusy(true);
     const { error } = await supabase.from("site_settings").upsert({ id: 1, featured_work: list as never, featured_columns: columns, updated_at: new Date().toISOString() });
     if (error) { setBusy(false); toast.error(error.message); return; }
@@ -1300,7 +1300,7 @@ function WorkEditor({ media, refresh }: { media: Media[]; refresh: () => void })
       if (e2) toast.error("Phone size needs a database update first (0021_featured_columns_mobile).");
     }
     setBusy(false);
-    toast.success("Selected works published");
+    toast.success(list.length ? "Selected works published" : "Selected works removed from the homepage");
     setItems(null); setCols(null); setColsM(null);
     qc.invalidateQueries({ queryKey: ["admin", "work"] });
   };

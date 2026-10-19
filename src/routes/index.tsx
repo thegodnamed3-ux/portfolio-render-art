@@ -91,6 +91,8 @@ function Hero({ slides }: { slides: HomeImage[] }) {
 
 function Work({ items, columns, mobileColumns, spotlight }: { items: WorkItem[]; columns: number; mobileColumns: number; spotlight: WorkItem[] }) {
   const { t } = useI18n();
+  // Both emptied in the studio: the whole block goes away.
+  if (!items.length && !spotlight.length) return null;
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
       <div className="mb-10 grid gap-6 md:mb-16 md:grid-cols-12">
@@ -99,8 +101,8 @@ function Work({ items, columns, mobileColumns, spotlight }: { items: WorkItem[];
           {t("work.lead1")} <em className="text-muted-foreground">{t("work.lead2")}</em>
         </p>
       </div>
-      {spotlight.length > 0 && <div className="mb-16 md:mb-28"><Spotlight items={spotlight} /></div>}
-      <WorkGrid items={items} columns={columns} mobileColumns={mobileColumns} />
+      {spotlight.length > 0 && <div className={items.length ? "mb-16 md:mb-28" : ""}><Spotlight items={spotlight} /></div>}
+      {items.length > 0 && <WorkGrid items={items} columns={columns} mobileColumns={mobileColumns} />}
     </section>
   );
 }

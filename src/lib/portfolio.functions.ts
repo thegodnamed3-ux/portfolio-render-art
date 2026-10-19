@@ -161,7 +161,8 @@ export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () =
   const list = (v: unknown) => (Array.isArray(v) && v.length ? (v as (HomeImage & { caption?: string })[]) : null);
   const hero = list(d.hero_slides) as HomeImage[] | null;
   const about = d.about_image && typeof d.about_image === "object" ? (d.about_image as HomeImage) : null;
-  const work = list(d.featured_work);
+  // An empty saved list means "hide the grid"; only a never-saved one falls back to the defaults.
+  const work = Array.isArray(d.featured_work) ? (d.featured_work as (HomeImage & { caption?: string })[]) : null;
   const spotlight = list(d.featured_spotlight);
   const columns = typeof d.featured_columns === "number" ? d.featured_columns : null;
   const columnsMobile = typeof d.featured_columns_mobile === "number" ? d.featured_columns_mobile : null;

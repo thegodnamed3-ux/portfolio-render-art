@@ -19,7 +19,7 @@ export function Spotlight({ items, force }: { items: WorkItem[]; force?: "deskto
   return (
     <>
       {force !== "mobile" && <Desk items={items} className={force ? "grid" : "hidden md:grid"} />}
-      {force !== "desktop" && <Strip items={items} className={force ? "flex" : "flex md:hidden"} />}
+      {force !== "desktop" && <Strip items={items} className={force ? "flex" : "flex md:hidden"} boxed={force === "mobile"} />}
     </>
   );
 }
@@ -116,19 +116,21 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
   );
 }
 
-function Strip({ items, className }: { items: WorkItem[]; className: string }) {
+/** `boxed`: the studio's phone preview — sizes come from the 375px preview box, not from the
+ *  (desktop) screen, which made the frames huge and the strip look broken there. */
+function Strip({ items, className, boxed = false }: { items: WorkItem[]; className: string; boxed?: boolean }) {
   return (
-    <div className={cn(className, "-mx-5 snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden")}>
-      {items.map((it, k) => <StripFrame key={it.src + k} it={it} k={k} n={items.length} />)}
+    <div className={cn(className, boxed ? "snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "-mx-5 snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden")}>
+      {items.map((it, k) => <StripFrame key={it.src + k} it={it} k={k} n={items.length} boxed={boxed} />)}
     </div>
   );
 }
 
-function StripFrame({ it, k, n }: { it: WorkItem; k: number; n: number }) {
+function StripFrame({ it, k, n, boxed = false }: { it: WorkItem; k: number; n: number; boxed?: boolean }) {
   const fade = useFadeIn();
   return (
     <figure className="shrink-0 snap-center">
-      <div className="h-[58svh] max-w-[86vw] overflow-hidden bg-charcoal" style={{ aspectRatio: `${it.w} / ${it.h}` }}>
+      <div className={cn("overflow-hidden bg-charcoal", boxed ? "h-[400px] max-w-[290px]" : "h-[58svh] max-w-[86vw]")} style={{ aspectRatio: `${it.w} / ${it.h}` }}>
         <img
           ref={fade.ref}
           onLoad={fade.onLoad}

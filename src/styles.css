@@ -312,3 +312,11 @@ html.slide-in::view-transition-new(root) { animation: page-float-in 1.05s cubic-
 a, button, [role="button"] { transition-property: transform, opacity, color, background-color, border-color; transition-duration: .25s; transition-timing-function: cubic-bezier(.2,.7,.2,1); }
 a:active, button:active, [role="button"]:active { transform: scale(.985); }
 @media (prefers-reduced-motion: reduce) { html.slide-in::view-transition-old(root), html.slide-in::view-transition-new(root) { animation: none; } }
+
+/* No white flash between pages: old page stays solid while sinking; new slides over it.
+   Back/forward and other page changes are instant. */
+@keyframes page-sink-solid { from { transform: scale(1); filter: brightness(1); } to { transform: scale(.965); filter: brightness(.82); } }
+@keyframes page-over { from { transform: translateX(38%); opacity: 0; } 35% { opacity: 1; } to { transform: translateX(0); opacity: 1; } }
+html.slide-in::view-transition-old(root) { animation: page-sink-solid .9s cubic-bezier(.33,0,.2,1) both; }
+html.slide-in::view-transition-new(root) { animation: page-over .95s cubic-bezier(.16,.84,.24,1) both; }
+html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transition-new(root) { animation: none; }

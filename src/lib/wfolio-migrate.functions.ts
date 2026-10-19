@@ -52,7 +52,7 @@ export const wfolioMigrationStatus = createServerFn({ method: "GET" })
 export const migrateWfolioMedia = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { batch?: number; skip?: string[] }) => ({
-    batch: Math.max(1, Math.min(6, Number(input?.batch) || 3)),
+    batch: Math.max(1, Math.min(10, Number(input?.batch) || 8)),
     skip: Array.isArray(input?.skip) ? input.skip.filter((x) => typeof x === "string").slice(0, 500) : [],
   }))
   .handler(async ({ data, context }) => {
@@ -65,25 +65,25 @@ export const migrateWfolioMedia = createServerFn({ method: "POST" })
 
     const failed: { id: string; error: string }[] = [];
     let done = 0;
-    for (const m of rows ?? []) {
+    // All photos of the batch, and the three sizes of each, are copied at the same time — the
+    // time goes into waiting on Wfolio, not into work, so parallel copies are several times faster.
+    await Promise.all((rows ?? []).map(async (m) => {
       try {
         // Same picture at three widths; reuse a copy when two sizes share one URL.
-        const made = new Map<string, string>();
-        const get = async (u: string, name: string) => {
-          if (!isWfolio(u)) return u;
-          if (!made.has(u)) made.set(u, await copy(sb, u, `wfolio/${m.id}-${name}.jpg`));
+        const made = new Map<string, Promise<string>>();
+        const get = (u: string, name: string): Promise<string> => {
+          if (!isWfolio(u)) return Promise.resolve(u);
+          if (!made.has(u)) made.set(u, copy(sb, u, `wfolio/${m.id}-${name}.jpg`));
           return made.get(u)!;
         };
-        const full = await get(m.full_src, "full");
-        const src = await get(m.src, "src");
-        const smv = await get(m.sm, "sm");
+        const [full, src, smv] = await Promise.all([get(m.full_src, "full"), get(m.src, "src"), get(m.sm, "sm")]);
         const { error: e } = await sb.from("media").update({ full_src: full, src, sm: smv, storage_path: `wfolio/${m.id}-full.jpg` }).eq("id", m.id);
         if (e) throw new Error(e.message);
         done++;
       } catch (e) {
         failed.push({ id: m.id, error: (e as Error).message });
       }
-    }
+    }));
     return { done, failed };
   });
 

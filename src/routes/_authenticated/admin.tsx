@@ -1297,13 +1297,13 @@ function WfolioMigration({ refresh }: { refresh: () => void }) {
     setRun({ done, total, failed, step: "Copying photos" });
     try {
       for (;;) {
-        const r = await runMedia({ data: { batch: 3, skip: failed.map((f) => f.id) } });
+        const r = await runMedia({ data: { batch: 8, skip: failed.map((f) => f.id) } });
         done += r.done;
         failed.push(...r.failed);
         setRun({ done, total, failed: [...failed], step: "Copying photos" });
         if (r.done === 0 && r.failed.length === 0) break;
         // Safety net: never run past the number that was left when we started.
-        if (done + failed.length >= total + 6) break;
+        if (done + failed.length >= total + 10) break;
       }
       setRun({ done, total, failed: [...failed], step: "Homepage images" });
       await runSettings();

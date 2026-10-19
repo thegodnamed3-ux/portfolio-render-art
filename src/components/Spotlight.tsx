@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { WorkItem } from "@/content/home";
 import { useFadeIn } from "@/components/Frame";
@@ -40,9 +40,21 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
     if (next) { const img = new Image(); img.src = next.src; }
   }, [i, n, items]);
 
+  // Keep the active thumbnail in view in the film strip.
+  const strip = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // Scroll only the strip itself (scrollIntoView would also scroll the page on load).
+    const box = strip.current;
+    const el = box?.children[i] as HTMLElement | undefined;
+    if (box && el) box.scrollTo({ left: el.offsetLeft - box.clientWidth / 2 + el.clientWidth / 2, behavior: reduce ? "auto" : "smooth" });
+  }, [i, reduce]);
+
+  /* Desktop: the photo large and centred; under it one calm row — counter and arrows on the left,
+     the caption, and a film strip of thumbnails that scrolls sideways. (The old side column
+     squeezed 30 thumbnails into a narrow box at the edge, where they overlapped.) */
   return (
-    <div className={cn(className, "grid-cols-[minmax(0,1fr)_15rem] gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12")}>
-      <div className="relative h-[min(76vh,50vw)] min-h-[22rem]">
+    <div className={cn(className, "grid-cols-1 gap-6")}>
+      <div className="relative h-[min(74vh,52vw)] min-h-[22rem]">
         <AnimatePresence initial={false}>
           <motion.img
             key={cur.src + i}
@@ -68,25 +80,26 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
         )}
       </div>
 
-      <div className="flex min-h-0 flex-col justify-between gap-6">
-        <div>
-          <p className="display text-2xl italic leading-none tabular-nums text-paper">{pad(i + 1)}<span className="text-paper/40"> / {pad(n)}</span></p>
+      {n > 1 && (
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-10 gap-y-4 border-t border-paper/10 pt-5 lg:grid-cols-[auto_minmax(0,14rem)_minmax(0,1fr)]">
+          <div className="flex items-center gap-5 text-paper/70">
+            <button type="button" onClick={() => go(-1)} aria-label={t("sp.prev")} className="hit flex w-10 items-center py-2 transition-colors hover:text-paper"><LongArrow left /></button>
+            <p className="display min-w-[5.5rem] text-center text-2xl italic leading-none tabular-nums text-paper">{pad(i + 1)}<span className="text-paper/40"> / {pad(n)}</span></p>
+            <button type="button" onClick={() => go(1)} aria-label={t("sp.next")} className="hit flex w-10 items-center py-2 transition-colors hover:text-paper"><LongArrow left={false} /></button>
+          </div>
           <AnimatePresence mode="wait" initial={false}>
             <motion.p
               key={i}
-              className="display mt-4 text-3xl leading-[1.05] text-paper lg:text-4xl"
-              initial={{ opacity: 0, y: 8 }}
+              className="display truncate text-xl leading-tight text-paper/85"
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: reduce ? 0 : 0.35, ease }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: reduce ? 0 : 0.3, ease }}
             >
-              {cur.caption || " "}
+              {cur.caption || "\u00a0"}
             </motion.p>
           </AnimatePresence>
-        </div>
-
-        {n > 1 && (
-          <div className="grid max-h-[min(44vh,30vw)] grid-cols-3 content-start gap-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+          <div ref={strip} className="col-span-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:col-span-1 [&::-webkit-scrollbar]:hidden">
             {items.map((it, k) => (
               <button
                 key={it.src + k}
@@ -94,24 +107,14 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
                 onClick={() => setI(k)}
                 aria-label={`${t("sp.show")} ${k + 1}`}
                 aria-current={k === i}
-                className={cn("aspect-square overflow-hidden bg-charcoal transition-opacity duration-300", k === i ? "opacity-100 outline outline-1 outline-offset-2 outline-paper/70" : "opacity-40 hover:opacity-80")}
+                className={cn("h-14 w-14 shrink-0 overflow-hidden bg-charcoal transition-opacity duration-300", k === i ? "opacity-100 ring-1 ring-paper/80 ring-offset-2 ring-offset-background" : "opacity-40 hover:opacity-80")}
               >
                 <img src={it.sm ?? it.src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
-        )}
-
-        {n > 1 && (
-          <div className="meta flex items-center gap-6 text-paper/70">
-            <button type="button" onClick={() => go(-1)} aria-label={t("sp.prev")} className="hit flex w-10 items-center py-3 transition-colors hover:text-paper"><LongArrow left /></button>
-            <span className="h-px flex-1 bg-paper/15" aria-hidden>
-              <span className="block h-px bg-paper/70 transition-[width] duration-500" style={{ width: `${((i + 1) / n) * 100}%` }} />
-            </span>
-            <button type="button" onClick={() => go(1)} aria-label={t("sp.next")} className="hit flex w-10 items-center py-3 transition-colors hover:text-paper"><LongArrow left={false} /></button>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

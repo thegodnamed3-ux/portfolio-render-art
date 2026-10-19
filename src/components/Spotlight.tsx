@@ -99,7 +99,7 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
               {cur.caption || "\u00a0"}
             </motion.p>
           </AnimatePresence>
-          <div ref={strip} className="col-span-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:col-span-1 [&::-webkit-scrollbar]:hidden">
+          <div ref={strip} className="relative col-span-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:col-span-1 [&::-webkit-scrollbar]:hidden">
             {items.map((it, k) => (
               <button
                 key={it.src + k}

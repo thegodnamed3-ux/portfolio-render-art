@@ -273,6 +273,7 @@ export type Database = {
           created_at: string
           id: string
           import_batch: string | null
+          location: string | null
           review_status: string | null
           sort_order: number
           source_album: string | null
@@ -280,6 +281,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          year: number | null
         }
         Insert: {
           album?: string | null
@@ -288,6 +290,7 @@ export type Database = {
           created_at?: string
           id?: string
           import_batch?: string | null
+          location?: string | null
           review_status?: string | null
           sort_order?: number
           source_album?: string | null
@@ -295,6 +298,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          year?: number | null
         }
         Update: {
           album?: string | null
@@ -303,6 +307,7 @@ export type Database = {
           created_at?: string
           id?: string
           import_batch?: string | null
+          location?: string | null
           review_status?: string | null
           sort_order?: number
           source_album?: string | null
@@ -310,6 +315,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          year?: number | null
         }
         Relationships: [
           {

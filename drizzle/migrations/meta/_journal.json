@@ -183,6 +183,13 @@
       "when": 1792421000000,
       "tag": "0025_review_photoshoot",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792422000000,
+      "tag": "0026_photoshoot_location_year",
+      "breakpoints": true
     }
   ]
 }

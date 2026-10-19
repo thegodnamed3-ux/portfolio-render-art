@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 type Media = { id: string; sm: string; src: string; full_src: string; w: number; h: number; album: string | null; origin_category: string | null; storage_path: string | null; created_at?: string; tags?: string[] };
-type Shoot = { id: string; category: string; title: string; album: string | null; cover_media_id: string | null; status: string; sort_order: number; source_url: string | null; source_album: string | null; import_batch: string | null; review_status: string | null };
+type Shoot = { id: string; category: string; title: string; location?: string | null; year?: number | null; album: string | null; cover_media_id: string | null; status: string; sort_order: number; source_url: string | null; source_album: string | null; import_batch: string | null; review_status: string | null };
 type Link_ = { photoshoot_id: string; media_id: string; position: number };
 
 const photoCats = categories.filter((c) => !c.external && c.videos.length === 0);
@@ -543,6 +543,8 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
   const [title, setTitle] = useState(shoot.title);
   const [album, setAlbum] = useState(shoot.album ?? "");
   const [category, setCategory] = useState(shoot.category);
+  const [place, setPlace] = useState(shoot.location ?? "");
+  const [year, setYear] = useState(shoot.year ? String(shoot.year) : "");
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -554,7 +556,7 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
   useEffect(() => setLocalOrder(null), [links]);
   const ordered = localOrder ? localOrder.map((id) => byId.get(id)).filter((m): m is Media => !!m) : saved;
   const coverId = shoot.cover_media_id && ordered.some((m) => m.id === shoot.cover_media_id) ? shoot.cover_media_id : ordered[0]?.id;
-  const dirty = title !== shoot.title || album !== (shoot.album ?? "") || category !== shoot.category;
+  const dirty = title !== shoot.title || album !== (shoot.album ?? "") || category !== shoot.category || place !== (shoot.location ?? "") || year !== (shoot.year ? String(shoot.year) : "");
 
   const viewerOrder = coverId ? [ordered.find((m) => m.id === coverId)!, ...ordered.filter((m) => m.id !== coverId)] : ordered;
   const preview = () => viewerOrder.length && open(viewerOrder.map((m) => ({ src: m.full_src, w: m.w, h: m.h, alt: title })), 0, title);
@@ -572,6 +574,11 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
     if (category !== shoot.category) { patch.category = category; patch.sort_order = shoots.filter((s) => s.category === category).length; }
     if (status) patch.status = status;
     check(await supabase.from("photoshoots").update(patch).eq("id", shoot.id));
+    // Place and year live in newer columns (migration 0026) — saved separately so the rest always saves.
+    if (place !== (shoot.location ?? "") || year !== (shoot.year ? String(shoot.year) : "")) {
+      const r = await supabase.from("photoshoots").update({ location: place.trim() || null, year: year ? Number(year) : null } as never).eq("id", shoot.id);
+      if (r.error) toast.error("Location and year need migration 0026_photoshoot_location_year — apply it in Lovable.");
+    }
   }, status === "published" ? "Published" : status === "draft" ? "Unpublished — saved as draft" : "Saved");
 
   const saveOrder = (next: string[]) => {
@@ -640,6 +647,9 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
           <select className={cn(input, "appearance-none")} value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category">
             {photoCats.map((c) => <option key={c.slug} value={c.slug} className="bg-background">{c.title}</option>)}
           </select>
+          <input className={input} list="shoot-places" value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Location — e.g. Tallinn, Pirita beach" aria-label="Location" />
+          <datalist id="shoot-places">{[...new Set(["Tallinn", "Tartu", "Pärnu", "Studio", ...shoots.map((s) => s.location ?? "")].filter((x) => x.trim()))].sort().map((x) => <option key={x} value={x} />)}</datalist>
+          <input className={input} type="number" min={2000} max={2100} value={year} onChange={(e) => setYear(e.target.value)} placeholder={`Year — e.g. ${new Date().getFullYear()}`} aria-label="Year" />
           <div className="flex flex-wrap gap-2 pt-2">
             <button className={btn} disabled={busy || !dirty} onClick={() => save()}>Save draft</button>
             <button className={btn} disabled={!ordered.length} onClick={preview}>Preview</button>

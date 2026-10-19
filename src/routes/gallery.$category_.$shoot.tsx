@@ -44,7 +44,7 @@ function Shoot() {
           <span aria-hidden>←</span>{t("ar.title")} · {title(c.slug, c.title)}
         </Link>
         <h1 className="display mt-3 truncate text-3xl leading-none md:text-5xl">{shoot.title}</h1>
-        <p className="meta mt-2 text-[0.625rem] text-paper/50">{String(n).padStart(2, "0")} {p(n, FRAMES)}</p>
+        <p className="meta mt-2 text-[0.625rem] text-paper/50">{[shoot.location, shoot.year, `${String(n).padStart(2, "0")} ${p(n, FRAMES)}`].filter(Boolean).join(" · ")}</p>
       </div>
       <Link to="/" hash="disciplines" aria-label={t("ar.back")} title={t("ar.back")} className="hit inline-flex size-9 shrink-0 items-center justify-center text-paper/75 transition-colors hover:text-paper">
         <CollapseIcon />

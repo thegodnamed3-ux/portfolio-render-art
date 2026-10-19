@@ -105,7 +105,10 @@ export const getPublishedShoot = createServerFn({ method: "GET" })
     if (ci > 0) imgs.unshift(imgs.splice(ci, 1)[0]!);
     const images = imgs.map(({ id: _id, ...p }) => p);
     if (!images.length) return null;
-    return { id: s.id, category: s.category, album: s.album ?? s.title, title: s.title, cover: images[0]!, images, count: images.length };
+    // Place and year (migration 0026); read separately so the page works before it is applied.
+    const extra = await sb.from("photoshoots").select("location, year").eq("id", s.id).maybeSingle();
+    const ex = (extra.error ? null : extra.data) as { location: string | null; year: number | null } | null;
+    return { id: s.id, category: s.category, album: s.album ?? s.title, title: s.title, cover: images[0]!, images, count: images.length, location: ex?.location ?? null, year: ex?.year ?? null };
   });
 
 /** One-time import of the photos originally taken from Wfolio, grouped by album as private drafts. */

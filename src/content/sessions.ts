@@ -10,4 +10,7 @@ export type Session = {
   cover: GalleryPhoto;
   images: GalleryPhoto[];
   count: number;
+  /** Where and when (set in the studio). */
+  location?: string | null;
+  year?: number | null;
 };

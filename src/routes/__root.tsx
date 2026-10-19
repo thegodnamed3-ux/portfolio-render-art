@@ -19,6 +19,7 @@ import { PortfolioProvider } from "../components/PortfolioOverlay";
 import { Toaster } from "../components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { installSlideLinks } from "../lib/slide";
 
 function Fallback({ meta, t1, t2, text, actions }: { meta: string; t1: string; t2: string; text: string; actions: ReactNode }) {
   return (
@@ -65,6 +66,8 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
     />
   );
 }
+
+installSlideLinks();
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

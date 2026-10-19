@@ -10,6 +10,8 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // Page changes run as View Transitions; links to another page slide in (src/lib/slide.ts).
+    defaultViewTransition: true,
   });
 
   return router;

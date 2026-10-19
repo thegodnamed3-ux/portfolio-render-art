@@ -289,3 +289,16 @@
 @layer components {
   html[lang="ru"] .display, html[lang="ru"] .display * { font-variation-settings: "wdth" 72; font-stretch: 72%; font-weight: 350; }
 }
+
+/* Press and slide (same as HŌRA): buttons and links sink in a little when tapped; when a link opens
+   another page, the current page sinks back and the next one slides in from the right over it. */
+@layer components {
+  a:active, button:active, [role="button"]:active { transform: scale(.97); }
+  a, button { -webkit-tap-highlight-color: transparent; }
+}
+@keyframes page-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes page-sink { from { transform: scale(1); opacity: 1; filter: brightness(1); } to { transform: scale(.92); opacity: .55; filter: brightness(.75); } }
+html.slide-in::view-transition-group(root) { animation-duration: .75s; }
+html.slide-in::view-transition-old(root) { animation: page-sink .75s cubic-bezier(.65,0,.25,1) both; transform-origin: 50% 40%; }
+html.slide-in::view-transition-new(root) { animation: page-slide-in .75s cubic-bezier(.65,0,.25,1) both; box-shadow: -30px 0 70px rgb(0 0 0 / 25%); }
+@media (prefers-reduced-motion: reduce) { html.slide-in::view-transition-old(root), html.slide-in::view-transition-new(root) { animation: none; } a:active, button:active { transform: none; } }

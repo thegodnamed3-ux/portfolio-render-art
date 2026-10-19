@@ -10,6 +10,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { discoverWfolioAlbums, importWfolioAlbum, IMPORT_BATCH, type AlbumResult } from "@/lib/wfolio-import.functions";
 import { importWfolio, type HomeImage } from "@/lib/portfolio.functions";
+import { discoverWfolioHome, copyWfolioHomePhoto } from "@/lib/wfolio-home.functions";
 import { migrateWfolioMedia, migrateWfolioSettings, wfolioMigrationStatus } from "@/lib/wfolio-migrate.functions";
 import { defaultHero, defaultAbout, defaultWork, defaultWorkColumns, type WorkItem } from "@/content/home";
 import { WorkGrid } from "@/components/WorkGrid";
@@ -994,6 +995,31 @@ function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
   const [picker, setPicker] = useState<"hero" | "about" | null>(null);
   const [busy, setBusy] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }));
+  // One-time: bring the photos from the old Wfolio home page in. The button disappears once done.
+  const findHome = useServerFn(discoverWfolioHome);
+  const copyHome = useServerFn(copyWfolioHomePhoto);
+  const [wf, setWf] = useState<{ done: number; total: number } | null>(null);
+  const homeDone = media.some((m) => m.album === "Wfolio homepage");
+  const loadFromWfolio = async () => {
+    setWf({ done: 0, total: 0 });
+    try {
+      const { photos } = await findHome();
+      if (!photos.length) { toast.error("No photos found on the Wfolio home page"); setWf(null); return; }
+      setWf({ done: 0, total: photos.length });
+      const got: HomeImage[] = [];
+      let failed = 0;
+      for (let i = 0; i < photos.length; i += 3) {
+        const part = await Promise.all(photos.slice(i, i + 3).map((p) => copyHome({ data: p }).catch(() => null)));
+        part.forEach((r) => { if (r) got.push({ src: r.src, w: r.w, h: r.h, ...(r.sm && r.sm !== r.src ? { sm: r.sm } : {}) }); else failed++; });
+        setWf({ done: Math.min(i + 3, photos.length), total: photos.length });
+      }
+      if (got.length) { setSlides(got); setSel(0); }
+      refresh();
+      toast.success(`${got.length} photos loaded from Wfolio into the hero slides — check them and press Save`);
+      if (failed) toast.error(`${failed} photo(s) could not be copied`);
+    } catch (e) { toast.error((e as Error).message); }
+    setWf(null);
+  };
 
   if (q.isLoading) return <p className="meta text-muted-foreground">Loading…</p>;
   const savedHero = Array.isArray(q.data?.hero_slides) && q.data.hero_slides.length ? (q.data.hero_slides as unknown as HomeImage[]) : defaultHero;
@@ -1042,6 +1068,7 @@ function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
         <button className={btnPrimary} disabled={!dirty || busy} onClick={save}>{busy ? "Saving…" : "Save & publish"}</button>
         {dirty && <button className={btn} onClick={() => { setSlides(null); setAbout(null); }}>Discard changes</button>}
         <Link to="/" target="_blank" className={btn}>Open homepage</Link>
+        {!homeDone && <button className={btn} disabled={!!wf || busy} onClick={loadFromWfolio}>{wf ? (wf.total ? `Loading from Wfolio ${wf.done} / ${wf.total}…` : "Looking at Wfolio…") : "Load homepage from Wfolio"}</button>}
       </div>
 
       <section>

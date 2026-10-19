@@ -320,3 +320,19 @@ a:active, button:active, [role="button"]:active { transform: scale(.985); }
 html.slide-in::view-transition-old(root) { animation: page-sink-solid .9s cubic-bezier(.33,0,.2,1) both; }
 html.slide-in::view-transition-new(root) { animation: page-over .95s cubic-bezier(.16,.84,.24,1) both; }
 html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transition-new(root) { animation: none; }
+
+/* Studio upload dock: live progress of background uploads, visible on every admin tab */
+.upload-dock { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 100; width: min(360px, calc(100vw - 32px)); border-radius: 18px; background: #1d1e1a; color: #f2f0eb; border: 1px solid rgb(242 240 235 / 14%); box-shadow: 0 14px 40px rgb(0 0 0 / 35%); overflow: hidden; font-size: 13px; }
+.upload-dock-head { display: flex; width: 100%; justify-content: space-between; gap: 10px; padding: 12px 14px; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.upload-dock-bar { height: 3px; background: rgb(242 240 235 / 12%); }
+.upload-dock-bar span { display: block; height: 100%; background: #f2f0eb; transition: width .3s ease; }
+.upload-dock-list { list-style: none; margin: 0; padding: 6px 0; max-height: 300px; overflow-y: auto; }
+.upload-dock-list li { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 6px 14px; }
+.upload-dock-thumb { width: 34px; height: 34px; border-radius: 8px; overflow: hidden; background: rgb(242 240 235 / 8%); }
+.upload-dock-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.upload-dock-name { min-width: 0; display: grid; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-dock-name small { color: rgb(242 240 235 / 55%); font-size: 11px; }
+.upload-dock-pct { font-variant-numeric: tabular-nums; color: rgb(242 240 235 / 70%); font-size: 12px; }
+.upload-dock-list li.is-failed .upload-dock-pct, .upload-dock-list li.is-failed small { color: #f2a28f; }
+.upload-dock-list li.is-done .upload-dock-pct { color: #a8d5a2; }
+.upload-dock-clear { display: block; width: 100%; padding: 10px; border: 0; border-top: 1px solid rgb(242 240 235 / 10%); background: none; color: rgb(242 240 235 / 70%); font: inherit; font-size: 12px; cursor: pointer; }

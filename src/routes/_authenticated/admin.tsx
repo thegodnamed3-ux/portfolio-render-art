@@ -24,6 +24,8 @@ import {
 import { cn } from "@/lib/utils";
 import { DeliveriesTab, createDeliveryFromFiles } from "@/components/admin/DeliveriesTab";
 import { ZipWriter } from "@/lib/zip";
+import { enqueueUploads, onUploadsFinished, uploadWithProgress, useUploads } from "@/lib/upload-queue";
+import { UploadDock } from "@/components/admin/UploadDock";
 import { ReviewsTab } from "@/components/admin/ReviewsTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 
@@ -234,6 +236,7 @@ function Studio() {
 
   return (
     <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
+      {tab !== "library" && <UploadDock />}
       <nav aria-label="Studio sections" className="sticky top-24 hidden self-start lg:block">
         {NAV.map((g) => (
           <div key={g.group} className="mb-7">
@@ -850,11 +853,27 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
     if (r.error) throw r.error;
   }, "Deleted permanently");
 
+  // Background queue: keeps uploading on other tabs, live progress here and in the dock.
+  useEffect(() => onUploadsFinished(() => { refresh(); }), [refresh]);
   const upload = (files: FileList | null) => {
     if (!files?.length) return;
-    setBusy(true);
-    uploadFiles([...files]).then(() => toast.success("Uploaded to unassigned photos")).catch((e) => toast.error(e.message)).finally(() => { setBusy(false); refresh(); });
+    enqueueUploads([...files], async (file, progress) => {
+      if (!file.type.startsWith("image/")) return "not an image";
+      const { w, h } = await readSize(file);
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const path = `uploads/${crypto.randomUUID()}.${ext}`;
+      await uploadWithProgress("portfolio", path, file, progress);
+      const signed = await supabase.storage.from("portfolio").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signed.error) return "could not be saved";
+      const url = signed.data.signedUrl;
+      const { error } = await supabase.from("media").insert({ sm: url, src: url, full_src: url, w, h, storage_path: path });
+      return error ? "could not be saved" : "done";
+    });
   };
+  const uploads = useUploads();
+  const upRunning = uploads.filter((i) => i.status === "waiting" || i.status === "uploading" || i.status === "saving");
+  const upTotal = uploads.reduce((a, i) => a + i.size, 0) || 1;
+  const upPct = Math.round((uploads.reduce((a, i) => a + (i.status === "uploading" || i.status === "waiting" ? i.loaded : i.size), 0) / upTotal) * 100);
 
   const pickedAssigned = [...picked].some((id) => (linked.get(id) ?? []).length > 0);
 
@@ -882,6 +901,12 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
           <input type="file" accept="image/*" multiple className="hidden" disabled={busy} onChange={(e) => { upload(e.target.files); e.target.value = ""; }} />
         </label>
         <span className="meta text-muted-foreground">{progress ?? `${shown.length} photos · drag photos here to upload`}</span>
+        {uploads.length > 0 && (
+          <span className="flex min-w-52 flex-1 items-center gap-3">
+            <span className="h-1 flex-1 overflow-hidden rounded-full bg-paper/15"><span className="block h-full bg-paper transition-[width] duration-300" style={{ width: `${upPct}%` }} /></span>
+            <span className="meta text-paper/80">{upRunning.length ? `Uploading ${uploads.length - upRunning.length} / ${uploads.length} · ${upPct}%` : `Uploaded ${uploads.filter((i) => i.status === "done").length} / ${uploads.length}`}</span>
+          </span>
+        )}
         {shown.length > 0 && !progress && <button className={btn} onClick={() => download(shown)}>Download {shown.length === media.length ? "all" : "these"} ({shown.length})</button>}
         {shown.length > 0 && <button className={btn} onClick={() => setPicked(picked.size === shown.length ? new Set() : new Set(shown.map((m) => m.id)))}>{picked.size === shown.length ? "Clear" : "Select all"}</button>}
         {picked.size > 0 && (

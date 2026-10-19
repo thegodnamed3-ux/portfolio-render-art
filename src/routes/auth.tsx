@@ -103,7 +103,7 @@ function AuthPage() {
         <Link to="/" className="meta text-[0.6875rem] text-paper/70 hover:text-paper">← Website</Link>
       </header>
 
-      <div className="flex flex-1 items-center justify-center px-5 pb-16">
+      <div className="flex flex-1 items-center justify-center px-5 pb-16 md:items-start md:pt-[7vh]">
         <div className="glass-panel w-full max-w-sm rounded-[32px] p-7 text-paper md:p-8">
           <p className="meta text-paper/60">{title}</p>
           <h1 className="display pb-5 pt-1 text-5xl">Studio<em>.</em></h1>

@@ -29,7 +29,7 @@ function ReviewCard({ r, onOpen }: { r: PublicReview; onOpen: () => void }) {
       <span className="display line-clamp-4 text-[0.9375rem] italic leading-[1.25] text-ink/85">{r.body}</span>
       <span className="meta mt-auto flex w-full items-center gap-2 pt-1 text-[0.5625rem] text-ink/55">
         <Avatar r={r} size="size-5" />
-        <span className="min-w-0 flex-1 truncate">{r.name}</span>
+        <span className="min-w-0 flex-1 truncate">{r.name}{r.shoot ? ` · ${r.shoot}` : ""}</span>
       </span>
     </button>
   );
@@ -99,7 +99,7 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
           <figure className="glass-card flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-[32px] !bg-white/85 p-6 md:p-8">
             <figcaption className="flex items-center gap-3">
               <Avatar r={open} size="size-11" />
-              <span className="meta min-w-0 flex-1 truncate text-ink/70">{open.name}</span>
+              <span className="meta min-w-0 flex-1 truncate text-ink/70">{open.name}{open.shoot ? ` · ${open.shoot}` : ""}</span>
               <button type="button" onClick={() => setOpen(null)} aria-label="Close review" className="glass-ink hit grid size-9 shrink-0 place-items-center self-center rounded-full text-ink/70 hover:text-ink">
                 <svg viewBox="0 0 24 24" aria-hidden className="size-3.5 fill-none stroke-current" strokeWidth="1.6" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
               </button>

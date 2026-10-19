@@ -176,6 +176,13 @@
       "when": 1792420000000,
       "tag": "0024_media_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792421000000,
+      "tag": "0025_review_photoshoot",
+      "breakpoints": true
     }
   ]
 }

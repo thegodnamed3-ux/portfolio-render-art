@@ -329,6 +329,7 @@ export type Database = {
           delivery_id: string | null
           id: string
           name: string
+          photoshoot_id: string | null
           rating: number | null
           source_key: string | null
           status: string
@@ -340,6 +341,7 @@ export type Database = {
           delivery_id?: string | null
           id?: string
           name: string
+          photoshoot_id?: string | null
           rating?: number | null
           source_key?: string | null
           status?: string
@@ -351,6 +353,7 @@ export type Database = {
           delivery_id?: string | null
           id?: string
           name?: string
+          photoshoot_id?: string | null
           rating?: number | null
           source_key?: string | null
           status?: string

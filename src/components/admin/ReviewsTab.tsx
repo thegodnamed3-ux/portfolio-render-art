@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils";
 type Review = {
   id: string; name: string; body: string; rating: number | null; status: string; created_at: string; avatar_url: string | null;
   client_deliveries: { title: string } | null;
+  photoshoot_id?: string | null;
 };
+type ShootOption = { id: string; title: string; category: string };
 
 const btn = "meta inline-flex items-center justify-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-paper/85 transition-colors hover:border-paper/60 hover:text-paper disabled:opacity-40";
 const btnPrimary = "meta inline-flex items-center justify-center gap-2 rounded-full bg-paper px-3.5 py-1.5 text-ink transition-opacity hover:opacity-90 disabled:opacity-40";
@@ -27,12 +29,22 @@ export function ReviewsTab() {
   const q = useQuery({
     queryKey: ["admin", "reviews"],
     queryFn: async () => {
+      // With the linked photoshoot (migration 0025); without it the list still loads.
+      const withShoot = await supabase.from("reviews").select("id, name, body, rating, status, created_at, avatar_url, photoshoot_id, client_deliveries(title)").order("created_at", { ascending: false });
+      if (!withShoot.error) return withShoot.data as unknown as Review[];
       const { data, error } = await supabase
         .from("reviews")
         .select("id, name, body, rating, status, created_at, avatar_url, client_deliveries(title)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as unknown as Review[];
+    },
+  });
+  const shoots = useQuery({
+    queryKey: ["admin", "review-shoots"],
+    queryFn: async () => {
+      const { data } = await supabase.from("photoshoots").select("id, title, category").order("title");
+      return (data ?? []) as ShootOption[];
     },
   });
   const refresh = () => {
@@ -60,14 +72,14 @@ export function ReviewsTab() {
         <p className="text-xs text-muted-foreground">Clients leave reviews from their delivery page. Approved reviews appear under “Reviews →” in the Contact block.</p>
       </div>
       <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {list.map((r) => <ReviewItem key={r.id} r={r} refresh={refresh} />)}
+        {list.map((r) => <ReviewItem key={r.id} r={r} refresh={refresh} shoots={shoots.data ?? []} />)}
       </ul>
       {!list.length && <p className="meta text-muted-foreground">Nothing here.</p>}
     </div>
   );
 }
 
-function ReviewItem({ r, refresh }: { r: Review; refresh: () => void }) {
+function ReviewItem({ r, refresh, shoots }: { r: Review; refresh: () => void; shoots: ShootOption[] }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(r.name);
   const [body, setBody] = useState(r.body);
@@ -106,6 +118,18 @@ function ReviewItem({ r, refresh }: { r: Review; refresh: () => void }) {
       ) : (
         <p className="whitespace-pre-line text-sm leading-relaxed text-paper/75">{r.body}</p>
       )}
+      <select
+        className="meta w-full rounded-full border border-border bg-background px-3 py-1.5 text-paper"
+        value={r.photoshoot_id ?? ""}
+        aria-label="Linked photoshoot"
+        onChange={async (e) => {
+          const { error } = await supabase.from("reviews").update({ photoshoot_id: e.target.value || null } as never).eq("id", r.id);
+          if (error) toast.error("Linking needs migration 0025_review_photoshoot — apply it in Lovable first."); else { toast.success(e.target.value ? "Linked to the photoshoot" : "Unlinked"); refresh(); }
+        }}
+      >
+        <option value="">Linked photoshoot: none</option>
+        {shoots.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+      </select>
       <p className="meta text-[0.6rem] text-muted-foreground">
         {new Date(r.created_at).toLocaleDateString()}{r.client_deliveries ? ` · ${r.client_deliveries.title}` : ""}
       </p>

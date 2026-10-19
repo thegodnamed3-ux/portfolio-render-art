@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-export type PublicReview = { id: string; name: string; body: string; rating: number | null; avatar_url: string | null };
+export type PublicReview = { id: string; name: string; body: string; rating: number | null; avatar_url: string | null; shoot?: string | null };
 
 const TOKEN = /^[A-Za-z0-9_-]{16,64}$/;
 /** A single delivery link can't be used to flood the studio with reviews. */
@@ -52,12 +52,11 @@ export const submitReview = createServerFn({ method: "POST" })
 /** Website: approved reviews only, newest first. */
 export const getApprovedReviews = createServerFn({ method: "GET" }).handler(async (): Promise<PublicReview[]> => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("reviews")
-    .select("id, name, body, rating, avatar_url")
-    .eq("status", "approved")
-    .order("created_at", { ascending: false })
-    .limit(48);
+  const base = () => supabaseAdmin.from("reviews").select("id, name, body, rating, avatar_url").eq("status", "approved").order("created_at", { ascending: false }).limit(48);
+  // With the linked photoshoot's title (needs migration 0025); falls back to plain reviews.
+  const linked = await supabaseAdmin.from("reviews").select("id, name, body, rating, avatar_url, photoshoots(title)").eq("status", "approved").order("created_at", { ascending: false }).limit(48);
+  if (!linked.error) return (linked.data ?? []).map((r: any) => ({ id: r.id, name: r.name, body: r.body, rating: r.rating, avatar_url: r.avatar_url, shoot: r.photoshoots?.title ?? null }));
+  const { data, error } = await base();
   if (error) {
     console.error("getApprovedReviews", error);
     return [];

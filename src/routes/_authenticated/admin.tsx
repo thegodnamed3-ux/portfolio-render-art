@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DeliveriesTab, createDeliveryFromFiles } from "@/components/admin/DeliveriesTab";
 import { ZipWriter } from "@/lib/zip";
+import { makeThumb } from "@/lib/thumbs";
 import { enqueueUploads, onUploadsFinished, uploadWithProgress, useUploads } from "@/lib/upload-queue";
 import { UploadDock } from "@/components/admin/UploadDock";
 import { ReviewsTab } from "@/components/admin/ReviewsTab";
@@ -102,6 +103,17 @@ async function readSize(file: File) {
   return r;
 }
 
+/** ~900px copy next to the original (for grids and phones); returns its long-lived link, or null. */
+async function smallCopy(source: Blob, path: string): Promise<string | null> {
+  const small = await makeThumb(source);
+  if (!small) return null;
+  const sp = path.replace(/\.[^.]+$/, "") + "-sm.jpg";
+  const up = await supabase.storage.from("portfolio").upload(sp, small, { contentType: "image/jpeg", cacheControl: "31536000", upsert: true });
+  if (up.error) return null;
+  const s = await supabase.storage.from("portfolio").createSignedUrl(sp, 60 * 60 * 24 * 365 * 10);
+  return s.error ? null : s.data.signedUrl;
+}
+
 /** Uploads files to private storage; returns inserted media rows. */
 async function uploadFiles(files: File[]): Promise<Media[]> {
   const out: Media[] = [];
@@ -114,7 +126,8 @@ async function uploadFiles(files: File[]): Promise<Media[]> {
     const signed = await supabase.storage.from("portfolio").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
     if (signed.error) throw signed.error;
     const url = signed.data.signedUrl;
-    const { data, error } = await supabase.from("media").insert({ sm: url, src: url, full_src: url, w, h, storage_path: path }).select("*").single();
+    const sm = (await smallCopy(file, path)) ?? url;
+    const { data, error } = await supabase.from("media").insert({ sm, src: url, full_src: url, w, h, storage_path: path }).select("*").single();
     if (error) throw error;
     out.push(data as Media);
   }
@@ -812,6 +825,31 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
     : sort === "project" ? (shootTitle(a) ?? "\uffff").localeCompare(shootTitle(b) ?? "\uffff")
     : (b.created_at ?? "").localeCompare(a.created_at ?? ""));
   const pickedList = media.filter((m) => picked.has(m.id));
+  // One-time: small copies for photos uploaded before (their grid image was the full-size file).
+  const noSmall = media.filter((m) => m.storage_path && m.sm === m.full_src);
+  const createPreviews = async () => {
+    let done = 0, failed = 0;
+    const queue = [...noSmall];
+    const work = async () => {
+      while (queue.length) {
+        const m = queue.shift()!;
+        try {
+          const r = await supabase.storage.from("portfolio").download(m.storage_path!);
+          if (r.error || !r.data) throw new Error("download");
+          const sm = await smallCopy(r.data, m.storage_path!);
+          if (!sm) throw new Error("small");
+          const u = await supabase.from("media").update({ sm }).eq("id", m.id);
+          if (u.error) throw u.error;
+        } catch { failed++; }
+        done++;
+        setProgress(`Creating previews ${done} / ${noSmall.length}…`);
+      }
+    };
+    await Promise.all([work(), work(), work()]);
+    setProgress(null);
+    toast.success(`Previews ready${failed ? ` · ${failed} could not be made` : ""}`);
+    refresh();
+  };
   const fileName = (m: Media, i: number) => `${(shootTitle(m) || m.album || "photo").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 70)} ${String(i + 1).padStart(3, "0")}.jpg`;
   const original = async (m: Media) => {
     if (m.storage_path) { const r = await supabase.storage.from("portfolio").download(m.storage_path); if (!r.error && r.data) return r.data; }
@@ -896,7 +934,8 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
       const signed = await supabase.storage.from("portfolio").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (signed.error) return "could not be saved";
       const url = signed.data.signedUrl;
-      const { error } = await supabase.from("media").insert({ sm: url, src: url, full_src: url, w, h, storage_path: path });
+      const sm = (await smallCopy(file, path)) ?? url;
+      const { error } = await supabase.from("media").insert({ sm, src: url, full_src: url, w, h, storage_path: path });
       return error ? "could not be saved" : "done";
     });
   };
@@ -938,6 +977,7 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
           </span>
         )}
         {shown.length > 0 && !progress && <button className={btn} onClick={() => download(shown)}>Download {shown.length === media.length ? "all" : "these"} ({shown.length})</button>}
+        {noSmall.length > 0 && !progress && <button className={btn} onClick={createPreviews} title="Small copies make the studio and the site load faster. Originals are not changed.">Create previews ({noSmall.length})</button>}
         {shown.length > 0 && <button className={btn} onClick={() => setPicked(picked.size === shown.length ? new Set() : new Set(shown.map((m) => m.id)))}>{picked.size === shown.length ? "Clear" : "Select all"}</button>}
         {picked.size > 0 && (
           <>

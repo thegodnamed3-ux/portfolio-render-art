@@ -38,13 +38,13 @@ export function withLang(ctx: Ctx, head: Head, opts: { categorySlug?: string; ca
     });
     return out.join(" — ");
   };
-  const meta = (head.meta ?? []).map((m) => (m.title ? { ...m, title: tr(m.title) } : m.content && ["description", "og:title", "og:description"].includes(m.name ?? m.property ?? "") ? { ...m, content: tr(m.content) } : m));
+  const meta = (head.meta ?? []).map((m) => (m["title"] ? { ...m, title: tr(m["title"]) } : m["content"] && ["description", "og:title", "og:description"].includes(m["name"] ?? m["property"] ?? "") ? { ...m, content: tr(m["content"]) } : m));
   meta.push({ property: "og:locale", content: lang === "et" ? "et_EE" : lang === "ru" ? "ru_RU" : "en_GB" });
   const path = ctx.match?.pathname ?? "/";
   if (origin) {
     meta.push({ property: "og:url", content: `${origin}${path}` }, { property: "og:site_name", content: "thegodnamed" });
     const img = opts.image;
-    if (img && !meta.some((m) => m.property === "og:image")) meta.push({ property: "og:image", content: img }, { name: "twitter:image", content: img });
+    if (img && !meta.some((m) => m["property"] === "og:image")) meta.push({ property: "og:image", content: img }, { name: "twitter:image", content: img });
   }
   const links = origin ? [
     ...(["en", "et", "ru"] as const).map((l) => ({ rel: "alternate", hrefLang: l, href: `${origin}${path}?lang=${l}` })),

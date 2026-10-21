@@ -167,7 +167,6 @@ export type Database = {
           source_url: string | null
           src: string
           storage_path: string | null
-          tags: string[]
           w: number
         }
         Insert: {
@@ -182,7 +181,6 @@ export type Database = {
           source_url?: string | null
           src: string
           storage_path?: string | null
-          tags?: string[]
           w: number
         }
         Update: {
@@ -197,7 +195,6 @@ export type Database = {
           source_url?: string | null
           src?: string
           storage_path?: string | null
-          tags?: string[]
           w?: number
         }
         Relationships: []
@@ -273,7 +270,6 @@ export type Database = {
           created_at: string
           id: string
           import_batch: string | null
-          location: string | null
           review_status: string | null
           sort_order: number
           source_album: string | null
@@ -281,7 +277,6 @@ export type Database = {
           status: string
           title: string
           updated_at: string
-          year: number | null
         }
         Insert: {
           album?: string | null
@@ -290,7 +285,6 @@ export type Database = {
           created_at?: string
           id?: string
           import_batch?: string | null
-          location?: string | null
           review_status?: string | null
           sort_order?: number
           source_album?: string | null
@@ -298,7 +292,6 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
-          year?: number | null
         }
         Update: {
           album?: string | null
@@ -307,7 +300,6 @@ export type Database = {
           created_at?: string
           id?: string
           import_batch?: string | null
-          location?: string | null
           review_status?: string | null
           sort_order?: number
           source_album?: string | null
@@ -315,7 +307,6 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
-          year?: number | null
         }
         Relationships: [
           {
@@ -335,7 +326,6 @@ export type Database = {
           delivery_id: string | null
           id: string
           name: string
-          photoshoot_id: string | null
           rating: number | null
           source_key: string | null
           status: string
@@ -347,7 +337,6 @@ export type Database = {
           delivery_id?: string | null
           id?: string
           name: string
-          photoshoot_id?: string | null
           rating?: number | null
           source_key?: string | null
           status?: string
@@ -359,7 +348,6 @@ export type Database = {
           delivery_id?: string | null
           id?: string
           name?: string
-          photoshoot_id?: string | null
           rating?: number | null
           source_key?: string | null
           status?: string

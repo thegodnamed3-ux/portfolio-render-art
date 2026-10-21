@@ -14,8 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_requests: {
+        Row: {
+          contact: string
+          created_at: string
+          id: string
+          message: string | null
+          name: string
+          notes: string | null
+          shoot_date: string | null
+          shoot_type: string
+          status: string
+          wished_date: string | null
+        }
+        Insert: {
+          contact: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          name: string
+          notes?: string | null
+          shoot_date?: string | null
+          shoot_type?: string
+          status?: string
+          wished_date?: string | null
+        }
+        Update: {
+          contact?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          name?: string
+          notes?: string | null
+          shoot_date?: string | null
+          shoot_type?: string
+          status?: string
+          wished_date?: string | null
+        }
+        Relationships: []
+      }
       client_deliveries: {
         Row: {
+          client_email: string | null
           client_name: string | null
           created_at: string
           expires_at: string | null
@@ -24,12 +64,14 @@ export type Database = {
           is_active: boolean
           message: string | null
           password_hash: string | null
+          review_asked_at: string | null
           title: string
           token: string
           updated_at: string
           watermark: boolean
         }
         Insert: {
+          client_email?: string | null
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -38,12 +80,14 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           password_hash?: string | null
+          review_asked_at?: string | null
           title?: string
           token: string
           updated_at?: string
           watermark?: boolean
         }
         Update: {
+          client_email?: string | null
           client_name?: string | null
           created_at?: string
           expires_at?: string | null
@@ -52,6 +96,7 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           password_hash?: string | null
+          review_asked_at?: string | null
           title?: string
           token?: string
           updated_at?: string
@@ -167,6 +212,7 @@ export type Database = {
           source_url: string | null
           src: string
           storage_path: string | null
+          tags: string[]
           w: number
         }
         Insert: {
@@ -181,6 +227,7 @@ export type Database = {
           source_url?: string | null
           src: string
           storage_path?: string | null
+          tags?: string[]
           w: number
         }
         Update: {
@@ -195,6 +242,7 @@ export type Database = {
           source_url?: string | null
           src?: string
           storage_path?: string | null
+          tags?: string[]
           w?: number
         }
         Relationships: []
@@ -270,6 +318,7 @@ export type Database = {
           created_at: string
           id: string
           import_batch: string | null
+          location: string | null
           review_status: string | null
           sort_order: number
           source_album: string | null
@@ -277,6 +326,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          year: number | null
         }
         Insert: {
           album?: string | null
@@ -285,6 +335,7 @@ export type Database = {
           created_at?: string
           id?: string
           import_batch?: string | null
+          location?: string | null
           review_status?: string | null
           sort_order?: number
           source_album?: string | null
@@ -292,6 +343,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          year?: number | null
         }
         Update: {
           album?: string | null
@@ -300,6 +352,7 @@ export type Database = {
           created_at?: string
           id?: string
           import_batch?: string | null
+          location?: string | null
           review_status?: string | null
           sort_order?: number
           source_album?: string | null
@@ -307,6 +360,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          year?: number | null
         }
         Relationships: [
           {
@@ -326,6 +380,7 @@ export type Database = {
           delivery_id: string | null
           id: string
           name: string
+          photoshoot_id: string | null
           rating: number | null
           source_key: string | null
           status: string
@@ -337,6 +392,7 @@ export type Database = {
           delivery_id?: string | null
           id?: string
           name: string
+          photoshoot_id?: string | null
           rating?: number | null
           source_key?: string | null
           status?: string
@@ -348,6 +404,7 @@ export type Database = {
           delivery_id?: string | null
           id?: string
           name?: string
+          photoshoot_id?: string | null
           rating?: number | null
           source_key?: string | null
           status?: string
@@ -358,6 +415,13 @@ export type Database = {
             columns: ["delivery_id"]
             isOneToOne: false
             referencedRelation: "client_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_photoshoot_id_fkey"
+            columns: ["photoshoot_id"]
+            isOneToOne: false
+            referencedRelation: "photoshoots"
             referencedColumns: ["id"]
           },
         ]

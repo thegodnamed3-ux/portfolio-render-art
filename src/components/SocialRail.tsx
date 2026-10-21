@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { getSiteSettings } from "@/lib/portfolio.functions";
 import { contact } from "@/content/contact";
 import { TelegramIcon, WhatsAppIcon, InstagramIcon, BehanceIcon } from "@/components/ContactLinks";
@@ -11,22 +11,38 @@ const HIDDEN = /^\/(admin|auth|g\/)/;
 
 /**
  * Liquid-glass rail fixed to the right edge on every public page: Telegram, WhatsApp, Instagram,
- * Behance. Visible on the first and last screens, fading out in between; each icon sinks in when pressed.
+ * Behance. Visible on the first and last screens, wiping away top-down in between; each icon sinks in when pressed.
  */
 export function SocialRail() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const fetchSettings = useServerFn(getSiteSettings);
   const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
-  // Shown on the first screen and on the last one (contacts); in between it fades out,
-  // and fades back in when the visitor reaches either end.
+  // Shown on the first screen and on the last one (contacts). Leaving either end it wipes away from
+  // the top down; arriving it draws in from the top down. "pre" = hidden, ready to draw in again.
   const [shown, setShown] = useState(false);
+  const [state, setState] = useState<"pre" | "in" | "out">("pre");
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  useEffect(() => {
+    let t = 0, f1 = 0, f2 = 0;
+    if (shown) {
+      if (stateRef.current === "out") {
+        setState("pre");
+        f1 = requestAnimationFrame(() => { f2 = requestAnimationFrame(() => setState("in")); });
+      } else setState("in");
+    } else if (stateRef.current === "in") {
+      setState("out");
+      t = window.setTimeout(() => setState("pre"), 800);
+    }
+    return () => { clearTimeout(t); cancelAnimationFrame(f1); cancelAnimationFrame(f2); };
+  }, [shown]);
   useEffect(() => {
     let frame = 0;
     const check = () => {
       frame = 0;
       const vh = window.innerHeight;
-      const top = window.scrollY < vh * 0.55;
-      const bottom = document.documentElement.scrollHeight - (window.scrollY + vh) < vh * 0.6;
+      const top = window.scrollY < vh * 0.12;
+      const bottom = document.documentElement.scrollHeight - (window.scrollY + vh) < vh * 0.35;
       setShown(top || bottom);
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
@@ -44,9 +60,9 @@ export function SocialRail() {
   ].filter((l): l is typeof l & { href: string } => !!l.href);
   if (!links.length) return null;
   return (
-    <nav aria-label="Social" className="social-rail" data-shown={shown ? "" : undefined} aria-hidden={!shown}>
+    <nav aria-label="Social" className="social-rail" data-state={state} aria-hidden={!shown}>
       {links.map(({ href, label, Icon }, i) => (
-        <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} tabIndex={shown ? 0 : -1} style={{ animationDelay: `${0.7 + i * 0.07}s` }}>
+        <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} tabIndex={shown ? 0 : -1} style={{ "--i": i } as CSSProperties}>
           <Icon className="size-[17px]" />
         </a>
       ))}

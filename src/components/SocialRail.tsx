@@ -17,7 +17,7 @@ export function SocialRail() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const fetchSettings = useServerFn(getSiteSettings);
   const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
-  // Shown on the first screen and on the last one (contacts). Leaving either end it wipes away from
+  // Shown on the first screen only. Leaving either end it wipes away from
   // the top down; arriving it opens out to the left. "pre" = hidden, ready to draw in again.
   const [shown, setShown] = useState(false);
   // On the homepage the panel lines up with the "Tallinn, Estonia" line of the hero.
@@ -47,8 +47,7 @@ export function SocialRail() {
       frame = 0;
       const vh = window.innerHeight;
       const top = window.scrollY < 8;
-      const atEnd = document.documentElement.scrollHeight - (window.scrollY + vh) < vh * 0.35;
-      setShown(top || atEnd);
+      setShown(top); // first screen only — the contact block has its own links
       const anchor = document.querySelector("[data-rail-anchor]");
       const nav = navRef.current;
       if (anchor && nav) {

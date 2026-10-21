@@ -10,7 +10,7 @@ import { TelegramIcon, WhatsAppIcon, InstagramIcon, BehanceIcon } from "@/compon
 const HIDDEN = /^\/(admin|auth|g\/)/;
 
 /**
- * Liquid-glass rail fixed to the right edge on every public page: Telegram, WhatsApp, Instagram,
+ * Liquid-glass panel fixed bottom right (where the hero's corner is) on every public page: Telegram, WhatsApp, Instagram,
  * Behance. Visible on the first and last screens, wiping away top-down in between; each icon sinks in when pressed.
  */
 export function SocialRail() {
@@ -18,7 +18,7 @@ export function SocialRail() {
   const fetchSettings = useServerFn(getSiteSettings);
   const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
   // Shown on the first screen and on the last one (contacts). Leaving either end it wipes away from
-  // the top down; arriving it draws in from the top down. "pre" = hidden, ready to draw in again.
+  // the top down; arriving it opens out to the left. "pre" = hidden, ready to draw in again.
   const [shown, setShown] = useState(false);
   const [state, setState] = useState<"pre" | "in" | "out">("pre");
   const stateRef = useRef(state);
@@ -62,7 +62,7 @@ export function SocialRail() {
   return (
     <nav aria-label="Social" className="social-rail" data-state={state} aria-hidden={!shown}>
       {links.map(({ href, label, Icon }, i) => (
-        <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} tabIndex={shown ? 0 : -1} style={{ "--i": i } as CSSProperties}>
+        <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} tabIndex={shown ? 0 : -1} style={{ "--r": links.length - 1 - i } as CSSProperties}>
           <Icon className="size-[17px]" />
         </a>
       ))}

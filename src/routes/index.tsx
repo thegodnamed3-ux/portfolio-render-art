@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { withLang } from "@/lib/seo";
 import { motion, useReducedMotion } from "framer-motion";
 import { createFileRoute } from "@tanstack/react-router";
@@ -48,14 +48,6 @@ function Hero({ slides }: { slides: HomeImage[] }) {
   // The slide arrows are rendered into the headline row, so they share its bottom edge.
   const [arrows, setArrows] = useState<HTMLDivElement | null>(null);
   const { t } = useI18n();
-  // The slide arrows take exactly the width of the "Scroll ↓" label, so the two stack neatly.
-  const [scrollW, setScrollW] = useState<number | null>(null);
-  const scrollRef = useCallback((el: HTMLAnchorElement | null) => {
-    if (!el) return;
-    const ro = new ResizeObserver(() => setScrollW(el.offsetWidth));
-    ro.observe(el);
-    setScrollW(el.offsetWidth);
-  }, []);
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden">
       <HeroSlideshow slides={slides} controlsContainer={arrows} />
@@ -73,17 +65,14 @@ function Hero({ slides }: { slides: HomeImage[] }) {
               </span>
             </span>
           </h1>
-          <div ref={setArrows} className="pointer-events-auto relative z-10 shrink-0" style={{ width: scrollW ?? 64 }} />
+          <div ref={setArrows} className="pointer-events-auto relative z-10 shrink-0" style={{ width: "5.5rem" }} />
         </div>
-        {/* Place on the left, tagline in the middle (desktop), "Scroll ↓" on the right — arrow centred on the text. */}
+        {/* Place on the left, tagline in the middle (desktop); the social panel takes the right end. */}
         <div className="meta mt-5 flex items-center justify-between gap-4 border-t border-paper/25 pt-4 leading-none text-paper/70 md:mt-8">
           <span className="leading-none">{t("hero.place")}</span>
           <span className="hidden leading-none md:inline">{t("hero.tag")}</span>
-          <a ref={scrollRef} href="#work" className="pointer-events-auto inline-flex items-center gap-1.5 leading-none transition-colors hover:text-paper">
-            {t("hero.scroll")}
-            {/* Drawn arrow: the font's ↓ sits low, this one is centred on the text's middle line. */}
-            <svg viewBox="0 0 10 12" aria-hidden className="h-[0.9em] w-[0.75em] shrink-0 fill-none stroke-current" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"><path d="M5 1v10M1.5 7.5 5 11l3.5-3.5" /></svg>
-          </a>
+          {/* Right end is left free: the social panel (fixed, bottom right) sits here on the first screen. */}
+          <span aria-hidden className="w-36 md:w-44" />
         </div>
       </div>
     </section>

@@ -361,6 +361,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
             {picked.size === rows.length ? "Clear selection" : "Select all"}
           </button>
         )}
+        {picked.size > 0 && picked.size < rows.length && <button className={btn} onClick={() => setPicked(new Set())}>Clear selection</button>}
         {picked.size > 0 && (
           <button className={cn(btn, "text-destructive hover:border-destructive")} disabled={busy} onClick={removePicked}>
             Remove {picked.size}

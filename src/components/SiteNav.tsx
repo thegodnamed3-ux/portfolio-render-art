@@ -10,7 +10,6 @@ const archiveSlug = internalCategories[0]?.slug ?? "";
 const links: { hash: string; key: Key }[] = [
   { hash: "work", key: "nav.work" },
   { hash: "disciplines", key: "nav.explore" },
-  { hash: ARCHIVE, key: "nav.archive" },
   { hash: "about", key: "nav.about" },
   { hash: "contact", key: "nav.contact" },
 ];
@@ -46,7 +45,8 @@ export function SiteNav() {
     <header className="fixed inset-x-0 top-0 z-50">
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 md:h-80">
         <div className={`absolute inset-0 bg-gradient-to-b from-background via-background via-40% to-transparent transition-opacity duration-500 md:via-30% ${light ? "opacity-0" : "opacity-100"}`} />
-        <div className={`absolute inset-0 bg-gradient-to-b from-paper via-paper via-40% to-transparent transition-opacity duration-500 md:via-30% ${light ? "opacity-100" : "opacity-0"}`} />
+        {/* On paper the wash stays short, so section titles under the bar are not bleached. */}
+        <div className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-paper via-paper/80 via-45% to-transparent transition-opacity duration-500 md:h-28 ${light ? "opacity-100" : "opacity-0"}`} />
       </div>
       <nav className={`meta relative px-5 py-4 transition-colors duration-500 md:px-10 md:py-6 ${light ? "text-ink" : "text-paper"}`}>
         <div className="flex items-center justify-between gap-4 md:items-baseline">

@@ -140,7 +140,7 @@ function Index_Disciplines() {
   const { t } = useI18n();
   const reduce = useReducedMotion();
   return (
-    <section id="disciplines" data-nav-light className="scroll-mt-0 overflow-x-clip bg-paper px-5 py-14 text-ink md:px-10 md:py-20">
+    <section id="disciplines" data-nav-light className="scroll-mt-0 overflow-x-clip bg-paper px-5 py-14 text-ink md:px-10 md:pb-20 md:pt-32">
       <div className="grid gap-10 md:grid-cols-12">
         <h2 className="display text-3xl md:col-span-3 md:text-4xl"><span className="meta mb-2 block text-ink/45">02 —</span>{t("disciplines.title")}</h2>
         {/* Rows slide in from the right, one after another. */}

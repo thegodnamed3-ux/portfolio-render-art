@@ -20,6 +20,7 @@ export async function checkExpiryReminders(sb: any, origin: string) {
     const { data: claimed } = await claim.select("id");
     if (!claimed?.length) return;
 
+    await askForReviews(sb, origin);
     const { data: due } = await sb
       .from("client_deliveries")
       .select("id, title, client_name, expires_at")
@@ -43,6 +44,41 @@ export async function checkExpiryReminders(sb: any, origin: string) {
     }
   } catch (e) {
     console.error("checkExpiryReminders", e);
+  }
+}
+
+/**
+ * Three days after a client first downloads their photos (and hasn't left a review), ask once:
+ * by email (client_email + RESEND_API_KEY secret) or, without those, a Telegram message with the
+ * text ready to forward. Needs migration 0028 — does nothing before it.
+ */
+async function askForReviews(sb: any, origin: string) {
+  if (!origin) return;
+  const { data: ds, error } = await sb.from("client_deliveries").select("id, token, title, client_name, client_email").eq("is_active", true).is("review_asked_at", null);
+  if (error || !ds?.length) return;
+  const cutoff = new Date(Date.now() - 3 * 86400_000).toISOString();
+  for (const d of ds) {
+    const { data: ev } = await sb.from("client_delivery_events").select("created_at").eq("delivery_id", d.id).in("kind", ["download", "zip"]).order("created_at").limit(1);
+    if (!ev?.length || ev[0].created_at > cutoff) continue;
+    const { count } = await sb.from("reviews").select("id", { count: "exact", head: true }).eq("delivery_id", d.id);
+    if (count) { await sb.from("client_deliveries").update({ review_asked_at: new Date().toISOString() }).eq("id", d.id); continue; }
+    const link = `${origin}/g/${d.token}?review=1`;
+    const name = (d.client_name || "").trim().split(/\s+/)[0] || "";
+    let sent = false;
+    const key = process.env["RESEND_API_KEY"];
+    if (key && d.client_email) {
+      const from = process.env["RESEND_FROM"] || "thegodnamed <onboarding@resend.dev>";
+      const text = `${name ? `Hi ${name}!` : "Hi!"}\n\nThank you for the shoot. If you liked the photos, I'd be grateful for a few words — it takes a minute:\n${link}\n\nAitäh! / Спасибо!\n— Gor, thegodnamed`;
+      try {
+        const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify({ from, to: [d.client_email], subject: "How did the photos turn out?", text }) });
+        sent = r.ok;
+      } catch { /* fall back to Telegram */ }
+    }
+    if (!sent) {
+      const msg = `${name ? `Hi ${name}!` : "Hi!"} Thank you for the shoot. If you liked the photos, I'd be grateful for a short review: ${link}`;
+      sent = await sendTelegram(["<b>Ask for a review</b>", "", `<b>${esc(d.client_name || d.title)}</b>`, "Downloaded the photos 3+ days ago. Text to forward:", "", `<code>${esc(msg)}</code>`].join("\n"), [{ text: "Open review page", url: link }]);
+    }
+    if (sent) await sb.from("client_deliveries").update({ review_asked_at: new Date().toISOString() }).eq("id", d.id);
   }
 }
 

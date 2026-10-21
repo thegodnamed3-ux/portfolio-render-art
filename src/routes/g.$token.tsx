@@ -281,7 +281,8 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
     }
   };
   const [progress, setProgress] = useState<number | null>(null);
-  const [reviewOpen, setReviewOpen] = useState(false);
+  // A link from the review request (?review=1) opens the form straight away.
+  const [reviewOpen, setReviewOpen] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("review") === "1");
   const [onlyFavs, setOnlyFavs] = useState(false);
   const [noteFor, setNoteFor] = useState<DeliveryFile | null>(null);
   const [marks, setMarks] = useState<Marks>(() => Object.fromEntries(d.files.map((f) => [f.id, { favorite: f.favorite, note: f.note }])));

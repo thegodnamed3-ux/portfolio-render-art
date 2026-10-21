@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type DeliveryRow = {
-  id: string; token: string; title: string; client_name: string | null; message: string | null;
+  id: string; token: string; title: string; client_name: string | null; message: string | null; client_email?: string | null;
   is_active: boolean; created_at: string; client_delivery_files: { count: number }[];
   password_hash: string | null; expires_at: string | null; watermark?: boolean;
 };
@@ -173,12 +173,13 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
   const qc = useQueryClient();
   const [title, setTitle] = useState(d.title);
   const [client, setClient] = useState(d.client_name ?? "");
+  const [email, setEmail] = useState(d.client_email ?? "");
   const [message, setMessage] = useState(d.message ?? "");
   const [busy, setBusy] = useState(false);
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<"delete" | "relink" | null>(null);
-  const dirty = title !== d.title || client !== (d.client_name ?? "") || message !== (d.message ?? "");
+  const dirty = title !== d.title || client !== (d.client_name ?? "") || message !== (d.message ?? "") || email !== (d.client_email ?? "");
   const link = linkFor(d.token);
 
   const files = useQuery({
@@ -221,6 +222,10 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
       client_name: client.trim() || null,
       message: message.trim() || null,
     }).eq("id", d.id));
+    if (email !== (d.client_email ?? "")) {
+      const r = await supabase.from("client_deliveries").update({ client_email: email.trim() || null } as never).eq("id", d.id);
+      if (r.error) toast.error("Client email needs migration 0028_review_requests — apply it in Lovable.");
+    }
   }, "Saved");
 
   const setActive = (is_active: boolean) => act(async () => {
@@ -319,6 +324,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
       <div className="space-y-3">
         <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title shown to the client, e.g. Pärnu mnt 12 — apartment" aria-label="Title" maxLength={120} />
         <input className={input} value={client} onChange={(e) => setClient(e.target.value)} placeholder="Client name (optional)" aria-label="Client name" maxLength={80} />
+        <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Client email — for the review request 3 days after download (optional)" aria-label="Client email" maxLength={200} />
         <textarea className={cn(input, "min-h-24 resize-y")} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Message to the client (optional)" aria-label="Message" maxLength={1000} />
         <div className="flex flex-wrap gap-2">
           <button className={btnPrimary} disabled={busy || !dirty} onClick={save}>Save</button>

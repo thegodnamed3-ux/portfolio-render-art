@@ -44,7 +44,7 @@ export function withLang(ctx: Ctx, head: Head, opts: { categorySlug?: string; ca
   if (origin) {
     meta.push({ property: "og:url", content: `${origin}${path}` }, { property: "og:site_name", content: "thegodnamed" });
     const img = opts.image;
-    if (img && !meta.some((m) => m.property === "og:image")) meta.push({ property: "og:image", content: img }, { name: "twitter:image", content: img });
+    if (img && !meta.some((m) => m["property"] === "og:image")) meta.push({ property: "og:image", content: img }, { name: "twitter:image", content: img });
   }
   const links = origin ? [
     ...(["en", "et", "ru"] as const).map((l) => ({ rel: "alternate", hrefLang: l, href: `${origin}${path}?lang=${l}` })),

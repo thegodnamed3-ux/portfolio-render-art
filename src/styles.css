@@ -402,3 +402,9 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
 @keyframes swipe-hint-trail { 0% { width: 0; } 75% { width: 52px; } 100% { width: 52px; opacity: 0; } }
 @keyframes swipe-hint-life { 0% { opacity: 0; } 8% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .swipe-hint-dot, .swipe-hint-dot::after { animation: none; } }
+
+/* Studio: preview tick draws itself, then the badge fades away. */
+.pv-tick { stroke-dasharray: 22; stroke-dashoffset: 22; animation: pv-draw .35s ease-out forwards; }
+.pv-done { animation: pv-fade 1.8s ease forwards; }
+@keyframes pv-draw { to { stroke-dashoffset: 0; } }
+@keyframes pv-fade { 0%, 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.7); } }

@@ -704,6 +704,7 @@ function ShootEditor({ shoot, shoots, links, byId, refresh, onClose, onSelect }:
         {picked.size > 0 && (
           <>
             <span className="meta text-muted-foreground">{picked.size} selected</span>
+            <button className={btn} onClick={() => setPicked(new Set())}>Clear selection</button>
             <MoveSelect shoots={shoots.filter((s) => s.id !== shoot.id)} onPick={moveSel} label="Move to…" allowNew />
             <button className={btn} onClick={removeSel}>Remove</button>
           </>
@@ -757,8 +758,22 @@ function SortableThumb({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
-function Thumb({ m, picked, onToggle, index, cover, onCover, note }: {
-  m: Media; picked: boolean; onToggle: () => void; index?: number; cover?: boolean; onCover?: () => void; note?: string;
+type PreviewStatus = "queued" | "working" | "done" | "failed";
+
+/** Per-photo preview state: clock while waiting, spinner while working, a tick that fades away, or "!" on failure. */
+function PreviewBadge({ status }: { status: PreviewStatus }) {
+  return (
+    <span className={cn("pointer-events-none absolute right-1.5 top-1.5 z-10 grid size-7 place-items-center rounded-full text-paper shadow-md backdrop-blur", status === "failed" ? "bg-destructive/90" : "bg-viewer/75", status === "done" && "pv-done")} title={status === "failed" ? "Preview could not be made" : undefined}>
+      {status === "queued" && <svg viewBox="0 0 24 24" className="size-4 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>}
+      {status === "working" && <span className="size-4 animate-spin rounded-full border-2 border-paper/30 border-t-paper" />}
+      {status === "done" && <svg viewBox="0 0 24 24" className="size-4 fill-none stroke-current" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path className="pv-tick" d="m5.5 12.5 4 4 9-9.5" /></svg>}
+      {status === "failed" && <span className="text-sm font-semibold leading-none">!</span>}
+    </span>
+  );
+}
+
+function Thumb({ m, picked, onToggle, index, cover, onCover, note, status }: {
+  m: Media; picked: boolean; onToggle: () => void; index?: number; cover?: boolean; onCover?: () => void; note?: string; status?: PreviewStatus;
 }) {
   return (
     <div className={cn("group relative aspect-square overflow-hidden rounded-lg bg-charcoal ring-2 transition", picked ? "ring-paper" : "ring-transparent")}>
@@ -773,6 +788,7 @@ function Thumb({ m, picked, onToggle, index, cover, onCover, note }: {
         <button type="button" onClick={onCover} className="meta absolute inset-x-1 bottom-1 rounded-full bg-viewer/75 py-1 text-[0.55rem] text-paper opacity-100 md:opacity-0 md:group-hover:opacity-100">Set cover</button>
       )}
       {note && <span className="meta pointer-events-none absolute inset-x-1 bottom-1 truncate rounded-full bg-viewer/75 px-1.5 text-[0.55rem] text-paper/80">{note}</span>}
+      {status && <PreviewBadge status={status} />}
     </div>
   );
 }
@@ -834,13 +850,22 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
   const pickedList = media.filter((m) => picked.has(m.id));
   // One-time: small copies for photos uploaded before (their grid image was the full-size file).
   const noSmall = media.filter((m) => m.storage_path && m.sm === m.full_src);
-  const createPreviews = async () => {
+  // Preview queue: every photo shows its own state (clock → spinner → tick), plus a bar with the count.
+  const [pv, setPv] = useState<Record<string, PreviewStatus>>({});
+  const [pvRun, setPvRun] = useState<{ done: number; total: number; failed: number } | null>(null);
+  const mark = (id: string, st: PreviewStatus | null) => setPv((p) => { const n = { ...p }; if (st) n[id] = st; else delete n[id]; return n; });
+  const createPreviews = async (list: Media[]) => {
+    const items = list.filter((m) => m.storage_path);
+    if (!items.length) { toast.error("These photos have no original in storage to make previews from."); return; }
     let done = 0, failed = 0;
     let firstError = "";
-    const queue = [...noSmall];
+    setPv((p) => { const n = { ...p }; items.forEach((m) => { n[m.id] = "queued"; }); return n; });
+    setPvRun({ done: 0, total: items.length, failed: 0 });
+    const queue = [...items];
     const work = async () => {
       while (queue.length) {
         const m = queue.shift()!;
+        mark(m.id, "working");
         try {
           const r = await supabase.storage.from("portfolio").download(m.storage_path!);
           if (r.error || !r.data) throw new Error(r.error?.message || "the original could not be downloaded");
@@ -848,15 +873,17 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
           if (!sm) throw new Error("the photo could not be read");
           const u = await supabase.from("media").update({ sm }).eq("id", m.id);
           if (u.error) throw u.error;
-        } catch (e) { failed++; if (!firstError) firstError = (e as Error)?.message || String(e); console.error("preview", m.id, e); }
+          mark(m.id, "done");
+          setTimeout(() => setPv((p) => { if (p[m.id] !== "done") return p; const n = { ...p }; delete n[m.id]; return n; }), 1800);
+        } catch (e) { failed++; if (!firstError) firstError = (e as Error)?.message || String(e); console.error("preview", m.id, e); mark(m.id, "failed"); }
         done++;
-        setProgress(`Creating previews ${done} / ${noSmall.length}…`);
+        setPvRun({ done, total: items.length, failed });
       }
     };
     await Promise.all([work(), work()]);
-    setProgress(null);
-    if (failed) toast.error(`${failed} of ${noSmall.length} previews could not be made: ${firstError}`);
-    else toast.success("Previews ready");
+    setPvRun(null);
+    if (failed) toast.error(`${failed} of ${items.length} previews could not be made: ${firstError}`);
+    else toast.success(`Previews ready (${items.length})`);
     refresh();
   };
   const fileName = (m: Media, i: number) => `${(shootTitle(m) || m.album || "photo").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 70)} ${String(i + 1).padStart(3, "0")}.jpg`;
@@ -986,12 +1013,20 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
           </span>
         )}
         {shown.length > 0 && !progress && <button className={btn} onClick={() => download(shown)}>Download {shown.length === media.length ? "all" : "these"} ({shown.length})</button>}
-        {noSmall.length > 0 && !progress && <button className={btn} onClick={createPreviews} title="Small copies make the studio and the site load faster. Originals are not changed.">Create previews ({noSmall.length})</button>}
+        {noSmall.length > 0 && !progress && !pvRun && picked.size === 0 && <button className={btn} onClick={() => createPreviews(noSmall)} title="Small copies make the studio and the site load faster. Originals are not changed.">Create previews ({noSmall.length})</button>}
+        {pvRun && (
+          <span className="flex min-w-52 flex-1 items-center gap-3">
+            <span className="h-1 flex-1 overflow-hidden rounded-full bg-paper/15"><span className="block h-full bg-paper transition-[width] duration-300" style={{ width: `${Math.round((pvRun.done / pvRun.total) * 100)}%` }} /></span>
+            <span className="meta text-paper/80">Previews {pvRun.done} / {pvRun.total}{pvRun.failed ? ` · ${pvRun.failed} failed` : ""}</span>
+          </span>
+        )}
         {shown.length > 0 && <button className={btn} onClick={() => setPicked(picked.size === shown.length ? new Set() : new Set(shown.map((m) => m.id)))}>{picked.size === shown.length ? "Clear" : "Select all"}</button>}
         {picked.size > 0 && (
           <>
             <span className="meta text-muted-foreground">{picked.size} selected</span>
+            <button className={btn} onClick={() => setPicked(new Set())}>Clear selection</button>
             <MoveSelect shoots={shoots} onPick={addTo} label="Add to photoshoot…" allowNew />
+            <button className={btn} disabled={!!pvRun} onClick={() => createPreviews(pickedList)} title="Make (or remake) small copies for the selected photos">Make previews</button>
             <button className={btnPrimary} disabled={!!progress} onClick={() => download(pickedList)}>Download</button>
             <button className={btn} disabled={!!progress} onClick={sendToClient}>Send to client</button>
             <input className="meta w-40 rounded-full border border-border bg-transparent px-4 py-2 text-paper outline-none" list="lib-tags" value={tag} onChange={(e) => setTag(e.target.value)} placeholder="Label" maxLength={60} />
@@ -1017,7 +1052,7 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
           const note = ids.length ? ids.map((id) => shootById.get(id)?.title).join(", ") : (m.album ?? undefined);
           const tags = (m.tags ?? []).join(" · ");
           const full = [note, tags].filter(Boolean).join(" · ");
-          return <Thumb key={m.id} m={m} picked={picked.has(m.id)} onToggle={() => setPicked((p) => { const n = new Set(p); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} {...(full ? { note: full } : {})} />;
+          return <Thumb key={m.id} m={m} picked={picked.has(m.id)} onToggle={() => setPicked((p) => { const n = new Set(p); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} {...(full ? { note: full } : {})} {...(pv[m.id] ? { status: pv[m.id] } : {})} />;
         })}
       </div>
       </div>
@@ -1477,6 +1512,7 @@ function LibraryPicker({ media, single, onPick, onClose }: { media: Media[]; sin
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 p-4 md:p-10" role="dialog" aria-label="Choose photos">
       <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-2 bg-background/90 py-2">
         <span className="meta text-muted-foreground">{single ? "Choose one photo" : `${picked.length} selected`}</span>
+        {picked.length > 0 && <button className={btn} onClick={() => setPicked([])}>Clear selection</button>}
         <button className={btnPrimary} disabled={!picked.length} onClick={() => onPick(picked.map((id) => toImg(media.find((m) => m.id === id)!)))}>Add</button>
         <button className={btn} onClick={onClose}>Cancel</button>
       </div>

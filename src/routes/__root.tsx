@@ -17,6 +17,7 @@ import { I18nProvider, getSiteInfo, useI18n } from "../lib/i18n";
 import { LightboxProvider } from "../components/Lightbox";
 import { PortfolioProvider } from "../components/PortfolioOverlay";
 import { Toaster } from "../components/ui/sonner";
+import { SocialRail } from "../components/SocialRail";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { installSlideLinks } from "../lib/slide";
@@ -138,6 +139,7 @@ function RootComponent() {
       <LightboxProvider><PortfolioProvider>
         <Outlet />
       </PortfolioProvider></LightboxProvider>
+      <SocialRail />
       <Toaster position="bottom-center" />
       <ViewTracker />
       </I18nProvider>

@@ -46,7 +46,7 @@ export function SocialRail() {
     const check = () => {
       frame = 0;
       const vh = window.innerHeight;
-      const top = window.scrollY < vh * 0.12;
+      const top = window.scrollY < 8;
       const atEnd = document.documentElement.scrollHeight - (window.scrollY + vh) < vh * 0.35;
       setShown(top || atEnd);
       const anchor = document.querySelector("[data-rail-anchor]");

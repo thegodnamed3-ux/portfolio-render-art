@@ -364,7 +364,8 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
 }
 /* Opens out to the left; leaves by wiping away from the top down; "pre" resets without motion. */
 .social-rail[data-state="in"] { clip-path: inset(0 0 0 0 round 999px); pointer-events: auto; }
-.social-rail[data-state="out"] { clip-path: inset(100% 0 0 0 round 999px); transition-duration: .6s; }
+.social-rail[data-state="out"] { clip-path: inset(100% 0 0 0 round 999px); transition-duration: .4s; }
+.social-rail[data-state="out"] a { transition-duration: .2s; }
 .social-rail[data-state="pre"] { transition: none; }
 .social-rail a {
   display: grid; place-items: center; width: 34px; height: 34px; border-radius: 999px;

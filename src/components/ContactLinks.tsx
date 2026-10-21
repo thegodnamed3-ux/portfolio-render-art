@@ -73,8 +73,8 @@ export function ContactList({ className, tabIndex, indent = 0 }: { className?: s
     <ul className={cn("border-t border-ink/12", className)}>
       {rows.map(({ label, href }) => (
         <li key={label} className="border-b border-ink/12">
-          <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={tabIndex} aria-label={label} className="group flex items-center justify-between gap-4 py-4 pl-1.5 text-ink md:py-5" style={indent ? { paddingLeft: indent } : undefined}>
-            <span className="meta text-[0.75rem] transition-transform duration-300 group-hover:translate-x-1">{label}</span>
+          <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={tabIndex} aria-label={label} className="group flex items-center justify-between gap-4 py-3.5 pl-1.5 text-ink md:py-4" style={indent ? { paddingLeft: indent } : undefined}>
+            <span className="display text-2xl leading-none transition-transform duration-300 group-hover:translate-x-1 md:text-3xl">{label}</span>
             <span aria-hidden className="text-sm text-ink-muted transition-[transform,color] duration-300 group-hover:translate-x-1 group-hover:text-ink">→</span>
           </a>
         </li>

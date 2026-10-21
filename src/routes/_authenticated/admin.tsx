@@ -109,8 +109,9 @@ async function smallCopy(source: Blob, path: string): Promise<string | null> {
   const small = await makeThumb(source);
   if (!small) return null;
   const sp = path.replace(/\.[^.]+$/, "") + "-sm.jpg";
-  const up = await supabase.storage.from("portfolio").upload(sp, small, { contentType: "image/jpeg", cacheControl: "31536000", upsert: true });
-  if (up.error) return null;
+  // No upsert (it needs an extra storage permission); a copy left by an earlier try is reused.
+  const up = await supabase.storage.from("portfolio").upload(sp, small, { contentType: "image/jpeg", cacheControl: "31536000" });
+  if (up.error && !/exist|duplicate/i.test(up.error.message)) throw up.error;
   const s = await supabase.storage.from("portfolio").createSignedUrl(sp, 60 * 60 * 24 * 365 * 10);
   return s.error ? null : s.data.signedUrl;
 }
@@ -127,7 +128,7 @@ async function uploadFiles(files: File[]): Promise<Media[]> {
     const signed = await supabase.storage.from("portfolio").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
     if (signed.error) throw signed.error;
     const url = signed.data.signedUrl;
-    const sm = (await smallCopy(file, path)) ?? url;
+    const sm = (await smallCopy(file, path).catch(() => null)) ?? url;
     const { data, error } = await supabase.from("media").insert({ sm, src: url, full_src: url, w, h, storage_path: path }).select("*").single();
     if (error) throw error;
     out.push(data as Media);
@@ -835,25 +836,27 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
   const noSmall = media.filter((m) => m.storage_path && m.sm === m.full_src);
   const createPreviews = async () => {
     let done = 0, failed = 0;
+    let firstError = "";
     const queue = [...noSmall];
     const work = async () => {
       while (queue.length) {
         const m = queue.shift()!;
         try {
           const r = await supabase.storage.from("portfolio").download(m.storage_path!);
-          if (r.error || !r.data) throw new Error("download");
+          if (r.error || !r.data) throw new Error(r.error?.message || "the original could not be downloaded");
           const sm = await smallCopy(r.data, m.storage_path!);
-          if (!sm) throw new Error("small");
+          if (!sm) throw new Error("the photo could not be read");
           const u = await supabase.from("media").update({ sm }).eq("id", m.id);
           if (u.error) throw u.error;
-        } catch { failed++; }
+        } catch (e) { failed++; if (!firstError) firstError = (e as Error)?.message || String(e); console.error("preview", m.id, e); }
         done++;
         setProgress(`Creating previews ${done} / ${noSmall.length}…`);
       }
     };
-    await Promise.all([work(), work(), work()]);
+    await Promise.all([work(), work()]);
     setProgress(null);
-    toast.success(`Previews ready${failed ? ` · ${failed} could not be made` : ""}`);
+    if (failed) toast.error(`${failed} of ${noSmall.length} previews could not be made: ${firstError}`);
+    else toast.success("Previews ready");
     refresh();
   };
   const fileName = (m: Media, i: number) => `${(shootTitle(m) || m.album || "photo").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 70)} ${String(i + 1).padStart(3, "0")}.jpg`;
@@ -940,7 +943,7 @@ function LibraryTab({ shoots, links, media, refresh }: { shoots: Shoot[]; links:
       const signed = await supabase.storage.from("portfolio").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (signed.error) return "could not be saved";
       const url = signed.data.signedUrl;
-      const sm = (await smallCopy(file, path)) ?? url;
+      const sm = (await smallCopy(file, path).catch(() => null)) ?? url;
       const { error } = await supabase.from("media").insert({ sm, src: url, full_src: url, w, h, storage_path: path });
       return error ? "could not be saved" : "done";
     });

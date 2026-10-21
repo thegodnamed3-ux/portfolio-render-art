@@ -55,3 +55,47 @@ export function ContactLinks({ tone = "light", className, align = "start", icons
     </div>
   );
 }
+
+/** Readable handle for a contact link: @name, a formatted phone number, or the profile name. */
+function handleOf(label: string, href: string) {
+  try {
+    const u = new URL(href);
+    const last = u.pathname.split("/").filter(Boolean).pop() ?? "";
+    if (label === "WhatsApp") {
+      const d = (last || u.searchParams.get("phone") || "").replace(/\D/g, "");
+      return d.startsWith("372") ? `+372 ${d.slice(3, 7)} ${d.slice(7)}`.trim() : d ? `+${d}` : "WhatsApp";
+    }
+    if (label === "Behance") return last || "Behance";
+    return last ? `@${last.replace(/^@/, "")}` : label;
+  } catch {
+    return label;
+  }
+}
+
+/**
+ * Contact band list (homepage): one hairline row per channel — name, handle, arrow — the whole row
+ * is the link. Replaces the loose pills and round buttons.
+ */
+export function ContactList({ className, tabIndex }: { className?: string; tabIndex?: number }) {
+  const fetchSettings = useServerFn(getSiteSettings);
+  const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
+  const rows = [
+    { label: "Telegram", href: contact.telegram },
+    { label: "WhatsApp", href: data?.whatsapp ?? contact.whatsapp },
+    { label: "Instagram", href: contact.instagram },
+    { label: "Behance", href: contact.behance },
+  ].filter((r): r is { label: string; href: string } => !!r.href);
+  return (
+    <ul className={cn("border-t border-ink/12", className)}>
+      {rows.map(({ label, href }) => (
+        <li key={label} className="border-b border-ink/12">
+          <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={tabIndex} className="group grid grid-cols-[6.5rem_minmax(0,1fr)_auto] items-center gap-4 py-4 text-ink md:grid-cols-[9rem_minmax(0,1fr)_auto] md:py-5">
+            <span className="meta text-[0.625rem] text-ink-muted">{label}</span>
+            <span className="truncate text-[0.9375rem] transition-transform duration-300 group-hover:translate-x-1 md:text-base">{handleOf(label, href)}</span>
+            <span aria-hidden className="text-sm text-ink-muted transition-[transform,color] duration-300 group-hover:translate-x-1 group-hover:text-ink">→</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}

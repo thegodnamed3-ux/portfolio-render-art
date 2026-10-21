@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { ContactLinks } from "@/components/ContactLinks";
+import { ContactList } from "@/components/ContactLinks";
 import { getApprovedReviews } from "@/lib/reviews.functions";
 import { ReviewsCarousel } from "@/components/ReviewsCarousel";
 import { BookingDialog } from "@/components/BookingDialog";
@@ -120,9 +120,10 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
             </motion.button>
             </div>
-            {/* Messengers sit on the right edge of the band, opposite the request link. */}
-            {/* Instagram / Behance reach the band's right edge (past the pane's inner padding). */}
-            <ContactLinks tone="light" align="end" className="mt-6 md:-mt-10" iconsClassName="-mr-8" />
+            {/* All channels as one quiet list under the request link (right half on desktop). */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 12 }, shown: { opacity: 1, y: 0 } }} transition={reduce ? { duration: 0 } : { duration: 1, ease }} className="mt-10 md:mt-4 md:ml-auto md:w-1/2">
+              <ContactList tabIndex={onReviews ? -1 : 0} />
+            </motion.div>
             </motion.div>
           </div>
           <div aria-hidden={!onReviews} className={cn("flex w-1/2 shrink-0 flex-col justify-center transition-[visibility] duration-700", !onReviews && "invisible")}>

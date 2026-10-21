@@ -129,7 +129,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const lang = Route.useLoaderData()?.lang ?? "en";
   // Tells the safety-net script in <head> that scripts are running and animations are in charge.
-  useEffect(() => { document.documentElement.dataset.hydrated = "1"; }, []);
+  useEffect(() => { document.documentElement.dataset["hydrated"] = "1"; }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

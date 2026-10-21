@@ -162,13 +162,13 @@ export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () =
   const { data: row } = await sb.from("site_settings").select("*").eq("id", 1).maybeSingle();
   const d = (row ?? {}) as Record<string, unknown>;
   const list = (v: unknown) => (Array.isArray(v) && v.length ? (v as (HomeImage & { caption?: string })[]) : null);
-  const hero = list(d.hero_slides) as HomeImage[] | null;
-  const about = d.about_image && typeof d.about_image === "object" ? (d.about_image as HomeImage) : null;
+  const hero = list(d["hero_slides"]) as HomeImage[] | null;
+  const about = d["about_image"] && typeof d["about_image"] === "object" ? (d["about_image"] as HomeImage) : null;
   // An empty saved list means "hide the grid"; only a never-saved one falls back to the defaults.
-  const work = Array.isArray(d.featured_work) ? (d.featured_work as (HomeImage & { caption?: string })[]) : null;
-  const spotlight = list(d.featured_spotlight);
-  const columns = typeof d.featured_columns === "number" ? d.featured_columns : null;
-  const columnsMobile = typeof d.featured_columns_mobile === "number" ? d.featured_columns_mobile : null;
+  const work = Array.isArray(d["featured_work"]) ? (d["featured_work"] as (HomeImage & { caption?: string })[]) : null;
+  const spotlight = list(d["featured_spotlight"]);
+  const columns = typeof d["featured_columns"] === "number" ? d["featured_columns"] : null;
+  const columnsMobile = typeof d["featured_columns_mobile"] === "number" ? d["featured_columns_mobile"] : null;
 
   // Older selections were saved without the small copy. Look them up ONCE and write the result back,
   // so later visits never scan the library again (items without a smaller copy keep their own image).
@@ -181,8 +181,8 @@ export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () =
       const bySrc = new Map((rows ?? []).map((r) => [r.src, r.sm && r.sm !== r.src ? r.sm : r.src]));
       lacking.forEach((x) => { x.sm = bySrc.get(x.src) ?? x.src; });
       const patch: Record<string, unknown> = {};
-      if (work) patch.featured_work = work;
-      if (spotlight) patch.featured_spotlight = spotlight;
+      if (work) patch["featured_work"] = work;
+      if (spotlight) patch["featured_spotlight"] = spotlight;
       await supabaseAdmin.from("site_settings").update(patch as never).eq("id", 1);
     } catch (e) {
       console.error("getHomeMedia backfill", e);

@@ -37,7 +37,8 @@ function pump() {
 
 export function enqueueUploads(files: File[], run: Job["run"]) {
   for (const file of files) {
-    const item: UploadItem = { id: crypto.randomUUID(), name: file.name, size: file.size, loaded: 0, status: "waiting", preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined };
+    const preview = file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined;
+    const item: UploadItem = { id: crypto.randomUUID(), name: file.name, size: file.size, loaded: 0, status: "waiting", ...(preview === undefined ? {} : { preview }) };
     items = [...items, item];
     jobs.push({ item, file, run });
   }

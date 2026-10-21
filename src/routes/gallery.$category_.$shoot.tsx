@@ -14,9 +14,9 @@ export const Route = createFileRoute("/gallery/$category_/$shoot")({
     if (!c) throw notFound();
     const s = await getPublishedShoot({ data: { id: params.shoot } });
     if (!s || s.category !== c.slug) throw notFound();
-    return { slug: c.slug, shoot: { id: s.id, title: s.title, photos: s.images, cover: s.cover.sm } };
+    return { slug: c.slug, shoot: { id: s.id, title: s.title, photos: s.images, cover: s.cover.sm ?? s.cover.src, location: s.location, year: s.year } };
   },
-  head: (ctx) => withLang(ctx, { meta: [{ title: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }, { property: "og:title", content: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }] }, ctx.loaderData?.shoot.cover?.src ? { image: ctx.loaderData.shoot.cover.src } : {}),
+  head: (ctx) => withLang(ctx, { meta: [{ title: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }, { property: "og:title", content: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }] }, ctx.loaderData?.shoot.cover ? { image: ctx.loaderData.shoot.cover } : {}),
   component: Shoot,
 });
 

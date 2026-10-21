@@ -307,7 +307,7 @@ function Studio() {
         </header>
 
         {tab === "settings" ? (
-          <WhatsAppSetting />
+          <div className="space-y-10"><WhatsAppSetting /><BackupPanel shoots={shoots} links={links} media={media} /></div>
         ) : tab === "analytics" ? (
           <AnalyticsTab />
         ) : tab === "requests" ? (
@@ -1571,5 +1571,70 @@ function WfolioMigration({ refresh }: { refresh: () => void }) {
         );
       })()}
     </div>
+  );
+}
+
+/* ---------------- Backup ---------------- */
+
+/**
+ * Everything the site holds, on this computer: "Data" is one JSON file (photoshoots, homepage,
+ * reviews, requests, client galleries); "Everything" is a ZIP with that file plus every original
+ * photo in a folder per photoshoot. In Chrome/Edge the ZIP is written straight to disk.
+ */
+function BackupPanel({ shoots, links, media }: { shoots: Shoot[]; links: Link_[]; media: Media[] }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const stamp = new Date().toISOString().slice(0, 10);
+  const collect = async () => {
+    const sb = supabase as any;
+    const [settings, reviews, requests, deliveries, files] = await Promise.all([
+      sb.from("site_settings").select("*"), sb.from("reviews").select("*"), sb.from("booking_requests").select("*"),
+      sb.from("client_deliveries").select("*"), sb.from("client_delivery_files").select("*"),
+    ]);
+    return JSON.stringify({ exported_at: new Date().toISOString(), site: "thegodnamed", photoshoots: shoots, photoshoot_images: links, media, site_settings: settings.data ?? [], reviews: reviews.data ?? [], booking_requests: requests.data ?? [], client_deliveries: deliveries.data ?? [], client_delivery_files: files.data ?? [] }, null, 2);
+  };
+  const saveBlob = (blob: Blob, name: string) => { const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60_000); };
+  const dataOnly = async () => { setBusy("Preparing…"); try { saveBlob(new Blob([await collect()], { type: "application/json" }), `thegodnamed-backup-${stamp}.json`); toast.success("Backup downloaded"); } catch { toast.error("Backup failed"); } setBusy(null); };
+  const everything = async () => {
+    const name = `thegodnamed-backup-${stamp}.zip`;
+    type Picker = (o: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<{ createWritable: () => Promise<{ write: (d: Uint8Array) => Promise<void>; close: () => Promise<void> }> }>;
+    const picker = (window as unknown as { showSaveFilePicker?: Picker }).showSaveFilePicker;
+    let write: (c: Uint8Array) => Promise<void>; let done: () => Promise<void>;
+    if (picker) {
+      let h; try { h = await picker({ suggestedName: name, types: [{ description: "ZIP archive", accept: { "application/zip": [".zip"] } }] }); } catch { return; }
+      const out = await h.createWritable(); write = (c) => out.write(c); done = () => out.close();
+    } else {
+      const parts: BlobPart[] = []; write = async (c) => { parts.push(c as BlobPart); }; done = async () => saveBlob(new Blob(parts, { type: "application/zip" }), name);
+    }
+    try {
+      const zip = new ZipWriter(write);
+      await zip.add("backup.json", new TextEncoder().encode(await collect()));
+      const shootOf = new Map<string, string>();
+      for (const l of links) if (!shootOf.has(l.media_id)) { const s = shoots.find((x) => x.id === l.photoshoot_id); if (s) shootOf.set(l.media_id, `${catTitle(s.category)}/${s.title.replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 60)}`); }
+      let i = 0, failed = 0;
+      for (const m of media) {
+        i++; setBusy(`Adding photos ${i} / ${media.length}…`);
+        try {
+          let blob: Blob | null = null;
+          if (m.storage_path) { const r = await supabase.storage.from("portfolio").download(m.storage_path); if (!r.error) blob = r.data; }
+          if (!blob) { const res = await fetch(m.full_src || m.src); if (res.ok) blob = await res.blob(); }
+          if (!blob) { failed++; continue; }
+          await zip.add(`${shootOf.get(m.id) ?? "Library"}/${m.id.slice(0, 8)}.jpg`, new Uint8Array(await blob.arrayBuffer()));
+        } catch { failed++; }
+      }
+      await zip.finish(); await done();
+      toast.success(`Backup saved${failed ? ` · ${failed} photo(s) could not be read` : ""}`);
+    } catch (e) { toast.error((e as Error).message || "Backup failed"); }
+    setBusy(null);
+  };
+  return (
+    <section className="space-y-3 border-t border-border pt-8">
+      <p className="meta text-muted-foreground">Backup</p>
+      <p className="text-sm text-paper/80">A copy of everything on this computer: photoshoots, homepage, reviews, requests, client galleries — and optionally every original photo.</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <button className={btn} disabled={!!busy} onClick={dataOnly}>Data only (.json)</button>
+        <button className={btnPrimary} disabled={!!busy} onClick={everything}>Everything with photos (.zip)</button>
+        {busy && <span className="meta text-muted-foreground">{busy}</span>}
+      </div>
+    </section>
   );
 }

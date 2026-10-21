@@ -55,6 +55,19 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const height = Math.max(heights[0], heights[1]);
 
   const section = useRef<HTMLElement>(null);
+  // Phones: the channel names start where the "Contact." heading ends (at its full stop).
+  const titleRef = useRef<HTMLSpanElement>(null);
+  const [indent, setIndent] = useState(0);
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    const measure = () => setIndent(window.matchMedia("(max-width: 767px)").matches ? Math.round(el.offsetWidth - 6) : 0);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, []);
   const toggle = () => setView(onReviews ? "contact" : "reviews");
 
   return (
@@ -62,7 +75,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="meta mb-2 text-ink/45">04 —</p>
-          <h2 className="display text-3xl leading-none md:text-4xl">{onReviews ? t("reviews.title") : t("contact.title")}</h2>
+          <h2 className="display text-3xl leading-none md:text-4xl"><span ref={titleRef}>{onReviews ? t("reviews.title") : t("contact.title")}</span></h2>
         </div>
         {has && (
           <motion.button
@@ -122,7 +135,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             </div>
             {/* All channels as one quiet list under the request link (right half on desktop). */}
             <motion.div variants={{ hidden: { opacity: 0, y: 12 }, shown: { opacity: 1, y: 0 } }} transition={reduce ? { duration: 0 } : { duration: 1, ease }} className="mt-10 md:mt-4 md:ml-auto md:w-1/2">
-              <ContactList tabIndex={onReviews ? -1 : 0} />
+              <ContactList tabIndex={onReviews ? -1 : 0} indent={indent} />
             </motion.div>
             </motion.div>
           </div>

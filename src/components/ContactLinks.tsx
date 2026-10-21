@@ -60,7 +60,7 @@ export function ContactLinks({ tone = "light", className, align = "start", icons
  * Contact band list (homepage): one hairline row per channel — name and arrow — the whole row
  * is the link. Replaces the loose pills and round buttons.
  */
-export function ContactList({ className, tabIndex }: { className?: string; tabIndex?: number }) {
+export function ContactList({ className, tabIndex, indent = 0 }: { className?: string; tabIndex?: number; indent?: number }) {
   const fetchSettings = useServerFn(getSiteSettings);
   const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
   const rows = [
@@ -73,7 +73,7 @@ export function ContactList({ className, tabIndex }: { className?: string; tabIn
     <ul className={cn("border-t border-ink/12", className)}>
       {rows.map(({ label, href }) => (
         <li key={label} className="border-b border-ink/12">
-          <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={tabIndex} aria-label={label} className="group flex items-center justify-between gap-4 py-4 pl-1.5 text-ink md:py-5">
+          <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={tabIndex} aria-label={label} className="group flex items-center justify-between gap-4 py-4 pl-1.5 text-ink md:py-5" style={indent ? { paddingLeft: indent } : undefined}>
             <span className="meta text-[0.75rem] transition-transform duration-300 group-hover:translate-x-1">{label}</span>
             <span aria-hidden className="text-sm text-ink-muted transition-[transform,color] duration-300 group-hover:translate-x-1 group-hover:text-ink">→</span>
           </a>

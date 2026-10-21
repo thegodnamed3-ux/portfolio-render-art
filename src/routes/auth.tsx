@@ -97,7 +97,7 @@ function AuthPage() {
 
   const field = "w-full rounded-full border border-paper/15 bg-paper/[0.04] px-5 py-3 text-sm text-paper outline-none transition-colors placeholder:text-paper/40 focus:border-paper/50";
   const ghost = "glass meta inline-flex w-full items-center justify-center gap-2.5 rounded-full px-5 py-3 text-paper disabled:opacity-50";
-  const link = "meta text-[0.5625rem] text-paper/45 transition-colors hover:text-paper/85";
+  const link = "meta text-[0.6875rem] text-paper/45 transition-colors hover:text-paper/85";
   const title = { in: "Private", up: "New account", forgot: "Reset password", recover: "New password" }[mode];
   const action = { in: "Sign in", up: "Create account", forgot: "Send reset link", recover: "Save new password" }[mode];
 
@@ -125,7 +125,7 @@ function AuthPage() {
                 <button type="button" disabled={busy} onClick={() => social("google")} className={ghost}><GoogleIcon />Continue with Google</button>
                 <button type="button" disabled={busy} onClick={() => social("apple")} className={ghost}><AppleIcon />Continue with Apple</button>
               </div>
-              <p className="meta my-4 flex items-center gap-3 text-[0.5625rem] text-paper/35"><span className="h-px flex-1 bg-paper/15" />or with email<span className="h-px flex-1 bg-paper/15" /></p>
+              <p className="meta my-4 flex items-center gap-3 text-[0.6875rem] text-paper/35"><span className="h-px flex-1 bg-paper/15" />or with email<span className="h-px flex-1 bg-paper/15" /></p>
             </>
           )}
 

@@ -132,7 +132,7 @@ function SwipeHint() {
   return (
     <div aria-hidden className="swipe-hint md:hidden">
       <span className="swipe-hint-track"><span className="swipe-hint-dot" /></span>
-      <span className="meta text-[0.5625rem] text-paper/75">{t("hero.swipe")}</span>
+      <span className="meta text-[0.6875rem] text-paper/75">{t("hero.swipe")}</span>
     </div>
   );
 }

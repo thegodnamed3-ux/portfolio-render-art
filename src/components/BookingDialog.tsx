@@ -69,7 +69,7 @@ export function BookingDialog({ onClose }: { onClose: () => void }) {
                   role="radio"
                   aria-checked={f.type === type}
                   onClick={() => setF({ ...f, type })}
-                  className={cn("meta rounded-full px-3 py-1.5 text-[0.625rem]", f.type === type ? "bg-ink text-paper" : "glass-ink text-ink/80")}
+                  className={cn("meta rounded-full px-3 py-1.5 text-[0.6875rem]", f.type === type ? "bg-ink text-paper" : "glass-ink text-ink/80")}
                 >
                   {t(`cat.${type.toLowerCase().replace(" ", "-")}` as Key)}
                 </button>

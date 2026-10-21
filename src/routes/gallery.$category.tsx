@@ -41,7 +41,7 @@ function Archive() {
       {/* Everything in the header shares one left edge: label, title, pill text, the grid below. */}
       <div className="flex items-start justify-between gap-3 px-4 pt-4 md:px-8 md:pt-6">
         <div className="min-w-0">
-          <p className="meta text-[0.625rem] text-paper/50 md:text-[0.6875rem]">
+          <p className="meta text-[0.6875rem] text-paper/50">
             {t("ar.title")}
             {total > 0 && <span> · {String(shoots.length).padStart(2, "0")} · {String(total).padStart(2, "0")} {p(total, FRAMES)}</span>}
           </p>
@@ -59,7 +59,7 @@ function Archive() {
             params={{ category: x.slug }}
             replace
             aria-current={x.slug === slug ? "page" : undefined}
-            className={cn("link-u meta mx-3 shrink-0 py-1.5 text-[0.625rem] first:ml-0", x.slug === slug ? "link-on text-paper" : "text-paper/55 hover:text-paper")}
+            className={cn("link-u meta mx-3 shrink-0 py-1.5 text-[0.6875rem] first:ml-0", x.slug === slug ? "link-on text-paper" : "text-paper/55 hover:text-paper")}
           >
             {title(x.slug, x.title)}
           </Link>

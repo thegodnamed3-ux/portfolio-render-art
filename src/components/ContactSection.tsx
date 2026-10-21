@@ -75,7 +75,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="meta mb-2 text-ink/45">04 —</p>
-          <h2 className="display text-3xl leading-none md:text-4xl"><span ref={titleRef}>{onReviews ? t("reviews.title") : t("contact.title")}</span></h2>
+          <h2 className="display text-[2.4375rem] leading-none md:text-[3.8125rem]"><span ref={titleRef}>{onReviews ? t("reviews.title") : t("contact.title")}</span></h2>
         </div>
         {has && (
           <motion.button
@@ -114,7 +114,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               viewport={{ once: true, amount: 0.3 }}
               variants={{ hidden: {}, shown: { transition: { staggerChildren: reduce ? 0 : 0.14 } } }}
             >
-            <p className="display text-[15vw] leading-[0.95] md:text-[9vw]">
+            <p className="display text-[12.5vw] leading-[0.95] md:text-[7.5vw]">
               <motion.span className="inline-block" {...step()}>{t("book.l1")}</motion.span>{" "}
               <motion.em className="inline-block" {...step()}>{t("book.l2")}</motion.em>
             </p>

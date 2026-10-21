@@ -78,7 +78,7 @@ export function ShootCard({ cover, title, meta, i, children }: { cover: { sm: st
     <>
       <span className="block aspect-[4/5] overflow-hidden rounded-[10px] bg-charcoal md:rounded-[12px]">{img}</span>
       <span className="mt-2 block truncate text-[0.6875rem] leading-tight text-paper md:mt-3 md:text-sm">{title}</span>
-      <span className="meta mt-0.5 block text-[0.5625rem] text-paper/45 md:text-[0.625rem]">{meta}</span>
+      <span className="meta mt-0.5 block text-[0.6875rem] text-paper/45">{meta}</span>
     </>
   );
   return (

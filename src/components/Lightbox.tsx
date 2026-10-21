@@ -220,7 +220,7 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
         </div>
         <AnimatePresence>
           {hint && !atEnd && (
-            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.625rem] tracking-[0.28em] text-paper/55 md:top-auto">{t("lb.swipe")}</motion.span>
+            <motion.span key="swipe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.6875rem] tracking-[0.28em] text-paper/55 md:top-auto">{t("lb.swipe")}</motion.span>
           )}
           {atEnd && n > 1 && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-paper/50 md:top-auto">{t("lb.end")}</motion.span>

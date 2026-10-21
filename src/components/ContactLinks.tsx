@@ -38,7 +38,7 @@ export function ContactLinks({ tone = "light", className, align = "start", icons
       {messaging.map(({ href, label, Icon }) => (
         <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={primary}>
           <Icon />
-          <span className="meta text-[0.625rem]">{label}</span>
+          <span className="meta text-[0.6875rem]">{label}</span>
           <span aria-hidden className="text-xs transition-transform duration-300 group-hover:translate-x-0.5">→</span>
         </a>
       ))}
@@ -74,7 +74,7 @@ export function ContactList({ className, tabIndex, indent = 0 }: { className?: s
       {rows.map(({ label, href }) => (
         <li key={label} className="border-b border-ink/12">
           <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={tabIndex} aria-label={label} className="group flex items-center justify-between gap-4 py-3.5 pl-1.5 text-ink md:py-4" style={indent ? { paddingLeft: indent } : undefined}>
-            <span className="display text-2xl leading-none transition-transform duration-300 group-hover:translate-x-1 md:text-3xl">{label}</span>
+            <span className="display text-[1.5625rem] leading-none transition-transform duration-300 group-hover:translate-x-1">{label}</span>
             <span aria-hidden className="text-sm text-ink-muted transition-[transform,color] duration-300 group-hover:translate-x-1 group-hover:text-ink">→</span>
           </a>
         </li>

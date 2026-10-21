@@ -26,8 +26,8 @@ function ReviewCard({ r, onOpen }: { r: PublicReview; onOpen: () => void }) {
       className="group flex h-full min-w-0 snap-start flex-col gap-2 overflow-hidden border-t border-ink/20 pb-1 pt-2.5 text-left transition-opacity duration-200 hover:opacity-75"
     >
       <span aria-hidden className="display -mb-3 text-4xl leading-none text-ink/30">“</span>
-      <span className="display line-clamp-4 text-[0.9375rem] italic leading-[1.25] text-ink/85">{r.body}</span>
-      <span className="meta mt-auto flex w-full items-center gap-2 pt-1 text-[0.5625rem] text-ink/55">
+      <span className="display line-clamp-4 text-base italic leading-[1.25] text-ink/85">{r.body}</span>
+      <span className="meta mt-auto flex w-full items-center gap-2 pt-1 text-[0.6875rem] text-ink/55">
         <Avatar r={r} size="size-5" />
         <span className="min-w-0 flex-1 truncate">{r.name}{r.shoot ? ` · ${r.shoot}` : ""}</span>
       </span>

@@ -54,7 +54,7 @@ function Hero({ slides }: { slides: HomeImage[] }) {
       <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-background via-background/60 to-transparent md:h-3/4 md:via-background/50" />
       <div className="pointer-events-none relative flex min-h-[100svh] flex-col justify-end px-5 pb-5 md:px-10 md:pb-8">
         <div className="flex items-end justify-between gap-4">
-          <h1 className="display text-[clamp(2.75rem,11vw,8rem)] leading-[0.92] text-paper">
+          <h1 className="display text-[clamp(3.5rem,15vw,8rem)] leading-[0.92] text-paper">
             {/* Each line rises out of its own mask, like a title card. */}
             <span className="line-mask">
               <span className="line-up" style={{ animationDelay: "0.2s" }}>{t("hero.l1")}</span>
@@ -86,8 +86,8 @@ function Work({ items, columns, mobileColumns, spotlight }: { items: WorkItem[];
   return (
     <section id="work" className="px-5 pb-20 pt-24 md:px-10 md:pb-32 md:pt-36">
       <div className="mb-10 grid gap-6 md:mb-16 md:grid-cols-12">
-        <h2 className="display text-3xl md:col-span-3 md:text-4xl"><span className="meta mb-2 block text-muted-foreground">01 —</span>{t("work.title")}</h2>
-        <p className="display text-4xl md:col-span-9 md:text-6xl">
+        <h2 className="display text-[2.4375rem] leading-none md:col-span-4 md:text-[3.8125rem]"><span className="meta mb-2 block text-muted-foreground">01 —</span>{t("work.title")}</h2>
+        <p className="display text-[1.9375rem] md:col-span-8 md:text-[3.0625rem]">
           {t("work.lead1")} <em className="text-muted-foreground">{t("work.lead2")}</em>
         </p>
       </div>
@@ -102,7 +102,7 @@ function DisciplineRow({ c, n }: { c: Category; n: string }) {
   const inner = (
     <>
       <span className="flex items-center gap-3 md:gap-5">
-        <span className="display text-4xl transition-transform duration-300 group-hover:translate-x-2 group-hover:italic md:text-6xl">
+        <span className="display text-[1.9375rem] transition-transform duration-300 group-hover:translate-x-2 group-hover:italic md:text-[3.0625rem]">
           {title}
         </span>
         {c.external && (
@@ -142,10 +142,10 @@ function Index_Disciplines() {
   return (
     <section id="disciplines" data-nav-light className="scroll-mt-0 overflow-x-clip bg-paper px-5 py-14 text-ink md:px-10 md:pb-20 md:pt-32">
       <div className="grid gap-10 md:grid-cols-12">
-        <h2 className="display text-3xl md:col-span-3 md:text-4xl"><span className="meta mb-2 block text-ink/45">02 —</span>{t("disciplines.title")}</h2>
+        <h2 className="display text-[2.4375rem] leading-none md:col-span-4 md:text-[3.8125rem]"><span className="meta mb-2 block text-ink/45">02 —</span>{t("disciplines.title")}</h2>
         {/* Rows slide in from the right, one after another. */}
         <motion.ol
-          className="md:col-span-9"
+          className="md:col-span-8"
           initial="hidden"
           whileInView="shown"
           viewport={{ once: true, amount: 0.25 }}
@@ -185,13 +185,13 @@ function About({ image }: { image: HomeImage }) {
         style={{ objectPosition: image.pos ?? "50% 50%" }}
       />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-background/95 via-background/45 to-background/50" />
-      <h2 className="display text-3xl text-paper md:text-4xl"><span className="meta mb-2 block text-paper/55">03 —</span>{t("about.title")}</h2>
+      <h2 className="display text-[2.4375rem] leading-none text-paper md:text-[3.8125rem]"><span className="meta mb-2 block text-paper/55">03 —</span>{t("about.title")}</h2>
       <div className="grid gap-8 md:grid-cols-[1fr_minmax(0,34rem)] md:items-end md:gap-16">
         <div>
-          <p className="display text-4xl text-paper md:text-6xl">Gor Arsakjan.</p>
+          <p className="display text-[1.9375rem] text-paper md:text-[3.0625rem]">Gor Arsakjan.</p>
           <p className="meta mt-5 text-paper/75">{t("about.role")}</p>
         </div>
-        <div className="max-w-md space-y-4 md:max-w-[34rem] text-[0.9375rem] leading-relaxed text-paper/85 md:text-base">
+        <div className="max-w-md space-y-4 md:max-w-[34rem] text-base leading-relaxed text-paper/85 md:text-[1.0625rem]">
           <p>{t("about.p1")}</p>
           <p className="text-paper/65">{t("about.p2")}</p>
         </div>

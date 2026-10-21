@@ -146,7 +146,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
                 key={x.slug}
                 onClick={() => pick(x.slug)}
                 aria-pressed={x.slug === cat}
-                className={`link-u meta mx-3 shrink-0 py-1.5 text-[0.625rem] first:ml-0 ${x.slug === cat ? "link-on text-paper" : "text-paper/55 hover:text-paper"}`}
+                className={`link-u meta mx-3 shrink-0 py-1.5 text-[0.6875rem] first:ml-0 ${x.slug === cat ? "link-on text-paper" : "text-paper/55 hover:text-paper"}`}
               >
                 {catTitle(x.slug, x.title)}
               </button>
@@ -177,7 +177,7 @@ function Overlay({ initial, onClose }: { initial: string; onClose: () => void })
           <AnimatePresence>
             {!scrolled && guide && !isVideo && (sessions?.length ?? 0) > 1 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-4">
-                <span className="meta text-[0.625rem] tracking-[0.28em] text-paper/60">{t("pf.scroll")}</span>
+                <span className="meta text-[0.6875rem] tracking-[0.28em] text-paper/60">{t("pf.scroll")}</span>
               </motion.div>
             )}
           </AnimatePresence>

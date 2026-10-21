@@ -68,7 +68,7 @@ export function SiteNav() {
           </Link>
           <DockMenu light={light} pathname={pathname} />
           <div className="flex items-center gap-4 md:hidden">
-          <LangSwitch className="whitespace-nowrap text-[0.625rem]" />
+          <LangSwitch className="whitespace-nowrap text-[0.6875rem]" />
           <button
             type="button"
             onClick={() => setMenu((m) => !m)}

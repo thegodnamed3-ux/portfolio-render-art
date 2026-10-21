@@ -73,11 +73,9 @@ export function SiteNav() {
             aria-expanded={menu}
             aria-controls="mobile-menu"
             aria-label={menu ? t("nav.closeMenu") : t("nav.openMenu")}
-            // Same as desktop: the word Menu. / Close. on a soft shade, no frame.
+            // Same as desktop: the word Menu. / Close. no frame, no shade.
             className="hit relative isolate inline-grid shrink-0 place-items-end self-center px-1 py-1.5 text-[0.6875rem] md:hidden"
           >
-            <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(0_0_0/0.5),transparent)] transition-opacity duration-700 ${light || menu ? "opacity-0" : "opacity-100"}`} />
-            <span aria-hidden className={`pointer-events-none absolute -inset-x-5 -inset-y-2.5 -z-10 bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
           </button>
@@ -115,7 +113,7 @@ export function SiteNav() {
 /**
  * Desktop menu. On the first screen of the homepage the items stand in a column on the right and
  * fade in one by one. Scrolling down (or pressing "—") flows them into one round glass button; the
- * button opens the same column again, every item on its own soft radial shade so it reads on any photo.
+ * button opens the same column again, items without any shade behind them.
  */
 function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
   const { t } = useI18n();
@@ -150,9 +148,6 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
 
   const resting = home && atTop && !tucked; // the big column on the first screen
   const shown = resting || open;
-  const shade = light
-    ? "bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)]"
-    : "bg-[radial-gradient(closest-side,rgb(0_0_0/0.55),transparent)]";
   const ease = [0.2, 0.8, 0.2, 1] as const;
   const close = () => { setOpen(false); if (resting) setTucked(true); };
 
@@ -160,7 +155,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
     const cls = "link-u relative inline-block py-1.5";
     const label = (
       <>
-        <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 ${shade}`} />
+        
         {t(l.key)}
       </>
     );
@@ -182,15 +177,13 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             aria-label={open ? t("nav.closeMenu") : t("nav.openMenu")}
             // The button never swaps classes: glass and solid-ink layers (and their shades) cross-fade
             // slowly, and the lines stay paper-coloured, so passing a light band is a soft fade, not a blink.
-            // No frame: just the word, on a soft radial shade so it reads over photos and paper alike.
+            // No frame: just the word, no shade.
             className={`hit relative isolate inline-grid place-items-end px-1 py-2 text-[0.75rem] transition-colors duration-700 hover:opacity-60 ${light ? "text-ink" : "text-paper"}`}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : 0.18, ease }}
           >
-            <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 bg-[radial-gradient(closest-side,rgb(0_0_0/0.55),transparent)] transition-opacity duration-700 ${light ? "opacity-0" : "opacity-100"}`} />
-            <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 bg-[radial-gradient(closest-side,rgb(241_239_234/0.9),transparent)] transition-opacity duration-700 ${light ? "opacity-100" : "opacity-0"}`} />
             {/* Both words share one cell, so swapping Menu ↔ Close never shifts the layout. */}
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
@@ -230,7 +223,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
               variants={{ shown: { opacity: 1, y: 0 }, tucked: { opacity: 0, y: -60 } }}
               transition={{ duration: reduce ? 0 : 0.5, ease }}
             >
-              <span aria-hidden className={`pointer-events-none absolute -inset-x-7 -inset-y-3 -z-10 ${shade}`} />
+              
               <LangSwitch className="whitespace-nowrap px-1 py-1.5" />
             </motion.li>
             {resting && (

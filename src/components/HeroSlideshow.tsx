@@ -40,12 +40,30 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
 
   const go = useCallback((d: number) => { setManual(true); setI((v) => (v + d + n) % n); setTick((t) => t + 1); }, [n]);
 
+  // Swipe left/right anywhere on the hero to change the photo (vertical moves still scroll the page).
+  const layer = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const host = layer.current?.parentElement;
+    if (!host || n < 2) return;
+    let x0 = 0, y0 = 0, on = false;
+    const start = (e: TouchEvent) => { if (e.touches.length !== 1) { on = false; return; } on = true; x0 = e.touches[0]!.clientX; y0 = e.touches[0]!.clientY; };
+    const end = (e: TouchEvent) => {
+      if (!on) return; on = false;
+      const t = e.changedTouches[0]; if (!t) return;
+      const dx = t.clientX - x0, dy = t.clientY - y0;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) go(dx < 0 ? 1 : -1);
+    };
+    host.addEventListener("touchstart", start, { passive: true });
+    host.addEventListener("touchend", end, { passive: true });
+    return () => { host.removeEventListener("touchstart", start); host.removeEventListener("touchend", end); };
+  }, [go, n]);
+
   // Arrows go into the page's own slot when one is given (portal), else sit where styled.
   const wrap = (node: React.ReactNode) => (controlsContainer ? createPortal(node, controlsContainer) : node);
 
   return (
     <>
-      <div className="absolute inset-0" aria-hidden>
+      <div ref={layer} className="absolute inset-0" aria-hidden>
         {slides.map((s, k) => {
           const near = k === i || (warm && k === (i + 1) % n);
           return (

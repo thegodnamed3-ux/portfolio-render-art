@@ -65,8 +65,8 @@ const D = {
 
   // Sections
   "work.title": { en: "Selected works.", et: "Valitud tööd.", ru: "Избранные работы." },
-  "work.lead1": { en: "Portraits by the sea, in studios,", et: "Portreed mere ääres, stuudios", ru: "Портреты у моря, в студии" },
-  "work.lead2": { en: "and in between.", et: "ja kõikjal vahepeal.", ru: "и везде между ними." },
+  "work.lead1": { en: "Faces, stories and products —", et: "Näod, lood ja tooted —", ru: "Лица, истории и вещи —" },
+  "work.lead2": { en: "in light worth keeping.", et: "valguses, mida tasub hoida.", ru: "в свете, который хочется сохранить." },
   "disciplines.title": { en: "Disciplines.", et: "Suunad.", ru: "Направления." },
   "about.title": { en: "About.", et: "Minust.", ru: "Обо мне." },
   "about.role": { en: "Photographer & visual artist · Tallinn", et: "Fotograaf ja visuaalkunstnik · Tallinn", ru: "Фотограф и визуальный художник · Таллин" },

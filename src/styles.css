@@ -353,13 +353,10 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
 
 /* Social panel (Telegram, WhatsApp, Instagram, Behance): a horizontal liquid-glass capsule, bottom right.
    Smoky tint so it reads on both the dark pages and the paper bands; floats in, icons sink on press. */
+/* No frame: the icons float on the photo, flush with the page edge. */
 .social-rail {
   position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(0px, env(safe-area-inset-bottom)); z-index: 40;
   display: flex; flex-direction: row; gap: 2px; padding: 3px; border-radius: 999px;
-  background: color-mix(in oklab, var(--ink) 34%, transparent);
-  backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%);
-  border: 1px solid color-mix(in oklab, var(--paper) 18%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--paper) 24%, transparent), 0 10px 30px -12px oklch(0 0 0 / 45%);
   color: var(--paper);
   pointer-events: none;
   clip-path: inset(0 0 0 100% round 999px);

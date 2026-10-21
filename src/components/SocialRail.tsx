@@ -23,6 +23,8 @@ export function SocialRail() {
   // On the homepage the panel lines up with the "Tallinn, Estonia" line of the hero.
   const navRef = useRef<HTMLElement | null>(null);
   const [bottom, setBottom] = useState<number | null>(null);
+  // Over the light (paper) bands — the contact block — the icons turn dark, like the header does.
+  const [onLight, setOnLight] = useState(false);
   const [state, setState] = useState<"pre" | "in" | "out">("pre");
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -54,6 +56,11 @@ export function SocialRail() {
         const centre = r.top + window.scrollY + r.height / 2;
         setBottom(Math.max(0, Math.round(vh - centre - nav.offsetHeight / 2)));
       } else setBottom(null);
+      if (nav) {
+        const b = nav.getBoundingClientRect();
+        const under = document.elementsFromPoint(b.left + b.width / 2, b.top + b.height / 2).find((el) => !nav.contains(el));
+        setOnLight(!!under?.closest("[data-nav-light]"));
+      }
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
     const start = window.setTimeout(check, 450);
@@ -70,7 +77,7 @@ export function SocialRail() {
   ].filter((l): l is typeof l & { href: string } => !!l.href);
   if (!links.length) return null;
   return (
-    <nav ref={navRef} aria-label="Social" className="social-rail" style={bottom !== null ? { bottom } : undefined} data-state={state} aria-hidden={!shown}>
+    <nav ref={navRef} aria-label="Social" className="social-rail" data-tone={onLight ? "ink" : undefined} style={bottom !== null ? { bottom } : undefined} data-state={state} aria-hidden={!shown}>
       {links.map(({ href, label, Icon }, i) => (
         <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} tabIndex={shown ? 0 : -1} style={{ "--r": links.length - 1 - i } as CSSProperties}>
           <Icon className="size-[17px]" />

@@ -387,3 +387,7 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
   .social-rail a { width: 36px; height: 36px; }
 }
 @media (prefers-reduced-motion: reduce) { .social-rail, .social-rail a { transition: none !important; } }
+/* Social panel over the paper bands (contacts): dark icons. */
+.social-rail[data-tone="ink"] { color: var(--ink); }
+.social-rail[data-tone="ink"][data-state="in"] a:hover { background: color-mix(in oklab, var(--ink) 8%, transparent); }
+.social-rail[data-tone="ink"] a:active { background: color-mix(in oklab, var(--ink) 12%, transparent); box-shadow: none; }

@@ -1,4 +1,5 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import { withLang } from "@/lib/seo";
 import { useEffect } from "react";
 import { VideoGallery } from "@/components/Gallery";
 import { CollapseIcon, GlassPage, ShootCard } from "@/components/ArchiveParts";
@@ -15,9 +16,9 @@ export const Route = createFileRoute("/gallery/$category")({
     const shoots = c.videos.length ? [] : await getArchiveShoots({ data: { category: c.slug } });
     return { slug: c.slug, shoots, total: shoots.reduce((n, s) => n + s.count, 0), cover: shoots[0]?.cover.sm ?? null };
   },
-  head: ({ loaderData }) => {
-    const c = loaderData ? getCategory(loaderData.slug) : undefined;
-    return { meta: [{ title: c ? `Archive · ${c.title} — thegodnamed` : "Archive — thegodnamed" }] };
+  head: (ctx) => {
+    const c = ctx.loaderData ? getCategory(ctx.loaderData.slug) : undefined;
+    return withLang(ctx, { meta: [{ title: c ? `Archive · ${c.title} — thegodnamed` : "Archive — thegodnamed" }] }, c ? { categorySlug: c.slug, categoryTitle: c.title, ...(ctx.loaderData?.cover ? { image: ctx.loaderData.cover } : {}) } : {});
   },
   component: Archive,
 });

@@ -1,4 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
+import { withLang } from "@/lib/seo";
 import { SessionGrid, VideoGallery } from "@/components/Gallery";
 import { useEffect } from "react";
 import { usePortfolio } from "@/components/PortfolioOverlay";
@@ -14,12 +15,13 @@ export const Route = createFileRoute("/$category")({
     const sessions = c.videos.length ? [] : await getPublishedSessions({ data: { category: c.slug } });
     return { slug: c.slug, sessions };
   },
-  head: ({ loaderData }) => {
+  head: (ctx) => {
+    const loaderData = ctx.loaderData;
     const c = loaderData ? getCategory(loaderData.slug) : undefined;
     if (!c) return { meta: [{ title: "Not found — thegodnamed" }, { name: "robots", content: "noindex" }] };
     const title = `${c.title} — thegodnamed`;
     const image = loaderData?.sessions[0]?.cover.src ?? (c.videos[0] ? `https://i.ytimg.com/vi/${c.videos[0].id}/hqdefault.jpg` : undefined);
-    return {
+    return withLang(ctx, {
       meta: [
         { title },
         { name: "description", content: c.description },
@@ -29,7 +31,7 @@ export const Route = createFileRoute("/$category")({
         { name: "twitter:card", content: "summary_large_image" },
         ...(image ? [{ property: "og:image", content: image }, { name: "twitter:image", content: image }] : []),
       ],
-    };
+    }, { categorySlug: c.slug, categoryTitle: c.title });
   },
   component: CategoryPage,
 });

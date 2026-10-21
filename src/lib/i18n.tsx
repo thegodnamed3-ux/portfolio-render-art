@@ -225,6 +225,19 @@ export function I18nProvider({ initial, children }: { initial: Lang; children: R
 }
 
 /** Category title in the current language (falls back to the content title). */
+/** A dictionary entry by key, outside React (page titles for Google). */
+export function translateKey(lang: Lang, key: string, fallback: string) {
+  const row = (D as Record<string, Entry>)[key];
+  return row?.[lang] ?? fallback;
+}
+
+/** Language plus the site's own address (for links that tell Google about the other languages). */
+export const getSiteInfo = createServerFn({ method: "GET" }).handler(async (): Promise<{ lang: Lang; origin: string }> => {
+  let origin = "";
+  try { const { getRequest } = await import("@tanstack/react-start/server"); origin = new URL(getRequest().url).origin; } catch { /* static */ }
+  return { lang: await getLang(), origin };
+});
+
 export function useCategoryTitle() {
   const { t } = useI18n();
   return (slug: string, fallback: string) => {

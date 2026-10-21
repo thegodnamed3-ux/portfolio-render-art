@@ -1,4 +1,5 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import { withLang } from "@/lib/seo";
 import { useEffect } from "react";
 import { CollapseIcon, GlassPage, PhotoTile } from "@/components/ArchiveParts";
 import { originOf, useLightbox } from "@/components/Lightbox";
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/gallery/$category_/$shoot")({
     if (!s || s.category !== c.slug) throw notFound();
     return { slug: c.slug, shoot: { id: s.id, title: s.title, photos: s.images, cover: s.cover.sm } };
   },
-  head: ({ loaderData }) => ({ meta: [{ title: loaderData ? `${loaderData.shoot.title} — thegodnamed` : "thegodnamed" }] }),
+  head: (ctx) => withLang(ctx, { meta: [{ title: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }, { property: "og:title", content: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }] }, ctx.loaderData?.shoot.cover?.src ? { image: ctx.loaderData.shoot.cover.src } : {}),
   component: Shoot,
 });
 

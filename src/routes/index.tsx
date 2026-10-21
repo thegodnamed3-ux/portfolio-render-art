@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { withLang } from "@/lib/seo";
 import { motion, useReducedMotion } from "framer-motion";
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
@@ -21,7 +22,7 @@ import { useCategoryTitle, useI18n } from "@/lib/i18n";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 
 export const Route = createFileRoute("/")({
-  head: ({ loaderData }) => ({
+  head: (ctx) => { const loaderData = ctx.loaderData; return withLang(ctx, {
     meta: [
       { title: "thegodnamed — Photography & film in Tallinn" },
       { name: "description", content: "Photography, film & visual storytelling. Made in Tallinn." },
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/")({
     ],
     // Start fetching the first hero frame before the bundle runs.
     links: [{ rel: "preload", as: "image", href: (loaderData?.hero ?? defaultHero)[0]?.src ?? photos[10]!.src, fetchPriority: "high" } as never],
-  }),
+  }); },
   loader: () => getHomeMedia(),
   component: Index,
 });

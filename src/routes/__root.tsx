@@ -12,7 +12,7 @@ import {
 import { useEffect, useRef, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { trackView } from "../lib/analytics.functions";
-import { I18nProvider, getLang, useI18n } from "../lib/i18n";
+import { I18nProvider, getSiteInfo, useI18n } from "../lib/i18n";
 
 import { LightboxProvider } from "../components/Lightbox";
 import { PortfolioProvider } from "../components/PortfolioOverlay";
@@ -93,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
-  loader: () => getLang(),
+  loader: () => getSiteInfo(),
   staleTime: Infinity,
   shellComponent: RootShell,
   component: RootComponent,
@@ -103,7 +103,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={(useRouterState({ select: (st) => (st.matches[0]?.loaderData as { lang?: string } | undefined)?.lang }) ?? "en")}>
       <head>
         <HeadContent />
         {/* Without scripts, photos that wait to fade in must still show. */}
@@ -127,7 +127,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const lang = Route.useLoaderData() ?? "en";
+  const lang = Route.useLoaderData()?.lang ?? "en";
   // Tells the safety-net script in <head> that scripts are running and animations are in charge.
   useEffect(() => { document.documentElement.dataset.hydrated = "1"; }, []);
 

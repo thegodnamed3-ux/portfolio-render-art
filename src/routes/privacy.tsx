@@ -1,15 +1,16 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { withLang } from "@/lib/seo";
 import type { ReactNode } from "react";
 import { contact } from "@/content/contact";
 import { LangSwitch, useI18n, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({
+  head: (ctx) => withLang(ctx, {
     meta: [
       { title: "Privacy policy — thegodnamed" },
       { name: "description", content: "How thegodnamed (Gor Arsakjan, Tallinn) handles personal data." },
     ],
-  }),
+    }),
   component: PrivacyPage,
 });
 

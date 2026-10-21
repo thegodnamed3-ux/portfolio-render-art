@@ -20,6 +20,9 @@ export function SocialRail() {
   // Shown on the first screen and on the last one (contacts). Leaving either end it wipes away from
   // the top down; arriving it opens out to the left. "pre" = hidden, ready to draw in again.
   const [shown, setShown] = useState(false);
+  // On the homepage the panel lines up with the "Tallinn, Estonia" line of the hero.
+  const navRef = useRef<HTMLElement | null>(null);
+  const [bottom, setBottom] = useState<number | null>(null);
   const [state, setState] = useState<"pre" | "in" | "out">("pre");
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -42,8 +45,15 @@ export function SocialRail() {
       frame = 0;
       const vh = window.innerHeight;
       const top = window.scrollY < vh * 0.12;
-      const bottom = document.documentElement.scrollHeight - (window.scrollY + vh) < vh * 0.35;
-      setShown(top || bottom);
+      const atEnd = document.documentElement.scrollHeight - (window.scrollY + vh) < vh * 0.35;
+      setShown(top || atEnd);
+      const anchor = document.querySelector("[data-rail-anchor]");
+      const nav = navRef.current;
+      if (anchor && nav) {
+        const r = anchor.getBoundingClientRect();
+        const centre = r.top + window.scrollY + r.height / 2;
+        setBottom(Math.max(0, Math.round(vh - centre - nav.offsetHeight / 2)));
+      } else setBottom(null);
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
     const start = window.setTimeout(check, 450);
@@ -60,7 +70,7 @@ export function SocialRail() {
   ].filter((l): l is typeof l & { href: string } => !!l.href);
   if (!links.length) return null;
   return (
-    <nav aria-label="Social" className="social-rail" data-state={state} aria-hidden={!shown}>
+    <nav ref={navRef} aria-label="Social" className="social-rail" style={bottom !== null ? { bottom } : undefined} data-state={state} aria-hidden={!shown}>
       {links.map(({ href, label, Icon }, i) => (
         <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} tabIndex={shown ? 0 : -1} style={{ "--r": links.length - 1 - i } as CSSProperties}>
           <Icon className="size-[17px]" />

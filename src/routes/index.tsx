@@ -69,7 +69,7 @@ function Hero({ slides }: { slides: HomeImage[] }) {
         </div>
         {/* Place on the left, tagline in the middle (desktop); the social panel takes the right end. */}
         <div className="meta mt-5 flex items-center justify-between gap-4 border-t border-paper/25 pt-4 leading-none text-paper/70 md:mt-8">
-          <span className="leading-none">{t("hero.place")}</span>
+          <span data-rail-anchor className="leading-none">{t("hero.place")}</span>
           <span className="hidden leading-none md:inline">{t("hero.tag")}</span>
           {/* Right end is left free: the social panel (fixed, bottom right) sits here on the first screen. */}
           <span aria-hidden className="w-36 md:w-44" />

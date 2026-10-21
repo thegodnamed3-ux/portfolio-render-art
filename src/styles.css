@@ -354,7 +354,7 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
 /* Social panel (Telegram, WhatsApp, Instagram, Behance): a horizontal liquid-glass capsule, bottom right.
    Smoky tint so it reads on both the dark pages and the paper bands; floats in, icons sink on press. */
 .social-rail {
-  position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(5px, env(safe-area-inset-bottom)); z-index: 40;
+  position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(0px, env(safe-area-inset-bottom)); z-index: 40;
   display: flex; flex-direction: row; gap: 2px; padding: 3px; border-radius: 999px;
   background: color-mix(in oklab, var(--ink) 34%, transparent);
   backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%);
@@ -386,7 +386,7 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
   box-shadow: inset 0 2px 6px oklch(0 0 0 / 35%);
 }
 @media (min-width: 768px) {
-  .social-rail { right: max(40px, env(safe-area-inset-right)); bottom: 15px; padding: 4px; }
+  .social-rail { right: max(40px, env(safe-area-inset-right)); bottom: 9px; padding: 4px; }
   .social-rail a { width: 36px; height: 36px; }
 }
 @media (prefers-reduced-motion: reduce) { .social-rail, .social-rail a { transition: none !important; } }

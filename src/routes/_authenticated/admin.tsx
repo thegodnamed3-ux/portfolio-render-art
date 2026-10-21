@@ -29,6 +29,7 @@ import { makeThumb } from "@/lib/thumbs";
 import { enqueueUploads, onUploadsFinished, uploadWithProgress, useUploads } from "@/lib/upload-queue";
 import { UploadDock } from "@/components/admin/UploadDock";
 import { ReviewsTab } from "@/components/admin/ReviewsTab";
+import { RequestsTab, useNewRequests } from "@/components/admin/RequestsTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -170,7 +171,7 @@ function Shell({ children, onSignOut }: { children: ReactNode; onSignOut: () => 
   );
 }
 
-type Tab = "shoots" | "library" | "home" | "review" | "clients" | "reviews" | "analytics" | "settings";
+type Tab = "shoots" | "library" | "home" | "review" | "requests" | "clients" | "reviews" | "analytics" | "settings";
 const NAV: { group: string; items: { id: Tab; label: string; hint: string; Icon: LucideIcon }[] }[] = [
   {
     group: "Website",
@@ -184,6 +185,7 @@ const NAV: { group: string; items: { id: Tab; label: string; hint: string; Icon:
   {
     group: "Clients",
     items: [
+      { id: "requests", label: "Requests", hint: "Booking requests from the website — stage, shoot date, notes.", Icon: Inbox },
       { id: "clients", label: "Client delivery", hint: "Private galleries: upload, share the link, see picks and activity.", Icon: Send },
       { id: "reviews", label: "Reviews", hint: "Approve, edit or hide what clients wrote.", Icon: MessageSquareQuote },
     ],
@@ -217,6 +219,7 @@ function Studio() {
   const [cat, setCat] = useState(photoCats[0]!.slug);
   const [selected, setSelected] = useState<string | null>(null);
   const pendingReviews = usePendingReviews();
+  const newRequests = useNewRequests();
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "portfolio"] });
 
   // Remember the open section between visits.
@@ -241,6 +244,7 @@ function Studio() {
   const hasImport = media.some((m) => m.origin_category);
   const badges: Partial<Record<Tab, number>> = {
     reviews: pendingReviews.data ?? 0,
+    requests: newRequests.data ?? 0,
     review: shoots.filter((s) => s.import_batch && (s.review_status ?? "pending") === "pending").length,
   };
   const current = ALL_TABS.find((t) => t.id === tab)!;
@@ -306,6 +310,8 @@ function Studio() {
           <WhatsAppSetting />
         ) : tab === "analytics" ? (
           <AnalyticsTab />
+        ) : tab === "requests" ? (
+          <RequestsTab />
         ) : tab === "clients" ? (
           <DeliveriesTab />
         ) : tab === "reviews" ? (

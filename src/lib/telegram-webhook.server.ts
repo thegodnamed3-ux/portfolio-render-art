@@ -46,6 +46,24 @@ export async function handleTelegramUpdate(request: Request): Promise<Response> 
     return ok();
   }
 
+  // Booking request: move it along (Talking / Shoot booked / Closed).
+  const bk = /^bk:([tbc]):([0-9a-f-]{36})$/.exec(String(cb.data ?? ""));
+  if (bk) {
+    const stage = ({ t: ["in progress", "Talking"], b: ["booked", "Shoot booked"], c: ["closed", "Closed"] } as const)[bk[1] as "t" | "b" | "c"];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { esc } = await import("@/lib/telegram.server");
+    const { data: q } = await (supabaseAdmin as any).from("booking_requests").update({ status: stage[0] }).eq("id", bk[2]).select("id, name, contact, shoot_type, wished_date, message").maybeSingle();
+    if (!q) { await tgApi("answerCallbackQuery", { callback_query_id: cb.id, text: "Request not found", show_alert: true }); return ok(); }
+    await tgApi("answerCallbackQuery", { callback_query_id: cb.id, text: stage[1] });
+    const rest = (["t", "b", "c"] as const).filter((k) => k !== bk[1]).map((k) => ({ text: ({ t: "Talking", b: "Shoot booked", c: "Closed" })[k], callback_data: `bk:${k}:${q.id}` }));
+    await tgApi("editMessageText", {
+      chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML", link_preview_options: { is_disabled: true },
+      text: withSite([`<b>Booking request</b> · ${esc(stage[1])}`, "", `<b>${esc(q.name)}</b>`, esc(q.contact), `${esc(q.shoot_type)}${q.wished_date ? ` · ${esc(q.wished_date)}` : ""}`, q.message ? `\n<blockquote>${esc(q.message)}</blockquote>` : null].filter((l) => l !== null).join("\n")),
+      reply_markup: { inline_keyboard: [rest, [{ text: "Open studio", url: `${new URL(request.url).origin}/admin` }]] },
+    });
+    return ok();
+  }
+
   const m = /^rv:([ph]):([0-9a-f-]{36})$/.exec(String(cb.data ?? ""));
   if (!m) {
     await tgApi("answerCallbackQuery", { callback_query_id: cb.id });

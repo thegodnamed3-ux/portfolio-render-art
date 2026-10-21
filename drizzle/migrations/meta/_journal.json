@@ -190,6 +190,13 @@
       "when": 1792422000000,
       "tag": "0026_photoshoot_location_year",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1792586000000,
+      "tag": "0027_booking_requests",
+      "breakpoints": true
     }
   ]
 }

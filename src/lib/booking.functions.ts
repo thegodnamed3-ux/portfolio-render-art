@@ -21,6 +21,13 @@ export const submitBooking = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     if (data.bot) return { ok: true };
+    // Keep the request in the studio (Requests tab); before migration 0027 this quietly does nothing.
+    let id: string | null = null;
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const r = await (supabaseAdmin as any).from("booking_requests").insert({ name: data.name, contact: data.contact, shoot_type: data.type, wished_date: data.date || null, message: data.message || null }).select("id").single();
+      if (!r.error) id = r.data.id;
+    } catch { /* table not created yet */ }
     const { sendTelegram, esc, replyButton, siteOrigin } = await import("@/lib/telegram.server");
     const html = [
       "<b>New booking request</b>",
@@ -32,8 +39,10 @@ export const submitBooking = createServerFn({ method: "POST" })
     ].filter((l) => l !== null).join("\n");
     const origin = await siteOrigin();
     const reply = replyButton(data.contact);
-    const ok = await sendTelegram(html, [...(reply ? [reply] : []), ...(origin ? [{ text: "Open website", url: origin }] : [])]);
-    if (!ok) {
+    // Stage buttons (Talking / Shoot booked / Closed) when the request was saved.
+    const stages = id ? [[{ text: "Talking", callback_data: `bk:t:${id}` }, { text: "Shoot booked", callback_data: `bk:b:${id}` }, { text: "Closed", callback_data: `bk:c:${id}` }]] : [];
+    const ok = await sendTelegram(html, [], [...stages, [...(reply ? [reply] : []), ...(origin ? [{ text: "Open studio", url: `${origin}/admin` }] : [])]]);
+    if (!ok && !id) {
       throw new Error("Could not send the request — please message me on Telegram or WhatsApp.");
     }
     return { ok: true };

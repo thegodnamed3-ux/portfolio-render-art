@@ -362,10 +362,10 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--paper) 24%, transparent), 0 10px 30px -12px oklch(0 0 0 / 45%);
   color: var(--paper);
   translate: 0 -50%;
-  opacity: 0; transform: translateY(-36px); pointer-events: none;
-  transition: opacity .55s ease, transform .9s cubic-bezier(.16,.84,.24,1);
+  opacity: 0; pointer-events: none; visibility: hidden;
+  transition: opacity .6s ease, visibility 0s linear .6s;
 }
-.social-rail[data-shown] { opacity: 1; transform: none; pointer-events: auto; }
+.social-rail[data-shown] { opacity: 1; pointer-events: auto; visibility: visible; transition: opacity .6s ease, visibility 0s; }
 .social-rail a {
   display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px;
   color: inherit; opacity: .85;

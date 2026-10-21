@@ -11,14 +11,14 @@ const HIDDEN = /^\/(admin|auth|g\/)/;
 
 /**
  * Liquid-glass rail fixed to the right edge on every public page: Telegram, WhatsApp, Instagram,
- * Behance. Visible on the first and last screens, sliding up out of view in between; each icon sinks in when pressed.
+ * Behance. Visible on the first and last screens, fading out in between; each icon sinks in when pressed.
  */
 export function SocialRail() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const fetchSettings = useServerFn(getSiteSettings);
   const { data } = useQuery({ queryKey: ["site-settings"], queryFn: () => fetchSettings(), staleTime: 300_000 });
-  // Shown on the first screen and on the last one (contacts); in between it slides up out of view,
-  // and comes back down from the top when the visitor reaches either end.
+  // Shown on the first screen and on the last one (contacts); in between it fades out,
+  // and fades back in when the visitor reaches either end.
   const [shown, setShown] = useState(false);
   useEffect(() => {
     let frame = 0;

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { HomeImage } from "@/lib/portfolio.functions";
 import { cn } from "@/lib/utils";
 import { LongArrow } from "@/components/LongArrow";
+import { useI18n } from "@/lib/i18n";
 
 const INTERVAL = 5500;
 
@@ -88,7 +89,8 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
         // Frameless: two drawn arrows side by side on one soft rectangular shade; the left one starts
         // where the "Scroll ↓" label below starts (the page sets the container's width).
         <div
-          className={cn("relative flex w-full items-center gap-5", controlsClassName)}
+          // Phones get a short swipe lesson in this spot instead of arrows; desktop keeps the arrows.
+          className={cn("relative flex w-full items-center gap-5 max-md:hidden", controlsClassName)}
           onPointerEnter={() => setPaused(true)}
           onPointerLeave={() => setPaused(false)}
           onFocus={() => setPaused(true)}
@@ -109,7 +111,29 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
           ))}
         </div>
       )}
+      {n > 1 && controlsContainer && createPortal(<SwipeHint />, controlsContainer)}
     </>
+  );
+}
+
+/** Phones: a fingertip glides right-to-left a few times ("Swipe"), then the hint fades away for good this visit. */
+function SwipeHint() {
+  const { t } = useI18n();
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    let seen = false;
+    try { seen = sessionStorage.getItem("swipe-hint") === "1"; sessionStorage.setItem("swipe-hint", "1"); } catch { /* private mode */ }
+    if (seen || window.matchMedia("(min-width: 768px)").matches) return;
+    setShow(true);
+    const tm = setTimeout(() => setShow(false), 4300);
+    return () => clearTimeout(tm);
+  }, []);
+  if (!show) return null;
+  return (
+    <div aria-hidden className="swipe-hint md:hidden">
+      <span className="swipe-hint-track"><span className="swipe-hint-dot" /></span>
+      <span className="meta text-[0.5625rem] text-paper/75">{t("hero.swipe")}</span>
+    </div>
   );
 }
 

@@ -59,6 +59,7 @@ const D = {
   "hero.place": { en: "Tallinn, Estonia", et: "Tallinn, Eesti", ru: "Таллин, Эстония" },
   "hero.tag": { en: "Photography · Visuals", et: "Fotograafia · Visuaalid", ru: "Фотография · Визуал" },
   "hero.scroll": { en: "Scroll", et: "Keri", ru: "Вниз" },
+  "hero.swipe": { en: "Swipe", et: "Libista", ru: "Листайте" },
   "hero.prev": { en: "Previous photograph", et: "Eelmine foto", ru: "Предыдущее фото" },
   "hero.next": { en: "Next photograph", et: "Järgmine foto", ru: "Следующее фото" },
 

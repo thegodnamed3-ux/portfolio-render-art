@@ -50,10 +50,21 @@ function AuthPage() {
 
   const social = async (provider: "google" | "apple") => {
     setBusy(true); setMsg(null);
-    const r = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/auth` });
-    setBusy(false);
-    if (r.error) setMsg(r.error.message || "Sign-in could not be completed.");
-    else if (!r.redirected) navigate({ to: "/admin", replace: true });
+    const name = provider === "google" ? "Google" : "Apple";
+    try {
+      const r = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/auth` });
+      if (r.redirected) return; // the page is leaving for the provider
+      if (r.error) { console.error("OAuth", provider, r.error); setMsg(`${name}: ${r.error.message || "sign-in could not be completed."}`); return; }
+      // The window closed without an error: check that a session really arrived before going on.
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) { setMsg(`${name}: the sign-in window closed before signing in finished. Allow pop-ups for this site and try again, or sign in with email.`); return; }
+      navigate({ to: "/admin", replace: true });
+    } catch (e) {
+      console.error("OAuth", provider, e);
+      setMsg(`${name}: ${(e as Error)?.message || "sign-in could not be completed."}`);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const submit = async (e: FormEvent) => {

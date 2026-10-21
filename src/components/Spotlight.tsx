@@ -30,6 +30,7 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
   const [i, setI] = useState(0);
   const n = items.length;
   const cur = items[i % n]!;
+  const hasCaptions = items.some((x) => x.caption?.trim());
   const go = (d: number) => setI((v) => (v + d + n) % n);
 
   // Warm the next frame so arrows never wait — but only after the visitor starts browsing,
@@ -81,13 +82,13 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
       </div>
 
       {n > 1 && (
-        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-10 gap-y-4 border-t border-paper/10 pt-5 lg:grid-cols-[auto_minmax(0,14rem)_minmax(0,1fr)]">
+        <div className={cn("grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-6 gap-y-4 border-t border-paper/10 pt-5", hasCaptions ? "lg:grid-cols-[auto_minmax(0,11rem)_minmax(0,1fr)]" : "lg:grid-cols-[auto_minmax(0,1fr)]")}>
           <div className="flex items-center gap-5 text-paper/70">
             <button type="button" onClick={() => go(-1)} aria-label={t("sp.prev")} className="hit flex w-10 items-center py-2 transition-colors hover:text-paper"><LongArrow left /></button>
             <p className="display min-w-[5.5rem] text-center text-2xl italic leading-none tabular-nums text-paper">{pad(i + 1)}<span className="text-paper/40"> / {pad(n)}</span></p>
             <button type="button" onClick={() => go(1)} aria-label={t("sp.next")} className="hit flex w-10 items-center py-2 transition-colors hover:text-paper"><LongArrow left={false} /></button>
           </div>
-          <AnimatePresence mode="wait" initial={false}>
+          {hasCaptions && <AnimatePresence mode="wait" initial={false}>
             <motion.p
               key={i}
               className="display truncate text-xl leading-tight text-paper/85"
@@ -98,8 +99,9 @@ function Desk({ items, className }: { items: WorkItem[]; className: string }) {
             >
               {cur.caption || "\u00a0"}
             </motion.p>
-          </AnimatePresence>
-          <div ref={strip} className="relative col-span-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:col-span-1 [&::-webkit-scrollbar]:hidden">
+          </AnimatePresence>}
+          {/* Film strip with soft fades at both ends; it stops short of the page edge. */}
+          <div ref={strip} className={cn("relative flex gap-2 overflow-x-auto px-10 py-1 [mask-image:linear-gradient(to_right,transparent,black_2.5rem,black_calc(100%-4rem),transparent)] [scrollbar-width:none] lg:mr-[4%] [&::-webkit-scrollbar]:hidden", hasCaptions ? "col-span-2 lg:col-span-1" : "col-span-2 md:col-span-1")}>
             {items.map((it, k) => (
               <button
                 key={it.src + k}

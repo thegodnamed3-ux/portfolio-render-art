@@ -106,7 +106,8 @@ export const migrateWfolioSettings = createServerFn({ method: "POST" })
 
     const hero = (Array.isArray(s?.hero_slides) && s.hero_slides.length ? s.hero_slides : defaultHero) as { src: string }[];
     const about = (s?.about_image && typeof s.about_image === "object" ? s.about_image : defaultAbout) as { src: string };
-    const work = (Array.isArray(s?.featured_work) && s.featured_work.length ? s.featured_work : defaultWork) as { src: string }[];
+    // An empty saved list means "no grid on the homepage" — keep it empty, never refill it with the defaults.
+    const work = (Array.isArray(s?.featured_work) ? s.featured_work : defaultWork) as { src: string }[];
 
     const cache = new Map<string, string>();
     let n = 0;

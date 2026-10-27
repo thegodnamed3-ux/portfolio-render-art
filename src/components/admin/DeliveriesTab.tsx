@@ -618,7 +618,7 @@ function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
       <div className="flex flex-wrap gap-2">
         <button className={btnPrimary} onClick={copy}>Copy message</button>
         <a className={btn} href={`https://wa.me/?text=${encodeURIComponent(value)}`} target="_blank" rel="noopener noreferrer">Send in WhatsApp</a>
-        <a className={btn} href={`https://t.me/share/url?url=${encodeURIComponent(`${link}?lang=${lang}`)}&text=${encodeURIComponent(value)}`} target="_blank" rel="noopener noreferrer">Send in Telegram</a>
+        <a className={btn} href={`https://t.me/share/url?url=${encodeURIComponent(value)}`} /* the whole message goes in "url": with url + text Telegram printed the link twice */ target="_blank" rel="noopener noreferrer">Send in Telegram</a>
       </div>
     </div>
   );

@@ -494,24 +494,24 @@ function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
           </span>
         )}
       </button>
-      <div className="absolute bottom-1 left-1 z-10 flex gap-1">
+      <div className="absolute bottom-1.5 left-1.5 z-10 flex gap-1.5">
         <button
           type="button"
           onClick={onFavorite}
           aria-pressed={mark.favorite}
           aria-label={mark.favorite ? `Remove ${f.name} from favourites` : `Add ${f.name} to favourites`}
-          className={cn("glass inline-flex size-6 items-center justify-center rounded-full text-paper", !mark.favorite && reveal)}
+          className={cn("tile-btn inline-flex size-9 items-center justify-center rounded-full text-white md:size-8", !mark.favorite && reveal)}
         >
-          <HeartIcon filled={mark.favorite} className="size-3" />
+          <HeartIcon filled={mark.favorite} className="size-4" />
         </button>
         <button
           type="button"
           onClick={onNote}
           aria-label={mark.note ? `Edit note on ${f.name}` : `Add a note to ${f.name}`}
           title={mark.note ?? undefined}
-          className={cn("glass inline-flex size-6 items-center justify-center rounded-full text-paper", !mark.note && reveal)}
+          className={cn("tile-btn inline-flex size-9 items-center justify-center rounded-full text-white md:size-8", !mark.note && reveal)}
         >
-          <NoteIcon filled={!!mark.note} className="size-3" />
+          <NoteIcon filled={!!mark.note} className="size-4" />
         </button>
       </div>
       {f.download && <a
@@ -519,9 +519,9 @@ function Tile({ f, mark, onOpen, onFavorite, onNote, onDownload }: {
         download={f.name}
         onClick={onDownload}
         aria-label={`Download ${f.name}`}
-        className={cn("glass absolute bottom-1 right-1 z-10 inline-flex size-6 items-center justify-center rounded-full text-paper", reveal)}
+        className={cn("tile-btn absolute bottom-1.5 right-1.5 z-10 inline-flex size-9 items-center justify-center rounded-full text-white md:size-8", reveal)}
       >
-        <DownloadIcon className="size-3" />
+        <DownloadIcon className="size-4" />
       </a>}
     </li>
   );

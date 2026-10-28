@@ -55,6 +55,7 @@ export type Database = {
       }
       client_deliveries: {
         Row: {
+          brand: Json | null
           client_email: string | null
           client_name: string | null
           created_at: string
@@ -71,6 +72,7 @@ export type Database = {
           watermark: boolean
         }
         Insert: {
+          brand?: Json | null
           client_email?: string | null
           client_name?: string | null
           created_at?: string
@@ -87,6 +89,7 @@ export type Database = {
           watermark?: boolean
         }
         Update: {
+          brand?: Json | null
           client_email?: string | null
           client_name?: string | null
           created_at?: string
@@ -145,6 +148,7 @@ export type Database = {
       }
       client_delivery_files: {
         Row: {
+          branded_path: string | null
           client_note: string | null
           created_at: string
           delivery_id: string
@@ -160,6 +164,7 @@ export type Database = {
           w: number | null
         }
         Insert: {
+          branded_path?: string | null
           client_note?: string | null
           created_at?: string
           delivery_id: string
@@ -175,6 +180,7 @@ export type Database = {
           w?: number | null
         }
         Update: {
+          branded_path?: string | null
           client_note?: string | null
           created_at?: string
           delivery_id?: string

@@ -324,7 +324,7 @@ function Gallery({ d, access }: { d: Delivery; access: AccessKey }) {
     setProgress(null);
   };
 
-  const view = (i: number, origin?: ViewerOrigin) => open(shown.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { origin, action: { label: t("g.leaveReview"), onClick: () => setReviewOpen(true) } });
+  const view = (i: number, origin?: ViewerOrigin) => open(shown.map((f) => ({ src: f.preview, w: f.w, h: f.h, alt: f.name })), i, d.title, { origin, large: true, action: { label: t("g.leaveReview"), onClick: () => setReviewOpen(true) } });
 
   return (
     <>

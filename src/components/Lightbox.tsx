@@ -14,14 +14,15 @@ export const originOf = (el: Element | null | undefined): ViewerOrigin | undefin
   const r = el.getBoundingClientRect();
   return r.width > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : undefined;
 };
-type ViewerOptions = { hideBook?: boolean; action?: ViewerAction; origin?: ViewerOrigin | undefined };
+/** `large`: the photo takes most of the screen on desktop (client galleries). */
+type ViewerOptions = { hideBook?: boolean; action?: ViewerAction; origin?: ViewerOrigin | undefined; large?: boolean };
 type Ctx = { open: (items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => void };
 const LightboxContext = createContext<Ctx>({ open: () => {} });
 export const useLightbox = () => useContext(LightboxContext);
 
 export function LightboxProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string | undefined; hideBook?: boolean | undefined; action?: ViewerAction | undefined; origin?: ViewerOrigin | undefined } | null>(null);
-  const open = useCallback((items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => setState({ items, index, title, hideBook: options?.hideBook, action: options?.action, origin: options?.origin }), []);
+  const [state, setState] = useState<{ items: ViewerItem[]; index: number; title?: string | undefined; hideBook?: boolean | undefined; action?: ViewerAction | undefined; origin?: ViewerOrigin | undefined; large?: boolean | undefined } | null>(null);
+  const open = useCallback((items: ViewerItem[], index: number, title?: string, options?: ViewerOptions) => setState({ items, index, title, hideBook: options?.hideBook, action: options?.action, origin: options?.origin, large: options?.large }), []);
   const close = useCallback(() => setState(null), []);
   return (
     <LightboxContext.Provider value={{ open }}>
@@ -48,7 +49,7 @@ function useViewport() {
   return vp;
 }
 
-export function Viewer({ items, index: start, title, onClose, onBack, embedded, hideBook, action, origin }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean; hideBook?: boolean | undefined; action?: ViewerAction | undefined; origin?: ViewerOrigin | undefined }) {
+export function Viewer({ items, index: start, title, onClose, onBack, embedded, hideBook, action, origin, large }: { items: ViewerItem[]; index: number; title?: string | undefined; onClose: () => void; onBack?: () => void; embedded?: boolean; hideBook?: boolean | undefined; action?: ViewerAction | undefined; origin?: ViewerOrigin | undefined; large?: boolean | undefined }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(start);
   const [dir, setDir] = useState<1 | -1>(1);
@@ -118,8 +119,8 @@ export function Viewer({ items, index: start, title, onClose, onBack, embedded, 
   }, [embedded]);
   const mobile = vp.w < 768;
   const pad = mobile ? 16 : 40;
-  const stageW = Math.max(80, embedded && box ? box.w - pad * 2 - OFFSET * DEPTH : vp.w * (mobile ? 0.8 : 0.72) - OFFSET * DEPTH);
-  const stageH = Math.max(80, embedded && box ? box.h - pad - OFFSET * DEPTH : vp.h * (mobile ? 0.66 : 0.74) - OFFSET * DEPTH);
+  const stageW = Math.max(80, embedded && box ? box.w - pad * 2 - OFFSET * DEPTH : vp.w * (mobile ? 0.8 : large ? 0.9 : 0.72) - OFFSET * DEPTH);
+  const stageH = Math.max(80, embedded && box ? box.h - pad - OFFSET * DEPTH : vp.h * (mobile ? 0.66 : large ? 0.8 : 0.74) - OFFSET * DEPTH);
   const size = (it: ViewerItem) => {
     const s = Math.min(stageW / it.w, stageH / it.h);
     return { w: Math.round(it.w * s), h: Math.round(it.h * s) };

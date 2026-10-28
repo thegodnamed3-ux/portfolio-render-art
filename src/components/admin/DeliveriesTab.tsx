@@ -10,7 +10,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { BRAND_DEFAULT, bakeBrand, brandedPathFor, placeLogo, type Brand, type Corner } from "@/lib/brand";
+import { BRAND_DEFAULT, bakeBrand, brandedPathFor, brandedPreviewFor, placeLogo, type Brand, type Corner } from "@/lib/brand";
 
 type DeliveryRow = {
   id: string; token: string; title: string; client_name: string | null; message: string | null; client_email?: string | null;
@@ -280,7 +280,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
             size: file.size, w, h, position: start + i,
           }).select("id").single();
           if (ins.error) throw ins.error;
-          if (brand && logo && ins.data) await bakeFile({ id: ins.data.id, storage_path: original }, brand, logo, file).catch((e) => console.error("brand", file.name, e));
+          if (brand && logo && ins.data) await bakeFile({ id: ins.data.id, storage_path: original, preview_path: preview }, brand, logo, file).catch((e) => console.error("brand", file.name, e));
         } catch (e) {
           console.error(e);
           failed.push(file.name);
@@ -666,7 +666,15 @@ async function loadLogo(path: string): Promise<ImageBitmap> {
 }
 
 /** Makes (or remakes) one photo's copy with the logo and points the file at it. */
-async function bakeFile(f: { id: string; storage_path: string; branded_path?: string | null }, b: Brand, logo: ImageBitmap, source?: Blob) {
+async function bakeFile(f: { id: string; storage_path: string; preview_path?: string | null; branded_path?: string | null }, b: Brand, logo: ImageBitmap, source?: Blob, previewOnly = false) {
+  // The gallery preview gets the same logo, so what the client sees is what they download.
+  const pv = f.preview_path ? await bucket().download(f.preview_path) : null;
+  if (pv?.data) {
+    const small = await bakeBrand(pv.data, logo, b, 0.86);
+    const up = await bucket().upload(brandedPreviewFor(f.storage_path, b.v), small, { contentType: "image/jpeg", cacheControl: "86400" });
+    if (up.error && !/exist|duplicate/i.test(up.error.message)) throw up.error;
+  }
+  if (previewOnly) return;
   let photo = source;
   if (!photo) {
     const r = await bucket().download(f.storage_path);
@@ -679,7 +687,7 @@ async function bakeFile(f: { id: string; storage_path: string; branded_path?: st
   if (up.error && !/exist|duplicate/i.test(up.error.message)) throw up.error;
   const u = await supabase.from("client_delivery_files").update({ branded_path: path } as never).eq("id", f.id);
   if (u.error) throw u.error;
-  if (f.branded_path && f.branded_path !== path) await bucket().remove([f.branded_path]);
+  if (f.branded_path && f.branded_path !== path) await bucket().remove([f.branded_path, `${f.branded_path.slice(0, f.branded_path.lastIndexOf("/"))}/__preview.jpg`]);
 }
 
 const CORNERS: { id: Corner; label: string }[] = [
@@ -741,8 +749,9 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
     setBusy(false);
   };
 
-  const bakeAll = async (b: Brand) => {
-    const todo = rows.filter((f) => f.branded_path !== brandedPathFor(f.storage_path, b.v));
+  const bakeAll = async (b: Brand, again = false) => {
+    // "Apply again" also redoes photos that already have their copy (only their gallery preview is remade).
+    const todo = again ? rows : rows.filter((f) => f.branded_path !== brandedPathFor(f.storage_path, b.v));
     if (!todo.length) return;
     const logo = await loadLogo(b.logo);
     let done = 0, failed = 0;
@@ -752,7 +761,7 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
     const work = async () => {
       while (queue.length) {
         const f = queue.shift()!;
-        try { await bakeFile(f, b, logo); } catch (e) { failed++; if (!firstError) firstError = (e as Error)?.message || String(e); console.error("brand", f.file_name, e); }
+        try { await bakeFile(f, b, logo, undefined, again && f.branded_path === brandedPathFor(f.storage_path, b.v)); } catch (e) { failed++; if (!firstError) firstError = (e as Error)?.message || String(e); console.error("brand", f.file_name, e); }
         done++;
         setRun({ done, total: todo.length, failed });
       }
@@ -772,7 +781,7 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
       const r = await supabase.from("client_deliveries").update({ brand: b } as never).eq("id", d.id);
       if (r.error) throw new Error(needsDb(r.error.message));
       setDraft(null);
-      await bakeAll(b);
+      await bakeAll(b, !!saved && saved.on && !changed && upToDate === rows.length);
     } catch (e) { toast.error((e as Error).message); }
     setBusy(false);
     await refresh();
@@ -846,8 +855,8 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
               );
             })}
             <div className="flex flex-wrap gap-2">
-              <button className={btnPrimary} disabled={busy || !!run || !rows.length || (on && !changed && upToDate === rows.length)} onClick={() => void apply()}>
-                {run ? `Adding logo ${run.done} / ${run.total}…` : on && !changed && upToDate < rows.length ? `Add to ${rows.length - upToDate} new` : `Apply to ${rows.length} photo${rows.length === 1 ? "" : "s"}`}
+              <button className={btnPrimary} disabled={busy || !!run || !rows.length} onClick={() => void apply()}>
+                {run ? `Adding logo ${run.done} / ${run.total}…` : on && !changed && upToDate < rows.length ? `Add to ${rows.length - upToDate} new` : on && !changed ? "Apply again" : `Apply to ${rows.length} photo${rows.length === 1 ? "" : "s"}`}
               </button>
               {draft && <button className={btn} disabled={busy || !!run} onClick={() => setDraft(null)}>Reset</button>}
               {on && <button className={btn} disabled={busy || !!run} onClick={() => void switchOff()}>Switch off</button>}

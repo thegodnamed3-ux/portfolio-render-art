@@ -34,7 +34,7 @@ export function placeLogo(w: number, h: number, lw: number, lh: number, b: Pick<
 }
 
 /** Full-size copy of a photo with the logo drawn in; JPEG at maximum quality (PNG stays PNG). */
-export async function bakeBrand(photo: Blob, logo: ImageBitmap, b: Brand): Promise<Blob> {
+export async function bakeBrand(photo: Blob, logo: ImageBitmap, b: Brand, quality = 1): Promise<Blob> {
   const bmp = await createImageBitmap(photo);
   try {
     const canvas = document.createElement("canvas");
@@ -48,7 +48,7 @@ export async function bakeBrand(photo: Blob, logo: ImageBitmap, b: Brand): Promi
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(logo, p.x, p.y, p.width, p.height);
     const type = photo.type === "image/png" ? "image/png" : "image/jpeg";
-    const out = await new Promise<Blob | null>((r) => canvas.toBlob(r, type, 1));
+    const out = await new Promise<Blob | null>((r) => canvas.toBlob(r, type, quality));
     if (!out) throw new Error("The photo is too large for this browser — try on a computer");
     return out;
   } finally {
@@ -59,4 +59,6 @@ export async function bakeBrand(photo: Blob, logo: ImageBitmap, b: Brand): Promi
 /** Folder of a delivery file's original ("<delivery>/<uuid>"). */
 export const folderOf = (storagePath: string) => storagePath.slice(0, storagePath.lastIndexOf("/"));
 /** Copy path: same file name as the original, so downloads keep the client's file names. */
+/** Web preview with the logo, so the gallery shows exactly what the client downloads. */
+export const brandedPreviewFor = (storagePath: string, v: number) => `${folderOf(storagePath)}/branded-${v}/__preview.jpg`;
 export const brandedPathFor = (storagePath: string, v: number) => `${folderOf(storagePath)}/branded-${v}/${storagePath.slice(storagePath.lastIndexOf("/") + 1)}`;

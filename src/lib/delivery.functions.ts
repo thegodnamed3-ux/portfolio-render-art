@@ -73,6 +73,9 @@ export const getDelivery = createServerFn({ method: "POST" })
     const branded = !!d.brand?.on;
     const fileOf = (f: (typeof files)[number]) => (branded && f.branded_path) || f.storage_path;
     const originals = wm ? [] : files.map(fileOf);
+    // Custom logo on: previews with the logo (made by the studio together with the copies); the
+    // plain preview is used for any photo whose logo preview isn't there.
+    const logoPreview = (f: (typeof files)[number]) => (!wm && branded && f.branded_path ? `${f.branded_path.slice(0, f.branded_path.lastIndexOf("/"))}/__preview.jpg` : null);
     const previews = files.map(previewOf);
     const [dl, pv] = files.length
       ? await Promise.all([
@@ -86,12 +89,17 @@ export const getDelivery = createServerFn({ method: "POST" })
       return { state: "missing" };
     }
     const dlBy = new Map((dl.data ?? []).map((s) => [s.path, s.signedUrl]));
+    // Signed on their own: a missing logo preview must never break the page.
+    const logoPaths = files.map(logoPreview).filter((p): p is string => !!p);
+    const lpSigned = logoPaths.length ? await bucket.createSignedUrls(logoPaths, TTL).catch(() => null) : null;
+    const lpBy = new Map((lpSigned?.data ?? []).filter((s) => s.signedUrl && !s.error).map((s) => [s.path, s.signedUrl]));
     const pvBy = new Map((pv.data ?? []).map((s) => [s.path, s.signedUrl]));
 
     const out: DeliveryFile[] = [];
     for (const f of files) {
       const download = wm ? null : (dlBy.get(fileOf(f)) ?? null);
-      const preview = pvBy.get(previewOf(f)) ?? download;
+      const lp = logoPreview(f);
+      const preview = (lp && lpBy.get(lp)) || pvBy.get(previewOf(f)) || download;
       if (!preview || (!wm && !download)) continue;
       out.push({
         id: f.id, name: f.file_name, size: Number(f.size) || 0, w: f.w ?? 3, h: f.h ?? 2, preview, download,

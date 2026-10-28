@@ -33,7 +33,7 @@ export function placeLogo(w: number, h: number, lw: number, lh: number, b: Pick<
   return { x, y, width, height };
 }
 
-/** Full-size copy of a photo with the logo drawn in; JPEG at high quality (PNG stays PNG). */
+/** Full-size copy of a photo with the logo drawn in; JPEG at maximum quality (PNG stays PNG). */
 export async function bakeBrand(photo: Blob, logo: ImageBitmap, b: Brand): Promise<Blob> {
   const bmp = await createImageBitmap(photo);
   try {
@@ -48,7 +48,7 @@ export async function bakeBrand(photo: Blob, logo: ImageBitmap, b: Brand): Promi
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(logo, p.x, p.y, p.width, p.height);
     const type = photo.type === "image/png" ? "image/png" : "image/jpeg";
-    const out = await new Promise<Blob | null>((r) => canvas.toBlob(r, type, 0.95));
+    const out = await new Promise<Blob | null>((r) => canvas.toBlob(r, type, 1));
     if (!out) throw new Error("The photo is too large for this browser — try on a computer");
     return out;
   } finally {

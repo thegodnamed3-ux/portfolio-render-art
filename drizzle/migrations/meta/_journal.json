@@ -211,6 +211,13 @@
       "when": 1792583971040,
       "tag": "0029_booking_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793192368286,
+      "tag": "0030_0030_delivery_brand",
+      "breakpoints": true
     }
   ]
 }

@@ -354,7 +354,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
 
       <AccessAndStats d={d} rows={rows} refresh={reload} />
       <ClientMessage d={d} link={link} />
-      <BrandPanel d={d} rows={rows} {...(files.data ? { thumbs: files.data.thumbs } : {})} refresh={reload} />
+      <BrandPanel d={d} rows={rows} {...(files.data ? { thumbs: files.data.thumbs } : {})} refresh={reload} picked={picked} onPickedDone={() => setPicked(new Set())} />
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <label className={cn(btnPrimary, "cursor-pointer", upload && "pointer-events-none opacity-60")}>
@@ -404,6 +404,9 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
               <button key={f.id} type="button" onClick={() => toggle(f.id)} aria-pressed={on} title={f.file_name}
                 className={cn("relative aspect-square overflow-hidden rounded-lg bg-charcoal ring-2 transition", on ? "ring-paper" : "ring-transparent")}>
                 {src && <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />}
+                {d.brand?.on && f.branded_path && !d.brand.skip?.includes(f.id) && (
+                  <span className="meta pointer-events-none absolute left-1 top-1 rounded-full bg-viewer/80 px-1.5 text-[0.6rem] text-paper" title="Downloads with the logo">Logo</span>
+                )}
                 {(f.favorite || f.client_note) && (
                   <span className="meta pointer-events-none absolute right-1 top-1 rounded-full bg-paper px-1.5 text-[0.6rem] text-ink">{f.favorite ? "♥" : ""}{f.client_note ? " ✎" : ""}</span>
                 )}
@@ -701,8 +704,10 @@ const lookOf = (b: Brand): BrandLook => ({ logo: b.logo, corner: b.corner, size:
  * Custom watermark: upload a logo, pick a corner, size, margin and opacity with a live preview on the
  * delivery's own photos, then "Apply" bakes it into full-size copies the client downloads. Not tied to payment.
  */
-function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRow[]; thumbs?: Map<string, string>; refresh: () => Promise<void> }) {
+function BrandPanel({ d, rows, thumbs, refresh, picked, onPickedDone }: { d: DeliveryRow; rows: FileRow[]; thumbs?: Map<string, string>; refresh: () => Promise<void>; picked: Set<string>; onPickedDone: () => void }) {
   const saved = d.brand ?? null;
+  const skip = new Set(saved?.skip ?? []);
+  const logoRows = rows.filter((f) => !skip.has(f.id));
   // A new delivery starts from the last logo setup used.
   const last = useQuery({
     queryKey: ["admin", "brand-last"],
@@ -726,7 +731,7 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
   const [sample, setSample] = useState(0);
   const [run, setRun] = useState<{ done: number; total: number; failed: number } | null>(null);
   const [busy, setBusy] = useState(false);
-  const upToDate = saved ? rows.filter((f) => f.branded_path === brandedPathFor(f.storage_path, saved.v)).length : 0;
+  const upToDate = saved ? logoRows.filter((f) => f.branded_path === brandedPathFor(f.storage_path, saved.v)).length : 0;
   const s = rows.length ? rows[((sample % rows.length) + rows.length) % rows.length]! : null;
   const W = s?.w ?? 3000, H = s?.h ?? 2000;
 
@@ -749,9 +754,11 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
     setBusy(false);
   };
 
-  const bakeAll = async (b: Brand, again = false) => {
+  const bakeAll = async (b: Brand, again = false, only?: FileRow[]) => {
     // "Apply again" also redoes photos that already have their copy (only their gallery preview is remade).
-    const todo = again ? rows : rows.filter((f) => f.branded_path !== brandedPathFor(f.storage_path, b.v));
+    // Photos marked "no logo" are skipped.
+    const pool = (only ?? rows).filter((f) => !(b.skip ?? []).includes(f.id));
+    const todo = again ? pool : pool.filter((f) => f.branded_path !== brandedPathFor(f.storage_path, b.v));
     if (!todo.length) return;
     const logo = await loadLogo(b.logo);
     let done = 0, failed = 0;
@@ -777,11 +784,11 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
     if (!look?.logo) return;
     setBusy(true);
     try {
-      const b: Brand = { ...look, on: true, v: changed || !saved ? Date.now() : saved.v };
+      const b: Brand = { ...look, on: true, v: changed || !saved ? Date.now() : saved.v, ...(saved?.skip?.length ? { skip: saved.skip } : {}) };
       const r = await supabase.from("client_deliveries").update({ brand: b } as never).eq("id", d.id);
       if (r.error) throw new Error(needsDb(r.error.message));
       setDraft(null);
-      await bakeAll(b, !!saved && saved.on && !changed && upToDate === rows.length);
+      await bakeAll(b, !!saved && saved.on && !changed && upToDate === logoRows.length);
     } catch (e) { toast.error((e as Error).message); }
     setBusy(false);
     await refresh();
@@ -795,6 +802,25 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
     await refresh();
   };
 
+  // Choose per photo: the selected photos get the logo, or go without it (same delivery).
+  const pickedRows = rows.filter((f) => picked.has(f.id));
+  const setLogoFor = async (withLogo: boolean) => {
+    if (!saved || !pickedRows.length) return;
+    setBusy(true);
+    try {
+      const ids = new Set(pickedRows.map((f) => f.id));
+      const next = withLogo ? [...skip].filter((id) => !ids.has(id)) : [...new Set([...skip, ...ids])];
+      const b: Brand = { ...saved, skip: next };
+      const r = await supabase.from("client_deliveries").update({ brand: b } as never).eq("id", d.id);
+      if (r.error) throw new Error(needsDb(r.error.message));
+      if (withLogo && saved.on) await bakeAll(b, false, pickedRows);
+      else toast.success(withLogo ? `${ids.size} photo${ids.size > 1 ? "s" : ""} will get the logo — press Apply` : `${ids.size} photo${ids.size > 1 ? "s" : ""} delivered without the logo`);
+      onPickedDone();
+    } catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+    await refresh();
+  };
+
   // Logo position on the preview, in % of the photo — the same maths as the baked copies.
   const pos = look && logoDims ? placeLogo(W, H, logoDims.w, logoDims.h, look) : null;
   const on = !!saved?.on;
@@ -802,7 +828,7 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
   return (
     <div className="mt-4 space-y-4 rounded-3xl border border-border/60 bg-card/30 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="meta text-muted-foreground">Custom watermark on downloads{on ? ` · on · ${upToDate} / ${rows.length} photos` : " · off"}</p>
+        <p className="meta text-muted-foreground">Custom watermark on downloads{on ? ` · on · ${upToDate} / ${logoRows.length} photos${skip.size ? ` · ${skip.size} without` : ""}` : " · off"}</p>
         <label className={cn(btn, "cursor-pointer", busy && "pointer-events-none opacity-50")}>
           {look?.logo ? "Change logo" : "+ Upload logo"}
           <input type="file" accept="image/png,image/webp,image/svg+xml,image/jpeg" className="hidden" onChange={(e) => { void uploadLogo(e.target.files?.[0]); e.target.value = ""; }} />
@@ -856,11 +882,24 @@ function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRo
             })}
             <div className="flex flex-wrap gap-2">
               <button className={btnPrimary} disabled={busy || !!run || !rows.length} onClick={() => void apply()}>
-                {run ? `Adding logo ${run.done} / ${run.total}…` : on && !changed && upToDate < rows.length ? `Add to ${rows.length - upToDate} new` : on && !changed ? "Apply again" : `Apply to ${rows.length} photo${rows.length === 1 ? "" : "s"}`}
+                {run ? `Adding logo ${run.done} / ${run.total}…` : on && !changed && upToDate < logoRows.length ? `Add to ${logoRows.length - upToDate} new` : on && !changed ? "Apply again" : `Apply to ${logoRows.length} photo${logoRows.length === 1 ? "" : "s"}`}
               </button>
               {draft && <button className={btn} disabled={busy || !!run} onClick={() => setDraft(null)}>Reset</button>}
               {on && <button className={btn} disabled={busy || !!run} onClick={() => void switchOff()}>Switch off</button>}
             </div>
+            {saved && (
+              <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+                {pickedRows.length ? (
+                  <>
+                    <span className="meta text-muted-foreground">{pickedRows.length} selected:</span>
+                    <button className={btn} disabled={busy || !!run} onClick={() => void setLogoFor(true)}>With logo</button>
+                    <button className={btn} disabled={busy || !!run} onClick={() => void setLogoFor(false)}>Without logo</button>
+                  </>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Select photos below to choose which ones get the logo — photos marked “Logo” download with it.</span>
+                )}
+              </div>
+            )}
             {run && <span className="block h-1 overflow-hidden rounded-full bg-paper/15"><span className="block h-full bg-paper transition-[width] duration-300" style={{ width: `${Math.round((run.done / run.total) * 100)}%` }} /></span>}
             <p className="text-xs text-muted-foreground">
               {changed && on ? "Changes are not applied yet — press Apply. " : ""}

@@ -18,6 +18,8 @@ export type Brand = {
   opacity: number;
   /** Changes whenever the settings change; copies made with an older version are redone. */
   v: number;
+  /** Photos (file ids) in this delivery that are delivered without the logo. */
+  skip?: string[];
 };
 
 export const BRAND_DEFAULT: Omit<Brand, "logo" | "v"> = { on: true, corner: "br", size: 18, margin: 4, opacity: 0.85 };

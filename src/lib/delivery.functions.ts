@@ -71,11 +71,13 @@ export const getDelivery = createServerFn({ method: "POST" })
     const previewOf = (f: (typeof files)[number]) => (wm && f.preview_wm_path) || f.preview_path || f.storage_path;
     // Custom logo on: the client downloads the copies with the logo (same file names).
     const branded = !!d.brand?.on;
-    const fileOf = (f: (typeof files)[number]) => (branded && f.branded_path) || f.storage_path;
+    const skip = new Set(d.brand?.skip ?? []);
+    const withLogo = (f: (typeof files)[number]) => branded && !!f.branded_path && !skip.has(f.id);
+    const fileOf = (f: (typeof files)[number]) => (withLogo(f) && f.branded_path) || f.storage_path;
     const originals = wm ? [] : files.map(fileOf);
     // Custom logo on: previews with the logo (made by the studio together with the copies); the
     // plain preview is used for any photo whose logo preview isn't there.
-    const logoPreview = (f: (typeof files)[number]) => (!wm && branded && f.branded_path ? `${f.branded_path.slice(0, f.branded_path.lastIndexOf("/"))}/__preview.jpg` : null);
+    const logoPreview = (f: (typeof files)[number]) => (!wm && withLogo(f) ? `${f.branded_path.slice(0, f.branded_path.lastIndexOf("/"))}/__preview.jpg` : null);
     const previews = files.map(previewOf);
     const [dl, pv] = files.length
       ? await Promise.all([

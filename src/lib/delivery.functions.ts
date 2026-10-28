@@ -56,7 +56,8 @@ export const getDelivery = createServerFn({ method: "POST" })
 
     const cols = "id, storage_path, preview_path, file_name, size, w, h, position, favorite, client_note";
     const query = (c: string) => supabaseAdmin.from("client_delivery_files").select(c).eq("delivery_id", d.id).order("position").order("file_name");
-    let { data: rows, error: e2 } = (await query(`${cols}, preview_wm_path`)) as { data: any[] | null; error: any };
+    let { data: rows, error: e2 } = (await query(`${cols}, preview_wm_path, branded_path`)) as { data: any[] | null; error: any };
+    if (e2) ({ data: rows, error: e2 } = (await query(`${cols}, preview_wm_path`)) as { data: any[] | null; error: any });
     if (e2) ({ data: rows, error: e2 } = (await query(cols)) as { data: any[] | null; error: any });
     if (e2) {
       console.error("getDelivery files", e2);
@@ -68,7 +69,10 @@ export const getDelivery = createServerFn({ method: "POST" })
     const wm = !!d.watermark;
     // With the watermark on, originals are never signed and previews are the watermarked copies.
     const previewOf = (f: (typeof files)[number]) => (wm && f.preview_wm_path) || f.preview_path || f.storage_path;
-    const originals = wm ? [] : files.map((f) => f.storage_path);
+    // Custom logo on: the client downloads the copies with the logo (same file names).
+    const branded = !!d.brand?.on;
+    const fileOf = (f: (typeof files)[number]) => (branded && f.branded_path) || f.storage_path;
+    const originals = wm ? [] : files.map(fileOf);
     const previews = files.map(previewOf);
     const [dl, pv] = files.length
       ? await Promise.all([
@@ -86,7 +90,7 @@ export const getDelivery = createServerFn({ method: "POST" })
 
     const out: DeliveryFile[] = [];
     for (const f of files) {
-      const download = wm ? null : (dlBy.get(f.storage_path) ?? null);
+      const download = wm ? null : (dlBy.get(fileOf(f)) ?? null);
       const preview = pvBy.get(previewOf(f)) ?? download;
       if (!preview || (!wm && !download)) continue;
       out.push({

@@ -10,16 +10,17 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { BRAND_DEFAULT, bakeBrand, brandedPathFor, placeLogo, type Brand, type Corner } from "@/lib/brand";
 
 type DeliveryRow = {
   id: string; token: string; title: string; client_name: string | null; message: string | null; client_email?: string | null;
   is_active: boolean; created_at: string; client_delivery_files: { count: number }[];
-  password_hash: string | null; expires_at: string | null; watermark?: boolean;
+  password_hash: string | null; expires_at: string | null; watermark?: boolean; brand?: Brand | null;
 };
 type FileRow = {
   id: string; delivery_id: string; storage_path: string; preview_path: string | null;
   file_name: string; size: number; w: number | null; h: number | null; position: number;
-  favorite: boolean; client_note: string | null; preview_wm_path?: string | null;
+  favorite: boolean; client_note: string | null; preview_wm_path?: string | null; branded_path?: string | null;
 };
 
 const btn = "meta inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2 text-paper/85 transition-colors hover:border-paper/60 hover:text-paper disabled:opacity-40";
@@ -247,6 +248,9 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
     const start = rows.length ? Math.max(...rows.map((f) => f.position)) + 1 : 0;
     setUpload({ done: 0, total: queue.length });
     const failed: string[] = [];
+    // Custom watermark on: new photos get their copy with the logo straight away.
+    const brand = d.brand?.on ? d.brand : null;
+    const logo = brand ? await loadLogo(brand.logo).catch(() => null) : null;
     let next = 0;
     const worker = async () => {
       while (next < queue.length) {
@@ -274,8 +278,9 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
             delivery_id: d.id, storage_path: original, preview_path: preview, file_name: file.name,
             ...(previewWm ? { preview_wm_path: previewWm } : {}),
             size: file.size, w, h, position: start + i,
-          });
+          }).select("id").single();
           if (ins.error) throw ins.error;
+          if (brand && logo && ins.data) await bakeFile({ id: ins.data.id, storage_path: original }, brand, logo, file).catch((e) => console.error("brand", file.name, e));
         } catch (e) {
           console.error(e);
           failed.push(file.name);
@@ -290,7 +295,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
     await reload();
   };
 
-  const pathsOf = (fs: FileRow[]) => fs.flatMap((f) => [f.storage_path, ...(f.preview_path ? [f.preview_path] : []), ...(f.preview_wm_path ? [f.preview_wm_path] : [])]);
+  const pathsOf = (fs: FileRow[]) => fs.flatMap((f) => [f.storage_path, ...(f.preview_path ? [f.preview_path] : []), ...(f.preview_wm_path ? [f.preview_wm_path] : []), ...(f.branded_path ? [f.branded_path] : [])]);
 
   const removePicked = () => act(async () => {
     const sel = rows.filter((f) => picked.has(f.id));
@@ -349,6 +354,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
 
       <AccessAndStats d={d} rows={rows} refresh={reload} />
       <ClientMessage d={d} link={link} />
+      <BrandPanel d={d} rows={rows} {...(files.data ? { thumbs: files.data.thumbs } : {})} refresh={reload} />
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <label className={cn(btnPrimary, "cursor-pointer", upload && "pointer-events-none opacity-60")}>
@@ -649,4 +655,211 @@ export async function createDeliveryFromFiles(title: string, files: File[], onPr
     onProgress?.(i + 1);
   }
   return { id: d.id as string, link: linkFor(d.token as string), failed };
+}
+
+/* ---------------- Custom watermark (logo) on downloads ---------------- */
+
+async function loadLogo(path: string): Promise<ImageBitmap> {
+  const r = await bucket().download(path);
+  if (r.error || !r.data) throw new Error("The logo file could not be loaded");
+  return createImageBitmap(r.data);
+}
+
+/** Makes (or remakes) one photo's copy with the logo and points the file at it. */
+async function bakeFile(f: { id: string; storage_path: string; branded_path?: string | null }, b: Brand, logo: ImageBitmap, source?: Blob) {
+  let photo = source;
+  if (!photo) {
+    const r = await bucket().download(f.storage_path);
+    if (r.error || !r.data) throw new Error(r.error?.message || "The original could not be downloaded");
+    photo = r.data;
+  }
+  const blob = await bakeBrand(photo, logo, b);
+  const path = brandedPathFor(f.storage_path, b.v);
+  const up = await bucket().upload(path, blob, { contentType: blob.type });
+  if (up.error && !/exist|duplicate/i.test(up.error.message)) throw up.error;
+  const u = await supabase.from("client_delivery_files").update({ branded_path: path } as never).eq("id", f.id);
+  if (u.error) throw u.error;
+  if (f.branded_path && f.branded_path !== path) await bucket().remove([f.branded_path]);
+}
+
+const CORNERS: { id: Corner; label: string }[] = [
+  { id: "tl", label: "↖" }, { id: "tr", label: "↗" }, { id: "bl", label: "↙" }, { id: "br", label: "↘" },
+];
+type BrandLook = Omit<Brand, "on" | "v">;
+const sameLook = (a: BrandLook | null, b: BrandLook | null) => !!a && !!b && a.logo === b.logo && a.corner === b.corner && a.size === b.size && a.margin === b.margin && a.opacity === b.opacity;
+const lookOf = (b: Brand): BrandLook => ({ logo: b.logo, corner: b.corner, size: b.size, margin: b.margin, opacity: b.opacity });
+
+/**
+ * Custom watermark: upload a logo, pick a corner, size, margin and opacity with a live preview on the
+ * delivery's own photos, then "Apply" bakes it into full-size copies the client downloads. Not tied to payment.
+ */
+function BrandPanel({ d, rows, thumbs, refresh }: { d: DeliveryRow; rows: FileRow[]; thumbs?: Map<string, string>; refresh: () => Promise<void> }) {
+  const saved = d.brand ?? null;
+  // A new delivery starts from the last logo setup used.
+  const last = useQuery({
+    queryKey: ["admin", "brand-last"],
+    enabled: !saved,
+    queryFn: async () => {
+      const r = await supabase.from("client_deliveries").select("brand" as never).not("brand" as never, "is", null).order("created_at", { ascending: false }).limit(1);
+      return r.error ? null : (((r.data as unknown as { brand: Brand | null }[] | null)?.[0]?.brand) ?? null);
+    },
+  });
+  const base: BrandLook | null = saved ? lookOf(saved) : last.data ? lookOf(last.data) : null;
+  const [draft, setDraft] = useState<BrandLook | null>(null);
+  const look = draft ?? base;
+  const changed = !!draft && !sameLook(draft, saved ? lookOf(saved) : null);
+  const logoUrl = useQuery({
+    queryKey: ["admin", "brand-logo", look?.logo],
+    enabled: !!look?.logo,
+    queryFn: async () => (await bucket().createSignedUrl(look!.logo, 3600)).data?.signedUrl ?? null,
+    staleTime: 50 * 60_000,
+  });
+  const [logoDims, setLogoDims] = useState<{ w: number; h: number } | null>(null);
+  const [sample, setSample] = useState(0);
+  const [run, setRun] = useState<{ done: number; total: number; failed: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const upToDate = saved ? rows.filter((f) => f.branded_path === brandedPathFor(f.storage_path, saved.v)).length : 0;
+  const s = rows.length ? rows[((sample % rows.length) + rows.length) % rows.length]! : null;
+  const W = s?.w ?? 3000, H = s?.h ?? 2000;
+
+  const set = (patch: Partial<BrandLook>) => look && setDraft({ ...look, ...patch });
+  const needsDb = (m: string) => /brand|column|schema/i.test(m)
+    ? "Custom watermark needs its database update (migration “delivery_brand”) — apply it in Lovable first."
+    : m;
+
+  const uploadLogo = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `brand/${crypto.randomUUID()}.${ext}`;
+      const up = await bucket().upload(path, file, { contentType: file.type || "image/png" });
+      if (up.error) throw up.error;
+      setLogoDims(null);
+      setDraft(look ? { ...look, logo: path } : { logo: path, corner: BRAND_DEFAULT.corner, size: BRAND_DEFAULT.size, margin: BRAND_DEFAULT.margin, opacity: BRAND_DEFAULT.opacity });
+    } catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+  };
+
+  const bakeAll = async (b: Brand) => {
+    const todo = rows.filter((f) => f.branded_path !== brandedPathFor(f.storage_path, b.v));
+    if (!todo.length) return;
+    const logo = await loadLogo(b.logo);
+    let done = 0, failed = 0;
+    let firstError = "";
+    setRun({ done: 0, total: todo.length, failed: 0 });
+    const queue = [...todo];
+    const work = async () => {
+      while (queue.length) {
+        const f = queue.shift()!;
+        try { await bakeFile(f, b, logo); } catch (e) { failed++; if (!firstError) firstError = (e as Error)?.message || String(e); console.error("brand", f.file_name, e); }
+        done++;
+        setRun({ done, total: todo.length, failed });
+      }
+    };
+    await Promise.all([work(), work()]);
+    logo.close();
+    setRun(null);
+    if (failed) toast.error(`${failed} of ${todo.length} photos could not get the logo: ${needsDb(firstError)}`);
+    else toast.success(`Logo added to ${todo.length} photo${todo.length > 1 ? "s" : ""} — the client downloads these`);
+  };
+
+  const apply = async () => {
+    if (!look?.logo) return;
+    setBusy(true);
+    try {
+      const b: Brand = { ...look, on: true, v: changed || !saved ? Date.now() : saved.v };
+      const r = await supabase.from("client_deliveries").update({ brand: b } as never).eq("id", d.id);
+      if (r.error) throw new Error(needsDb(r.error.message));
+      setDraft(null);
+      await bakeAll(b);
+    } catch (e) { toast.error((e as Error).message); }
+    setBusy(false);
+    await refresh();
+  };
+  const switchOff = async () => {
+    if (!saved) return;
+    setBusy(true);
+    const r = await supabase.from("client_deliveries").update({ brand: { ...saved, on: false } } as never).eq("id", d.id);
+    setBusy(false);
+    if (r.error) toast.error(r.error.message); else toast.success("Custom watermark off — the client downloads the originals");
+    await refresh();
+  };
+
+  // Logo position on the preview, in % of the photo — the same maths as the baked copies.
+  const pos = look && logoDims ? placeLogo(W, H, logoDims.w, logoDims.h, look) : null;
+  const on = !!saved?.on;
+
+  return (
+    <div className="mt-4 space-y-4 rounded-3xl border border-border/60 bg-card/30 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="meta text-muted-foreground">Custom watermark on downloads{on ? ` · on · ${upToDate} / ${rows.length} photos` : " · off"}</p>
+        <label className={cn(btn, "cursor-pointer", busy && "pointer-events-none opacity-50")}>
+          {look?.logo ? "Change logo" : "+ Upload logo"}
+          <input type="file" accept="image/png,image/webp,image/svg+xml,image/jpeg" className="hidden" onChange={(e) => { void uploadLogo(e.target.files?.[0]); e.target.value = ""; }} />
+        </label>
+      </div>
+      {!look?.logo ? (
+        <p className="text-xs text-muted-foreground">Upload your logo (PNG with a transparent background works best). It goes into the corner you choose, at the same relative size on every photo, and the client downloads the photos with it. Not related to payment.</p>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_16rem]">
+          <div>
+            {/* Live preview on this delivery's own photos. */}
+            <div className="relative overflow-hidden rounded-xl bg-charcoal" style={{ aspectRatio: `${W} / ${H}`, maxHeight: "26rem" }}>
+              {s && thumbs?.get(s.id) && <img src={thumbs.get(s.id)} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+              {logoUrl.data && (
+                <img
+                  src={logoUrl.data}
+                  alt=""
+                  onLoad={(e) => setLogoDims({ w: e.currentTarget.naturalWidth || 1, h: e.currentTarget.naturalHeight || 1 })}
+                  className="pointer-events-none absolute transition-all duration-200"
+                  style={pos ? { left: `${(pos.x / W) * 100}%`, top: `${(pos.y / H) * 100}%`, width: `${(pos.width / W) * 100}%`, opacity: look.opacity } : { opacity: 0 }}
+                />
+              )}
+            </div>
+            {rows.length > 1 && (
+              <div className="mt-2 flex items-center gap-2">
+                <button className={btn} onClick={() => setSample((v) => v - 1)} aria-label="Previous photo">←</button>
+                <button className={btn} onClick={() => setSample((v) => v + 1)} aria-label="Next photo">→</button>
+                <span className="meta truncate text-muted-foreground">{s?.file_name}</span>
+              </div>
+            )}
+          </div>
+          <div className="space-y-4">
+            <div>
+              <p className="meta mb-2 text-muted-foreground">Corner</p>
+              <div className="grid w-28 grid-cols-2 gap-2">
+                {CORNERS.map((c) => (
+                  <button key={c.id} type="button" onClick={() => set({ corner: c.id })} aria-pressed={look.corner === c.id}
+                    className={cn("aspect-square rounded-xl border text-lg transition", look.corner === c.id ? "border-paper bg-paper text-ink" : "border-border text-paper/80 hover:border-paper/60")}>{c.label}</button>
+                ))}
+              </div>
+            </div>
+            {([["size", "Size", 4, 40, "% of the short side"], ["margin", "Distance from edge", 0, 15, "%"], ["opacity", "Opacity", 10, 100, "%"]] as const).map(([k, label, min, max, unit]) => {
+              const value = k === "opacity" ? Math.round(look.opacity * 100) : look[k];
+              return (
+                <label key={k} className="block">
+                  <span className="meta flex justify-between text-muted-foreground"><span>{label}</span><span className="text-paper/85">{value}{unit.startsWith("%") ? "%" : ""}</span></span>
+                  <input type="range" min={min} max={max} step={1} value={value} className="mt-1 w-full accent-[var(--paper)]"
+                    onChange={(e) => { const n = Number(e.target.value); set(k === "opacity" ? { opacity: n / 100 } : { [k]: n } as Partial<BrandLook>); }} />
+                </label>
+              );
+            })}
+            <div className="flex flex-wrap gap-2">
+              <button className={btnPrimary} disabled={busy || !!run || !rows.length || (on && !changed && upToDate === rows.length)} onClick={() => void apply()}>
+                {run ? `Adding logo ${run.done} / ${run.total}…` : on && !changed && upToDate < rows.length ? `Add to ${rows.length - upToDate} new` : `Apply to ${rows.length} photo${rows.length === 1 ? "" : "s"}`}
+              </button>
+              {draft && <button className={btn} disabled={busy || !!run} onClick={() => setDraft(null)}>Reset</button>}
+              {on && <button className={btn} disabled={busy || !!run} onClick={() => void switchOff()}>Switch off</button>}
+            </div>
+            {run && <span className="block h-1 overflow-hidden rounded-full bg-paper/15"><span className="block h-full bg-paper transition-[width] duration-300" style={{ width: `${Math.round((run.done / run.total) * 100)}%` }} /></span>}
+            <p className="text-xs text-muted-foreground">
+              {changed && on ? "Changes are not applied yet — press Apply. " : ""}
+              Full-size copies with the logo are made in this browser (a computer is faster for big files); your originals stay untouched. New photos uploaded here get the logo automatically while it’s on.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { hashDeliveryPassword } from "@/lib/delivery-hash";
+import type { Brand } from "@/lib/brand";
 
 export const TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/;
 
@@ -12,6 +13,8 @@ export type DeliveryRow = {
   password_hash: string | null;
   expires_at: string | null;
   watermark: boolean;
+  /** Custom logo on downloads (null when not set up, or before its database update). */
+  brand?: Brand | null;
 };
 
 export type Access =
@@ -24,7 +27,8 @@ export type Access =
 export async function checkAccess(token: string, password?: string | null): Promise<Access> {
   if (!TOKEN_RE.test(token)) return { state: "missing" };
   const base = "id, title, client_name, message, is_active, password_hash, expires_at";
-  let { data: d, error } = await supabaseAdmin.from("client_deliveries").select(`${base}, watermark`).eq("token", token).maybeSingle();
+  let { data: d, error } = (await supabaseAdmin.from("client_deliveries").select(`${base}, watermark, brand` as never).eq("token", token).maybeSingle()) as unknown as { data: DeliveryRow | null; error: { message: string } | null };
+  if (error) ({ data: d, error } = await supabaseAdmin.from("client_deliveries").select(`${base}, watermark`).eq("token", token).maybeSingle());
   if (error) {
     // Database update for the watermark not applied yet: carry on without it.
     const r = await supabaseAdmin.from("client_deliveries").select(base).eq("token", token).maybeSingle();

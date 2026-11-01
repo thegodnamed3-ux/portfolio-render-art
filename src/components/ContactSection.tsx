@@ -55,22 +55,6 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const height = Math.max(heights[0], heights[1]);
 
   const section = useRef<HTMLElement>(null);
-  // Phones: the channel names start under the italic word of "Book a session." (its first letter),
-  // so the list hangs off the headline above instead of floating on its own.
-  const bookRef = useRef<HTMLParagraphElement>(null);
-  const wordRef = useRef<HTMLElement>(null);
-  const [indent, setIndent] = useState(0);
-  useEffect(() => {
-    const p = bookRef.current, w = wordRef.current;
-    if (!p || !w) return;
-    // offsetLeft (relative to the headline, which is positioned) ignores the slide-in transform.
-    const measure = () => setIndent(window.matchMedia("(max-width: 767px)").matches ? Math.max(0, Math.round(w.offsetLeft)) : 0);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(p);
-    window.addEventListener("resize", measure);
-    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
-  }, []);
   const toggle = () => setView(onReviews ? "contact" : "reviews");
 
   return (
@@ -117,9 +101,9 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
               viewport={{ once: true, amount: 0.3 }}
               variants={{ hidden: {}, shown: { transition: { staggerChildren: reduce ? 0 : 0.14 } } }}
             >
-            <p ref={bookRef} className="display relative text-[12.5vw] leading-[0.95] md:text-[7.5vw]">
+            <p className="display text-[12.5vw] leading-[0.95] md:text-[7.5vw]">
               <motion.span className="inline-block" {...step()}>{t("book.l1")}</motion.span>{" "}
-              <motion.em ref={wordRef} className="inline-block" {...step()}>{t("book.l2")}</motion.em>
+              <motion.em className="inline-block" {...step()}>{t("book.l2")}</motion.em>
             </p>
             {/* A typographic link, always underlined, instead of a pill button. Nudged in so its first
                 letter lines up optically with the big serif "B" above (serif capitals carry a side bearing). */}
@@ -138,7 +122,7 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
             </div>
             {/* All channels as one quiet list under the request link (right half on desktop). */}
             <motion.div variants={{ hidden: { opacity: 0, y: 12 }, shown: { opacity: 1, y: 0 } }} transition={reduce ? { duration: 0 } : { duration: 1, ease }} className="-mr-8 mt-10 md:mt-4 md:ml-auto md:w-1/2">
-              <ContactList tabIndex={onReviews ? -1 : 0} indent={indent} />
+              <ContactList tabIndex={onReviews ? -1 : 0} />
             </motion.div>
             </motion.div>
           </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,17 +217,39 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
   };
   const check = <T,>(r: { error: { message: string } | null; data?: T | null }) => { if (r.error) throw new Error(r.error.message); return r.data as T; };
 
-  const save = () => act(async () => {
-    check(await supabase.from("client_deliveries").update({
-      title: title.trim() || "Untitled delivery",
-      client_name: client.trim() || null,
-      message: message.trim() || null,
-    }).eq("id", d.id));
-    if (email !== (d.client_email ?? "")) {
-      const r = await supabase.from("client_deliveries").update({ client_email: email.trim() || null } as never).eq("id", d.id);
-      if (r.error) toast.error("Client email needs migration 0028_review_requests — apply it in Lovable.");
-    }
-  }, "Saved");
+  // Autosave: every field is written shortly after you stop typing (and when you leave it),
+  // so nothing is lost when switching deliveries or closing the studio.
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const latest = useRef({ title, client, message, email });
+  latest.current = { title, client, message, email };
+  const savedRef = useRef({ title: d.title, client: d.client_name ?? "", message: d.message ?? "", email: d.client_email ?? "" });
+  const save = async () => {
+    const v = latest.current, was = savedRef.current;
+    if (v.title === was.title && v.client === was.client && v.message === was.message && v.email === was.email) return;
+    setSaveState("saving");
+    try {
+      check(await supabase.from("client_deliveries").update({
+        title: v.title.trim() || "Untitled delivery",
+        client_name: v.client.trim() || null,
+        message: v.message.trim() || null,
+      }).eq("id", d.id));
+      if (v.email !== was.email) {
+        const r = await supabase.from("client_deliveries").update({ client_email: v.email.trim() || null } as never).eq("id", d.id);
+        if (r.error) toast.error("Client email needs migration 0028_review_requests — apply it in Lovable.");
+      }
+      savedRef.current = { ...v };
+      setSaveState("saved");
+      await refresh();
+    } catch (e) { setSaveState("error"); toast.error((e as Error).message); }
+  };
+  useEffect(() => {
+    const t = setTimeout(() => void save(), 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, client, message, email]);
+  // Leaving the delivery with a change still pending: write it straight away.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => () => { void save(); }, []);
 
   const setActive = (is_active: boolean) => act(async () => {
     check(await supabase.from("client_deliveries").update({ is_active }).eq("id", d.id));
@@ -327,12 +349,12 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
       <button onClick={onClose} className="meta mb-4 text-muted-foreground hover:text-paper lg:hidden">← All deliveries</button>
 
       <div className="space-y-3">
-        <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title shown to the client, e.g. Pärnu mnt 12 — apartment" aria-label="Title" maxLength={120} />
-        <input className={input} value={client} onChange={(e) => setClient(e.target.value)} placeholder="Client name (optional)" aria-label="Client name" maxLength={80} />
-        <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Client email — for the review request 3 days after download (optional)" aria-label="Client email" maxLength={200} />
-        <textarea className={cn(input, "min-h-24 resize-y")} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Message to the client (optional)" aria-label="Message" maxLength={1000} />
+        <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} onBlur={() => void save()} placeholder="Title shown to the client, e.g. Pärnu mnt 12 — apartment" aria-label="Title" maxLength={120} />
+        <input className={input} value={client} onChange={(e) => setClient(e.target.value)} onBlur={() => void save()} placeholder="Client name (optional)" aria-label="Client name" maxLength={80} />
+        <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => void save()} placeholder="Client email — for the review request 3 days after download (optional)" aria-label="Client email" maxLength={200} />
+        <textarea className={cn(input, "min-h-24 resize-y")} value={message} onChange={(e) => setMessage(e.target.value)} onBlur={() => void save()} placeholder="Message to the client (optional)" aria-label="Message" maxLength={1000} />
         <div className="flex flex-wrap gap-2">
-          <button className={btnPrimary} disabled={busy || !dirty} onClick={save}>Save</button>
+          <span className="meta self-center pr-1 text-muted-foreground" aria-live="polite">{saveState === "saving" || dirty ? "Saving…" : saveState === "error" ? "Not saved — check your connection" : "Saved automatically"}</span>
           {d.is_active
             ? <button className={btn} disabled={busy} onClick={() => setActive(false)}>Switch link off</button>
             : <button className={btn} disabled={busy} onClick={() => setActive(true)}>Switch link on</button>}

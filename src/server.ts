@@ -44,8 +44,28 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/**
+ * One address for visitors and Google: pages opened on the old Lovable address (or the other
+ * spelling of the domain) move permanently to the main domain, same path. API calls and
+ * server functions (Telegram webhook, forms) are never redirected.
+ */
+const CANONICAL_HOST = "thegodnamed.ee";
+const OLD_HOSTS = new Set(["thegodnamed.lovable.app", "www.thegodnamed.ee"]);
+function redirectToCanonical(request: Request): Response | null {
+  if (request.method !== "GET" && request.method !== "HEAD") return null;
+  const url = new URL(request.url);
+  if (!OLD_HOSTS.has(url.hostname.toLowerCase())) return null;
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_serverFn")) return null;
+  url.protocol = "https:";
+  url.hostname = CANONICAL_HOST;
+  url.port = "";
+  return new Response(null, { status: 301, headers: { location: url.toString(), "cache-control": "public, max-age=3600" } });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const moved = redirectToCanonical(request);
+    if (moved) return moved;
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

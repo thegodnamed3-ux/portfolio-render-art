@@ -24,6 +24,7 @@ export type Database = {
           notes: string | null
           shoot_date: string | null
           shoot_type: string
+          source: string | null
           status: string
           wished_date: string | null
         }
@@ -36,6 +37,7 @@ export type Database = {
           notes?: string | null
           shoot_date?: string | null
           shoot_type?: string
+          source?: string | null
           status?: string
           wished_date?: string | null
         }
@@ -48,6 +50,7 @@ export type Database = {
           notes?: string | null
           shoot_date?: string | null
           shoot_type?: string
+          source?: string | null
           status?: string
           wished_date?: string | null
         }
@@ -57,6 +60,7 @@ export type Database = {
         Row: {
           brand: Json | null
           client_email: string | null
+          client_id: string | null
           client_name: string | null
           cover_file: string | null
           created_at: string
@@ -75,6 +79,7 @@ export type Database = {
         Insert: {
           brand?: Json | null
           client_email?: string | null
+          client_id?: string | null
           client_name?: string | null
           cover_file?: string | null
           created_at?: string
@@ -93,6 +98,7 @@ export type Database = {
         Update: {
           brand?: Json | null
           client_email?: string | null
+          client_id?: string | null
           client_name?: string | null
           cover_file?: string | null
           created_at?: string
@@ -108,7 +114,15 @@ export type Database = {
           updated_at?: string
           watermark?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "client_deliveries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "studio_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_delivery_events: {
         Row: {
@@ -208,6 +222,38 @@ export type Database = {
           },
         ]
       }
+      client_portals: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          email: string | null
+          name: string | null
+          token: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          name?: string | null
+          token: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          email?: string | null
+          name?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "studio_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media: {
         Row: {
           album: string | null
@@ -253,6 +299,30 @@ export type Database = {
           storage_path?: string | null
           tags?: string[]
           w?: number
+        }
+        Relationships: []
+      }
+      message_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          lang: string
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          lang?: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          lang?: string
+          title?: string
         }
         Relationships: []
       }
@@ -474,6 +544,42 @@ export type Database = {
           report_week?: string | null
           updated_at?: string
           whatsapp_url?: string | null
+        }
+        Relationships: []
+      }
+      studio_clients: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          lang: string
+          name: string
+          notes: string | null
+          phone: string | null
+          template_id: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lang?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lang?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          template_id?: string | null
         }
         Relationships: []
       }

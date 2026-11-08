@@ -58,6 +58,7 @@ export type Database = {
           brand: Json | null
           client_email: string | null
           client_name: string | null
+          cover_file: string | null
           created_at: string
           expires_at: string | null
           expiry_reminded_at: string | null
@@ -75,6 +76,7 @@ export type Database = {
           brand?: Json | null
           client_email?: string | null
           client_name?: string | null
+          cover_file?: string | null
           created_at?: string
           expires_at?: string | null
           expiry_reminded_at?: string | null
@@ -92,6 +94,7 @@ export type Database = {
           brand?: Json | null
           client_email?: string | null
           client_name?: string | null
+          cover_file?: string | null
           created_at?: string
           expires_at?: string | null
           expiry_reminded_at?: string | null

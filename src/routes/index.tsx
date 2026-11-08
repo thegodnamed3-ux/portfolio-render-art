@@ -20,25 +20,66 @@ import { Spotlight } from "@/components/Spotlight";
 import { useFadeIn } from "@/components/Frame";
 import { useCategoryTitle, useI18n } from "@/lib/i18n";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
+import { getApprovedReviews, type PublicReview } from "@/lib/reviews.functions";
+import { contact } from "@/content/contact";
 
 export const Route = createFileRoute("/")({
   head: (ctx) => { const loaderData = ctx.loaderData; return withLang(ctx, {
     meta: [
-      { title: "thegodnamed — Photography & film in Tallinn" },
-      { name: "description", content: "Photography, film & visual storytelling. Made in Tallinn." },
-      { property: "og:title", content: "thegodnamed — Photography & film in Tallinn" },
-      { property: "og:description", content: "Photography, film & visual storytelling. Made in Tallinn." },
+      { title: "Photographer in Tallinn — portraits, couples & commercial | thegodnamed" },
+      { name: "description", content: "Gor Arsakjan — photographer and videographer in Tallinn. Portraits, couples, commercial, automotive and real estate shoots across Estonia." },
+      { property: "og:title", content: "Photographer in Tallinn — portraits, couples & commercial | thegodnamed" },
+      { property: "og:description", content: "Gor Arsakjan — photographer and videographer in Tallinn. Portraits, couples, commercial, automotive and real estate shoots across Estonia." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: loaderData?.hero?.[0]?.src ?? photos[10]!.src },
       { name: "twitter:image", content: loaderData?.hero?.[0]?.src ?? photos[10]!.src },
     ],
+    // What Google reads about the business: who, where, how to reach, and the approved reviews.
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(businessSchema(loaderData?.hero?.[0]?.src ?? photos[10]!.src, loaderData?.reviews ?? [])) }],
     // Start fetching the first hero frame before the bundle runs.
     links: [{ rel: "preload", as: "image", href: (loaderData?.hero ?? defaultHero)[0]?.src ?? photos[10]!.src, fetchPriority: "high" } as never],
   }); },
-  loader: () => getHomeMedia(),
+  loader: async () => {
+    const [home, reviews] = await Promise.all([getHomeMedia(), getApprovedReviews().catch(() => [] as PublicReview[])]);
+    return { ...home, reviews };
+  },
   component: Index,
 });
+
+/** schema.org description of the studio for search engines (rich results, knowledge panel). */
+function businessSchema(image: string, reviews: PublicReview[]) {
+  const rated = reviews.filter((r) => typeof r.rating === "number" && r.rating > 0);
+  const avg = rated.length ? rated.reduce((a, r) => a + (r.rating ?? 0), 0) / rated.length : 0;
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "@id": "https://thegodnamed.ee/#business",
+    name: "thegodnamed",
+    alternateName: "Gor Arsakjan Photography",
+    description: "Photographer and videographer in Tallinn: portraits, couples, commercial, automotive, video and real estate.",
+    url: "https://thegodnamed.ee/",
+    image,
+    telephone: "+372 5800 0729",
+    priceRange: "€€",
+    address: { "@type": "PostalAddress", addressLocality: "Tallinn", addressCountry: "EE" },
+    areaServed: { "@type": "Country", name: "Estonia" },
+    founder: { "@type": "Person", name: "Gor Arsakjan", jobTitle: "Photographer" },
+    knowsLanguage: ["en", "et", "ru"],
+    sameAs: [contact.instagram, contact.behance, contact.telegram].filter(Boolean),
+    ...(rated.length
+      ? {
+          aggregateRating: { "@type": "AggregateRating", ratingValue: avg.toFixed(1), reviewCount: rated.length, bestRating: 5, worstRating: 1 },
+          review: rated.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.name },
+            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+            reviewBody: r.body.slice(0, 500),
+          })),
+        }
+      : {}),
+  };
+}
 
 const p = (n: number) => photos[n - 1]!;
 const num = (n: number) => String(n).padStart(2, "0");

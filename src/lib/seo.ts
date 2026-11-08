@@ -1,6 +1,6 @@
 import { translateKey, type Lang } from "@/lib/i18n";
 
-type Head = { meta?: Record<string, string>[]; links?: Record<string, string>[] };
+type Head = { meta?: Record<string, string>[]; links?: Record<string, string>[]; scripts?: Record<string, string>[] };
 type Ctx = { matches?: { loaderData?: unknown }[]; match?: { pathname?: string } };
 
 /** Page titles and descriptions in Estonian and Russian (everything else stays as written). */
@@ -8,6 +8,10 @@ const T: Record<string, [et: string, ru: string]> = {
   "Photography & film in Tallinn": ["Fotograafia ja video Tallinnas", "Фото и видео в Таллине"],
   "Photography, film & visual storytelling. Made in Tallinn.": ["Fotograafia, video ja visuaalne lugude jutustamine. Tehtud Tallinnas.", "Фотография, видео и визуальные истории. Сделано в Таллине."],
   "Photography, film & visual storytelling, made in Tallinn.": ["Fotograafia, video ja visuaalne lugude jutustamine. Tehtud Tallinnas.", "Фотография, видео и визуальные истории. Сделано в Таллине."],
+  "Photographer in Tallinn": ["Fotograaf Tallinnas", "Фотограф в Таллине"],
+  "portraits, couples & commercial | thegodnamed": ["portreed, paarid ja reklaam | thegodnamed", "портреты, пары и реклама | thegodnamed"],
+  "Gor Arsakjan": ["Gor Arsakjan", "Гор Арсакян"],
+  "photographer and videographer in Tallinn. Portraits, couples, commercial, automotive and real estate shoots across Estonia.": ["fotograaf ja videograaf Tallinnas. Portreed, paarid, reklaam, autod ja kinnisvara üle Eesti.", "фотограф и видеограф в Таллине. Портреты, пары, реклама, авто и недвижимость по всей Эстонии."],
   "Privacy policy": ["Privaatsuspoliitika", "Политика конфиденциальности"],
   "How thegodnamed (Gor Arsakjan, Tallinn) handles personal data.": ["Kuidas thegodnamed (Gor Arsakjan, Tallinn) isikuandmeid käsitleb.", "Как thegodnamed (Гор Арсакян, Таллин) обращается с персональными данными."],
   "Archive": ["Arhiiv", "Архив"],

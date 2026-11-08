@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiTelegramRouteImport } from './routes/api/telegram'
+import { Route as ApiSitemapRouteImport } from './routes/api/sitemap'
 import { Route as GTokenRouteImport } from './routes/g.$token'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as GalleryCategoryRouteImport } from './routes/gallery.$category'
@@ -50,6 +51,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiSitemapRoute = ApiSitemapRouteImport.update({
+  id: '/api/sitemap',
+  path: '/api/sitemap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTelegramRoute = ApiTelegramRouteImport.update({
   id: '/api/telegram',
   path: '/api/telegram',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/telegram': typeof ApiTelegramRoute
+  '/api/sitemap': typeof ApiSitemapRoute
   '/g/$token': typeof GTokenRoute
   '/c/$token': typeof CTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/telegram': typeof ApiTelegramRoute
+  '/api/sitemap': typeof ApiSitemapRoute
   '/g/$token': typeof GTokenRoute
   '/c/$token': typeof CTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/api/telegram': typeof ApiTelegramRoute
+  '/api/sitemap': typeof ApiSitemapRoute
   '/g/$token': typeof GTokenRoute
   '/c/$token': typeof CTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/admin'
     | '/api/telegram'
+    | '/api/sitemap'
     | '/g/$token'
     | '/c/$token'
     | '/gallery/$category'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/admin'
     | '/api/telegram'
+    | '/api/sitemap'
     | '/g/$token'
     | '/c/$token'
     | '/gallery/$category'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/_authenticated/admin'
     | '/api/telegram'
+    | '/api/sitemap'
     | '/g/$token'
     | '/c/$token'
     | '/gallery/$category'
@@ -161,6 +173,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
   ApiTelegramRoute: typeof ApiTelegramRoute
+  ApiSitemapRoute: typeof ApiSitemapRoute
   GTokenRoute: typeof GTokenRoute
   CTokenRoute: typeof CTokenRoute
   GalleryCategoryRoute: typeof GalleryCategoryRoute
@@ -210,6 +223,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/sitemap': {
+      id: '/api/sitemap'
+      path: '/api/sitemap'
+      fullPath: '/api/sitemap'
+      preLoaderRoute: typeof ApiSitemapRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/telegram': {
       id: '/api/telegram'
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
   ApiTelegramRoute: ApiTelegramRoute,
+  ApiSitemapRoute: ApiSitemapRoute,
   GTokenRoute: GTokenRoute,
   CTokenRoute: CTokenRoute,
   GalleryCategoryRoute: GalleryCategoryRoute,

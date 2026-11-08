@@ -590,8 +590,15 @@ const MSG: Record<MsgLang, { hi: (n: string) => string; ready: string; pw: strin
 
 /** Ready-to-send message for the client in EN / ET / RU — copy, or open in WhatsApp / Telegram. */
 function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
-  const [lang, setLang] = useState<MsgLang>("en");
-  const [edited, setEdited] = useState<string | null>(null);
+  // The chosen language and any edits are kept per delivery (in this browser), so they survive
+  // closing the delivery or reloading the studio.
+  const key = (k: string) => `delivery-msg:${d.id}:${k}`;
+  const read = (k: string) => { try { return typeof window === "undefined" ? null : localStorage.getItem(key(k)); } catch { return null; } };
+  const write = (k: string, v: string | null) => { try { if (v === null) localStorage.removeItem(key(k)); else localStorage.setItem(key(k), v); } catch { /* private mode */ } };
+  const [lang, setLangState] = useState<MsgLang>(() => { const l = read("lang"); return l === "et" || l === "ru" || l === "en" ? l : "en"; });
+  const [edited, setEditedState] = useState<string | null>(() => read(`text:${(() => { const l = read("lang"); return l === "et" || l === "ru" ? l : "en"; })()}`));
+  const setLang = (l: MsgLang) => { setLangState(l); write("lang", l); setEditedState(read(`text:${l}`)); };
+  const setEdited = (v: string | null) => { setEditedState(v); write(`text:${lang}`, v); };
   let pw: string | null = null;
   try { pw = typeof window === "undefined" ? null : localStorage.getItem(`delivery-pw:${d.id}`); } catch { /* ignore */ }
   const m = MSG[lang];
@@ -618,7 +625,7 @@ function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
         <p className="meta text-muted-foreground">Message to the client</p>
         <div className="glass inline-flex rounded-full p-1">
           {(["en", "et", "ru"] as const).map((l) => (
-            <button key={l} onClick={() => { setLang(l); setEdited(null); }} className={cn("meta rounded-full px-3 py-1", lang === l ? "bg-paper text-ink" : "text-paper/75")}>{l.toUpperCase()}</button>
+            <button key={l} onClick={() => setLang(l)} className={cn("meta rounded-full px-3 py-1", lang === l ? "bg-paper text-ink" : "text-paper/75")}>{l.toUpperCase()}</button>
           ))}
         </div>
       </div>
@@ -626,6 +633,7 @@ function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
       {d.password_hash && !pw && <p className="text-xs text-muted-foreground">The password isn’t known in this browser — type it in place of “…”, or set it again above.</p>}
       <div className="flex flex-wrap gap-2">
         <button className={btnPrimary} onClick={copy}>Copy message</button>
+        {edited !== null && <button className={btn} onClick={() => setEdited(null)} title="Back to the standard text for this language">Reset text</button>}
         <a className={btn} href={`https://wa.me/?text=${encodeURIComponent(value)}`} target="_blank" rel="noopener noreferrer">Send in WhatsApp</a>
         <a className={btn} href={`https://t.me/share/url?url=${encodeURIComponent(value)}`} /* the whole message goes in "url": with url + text Telegram printed the link twice */ target="_blank" rel="noopener noreferrer">Send in Telegram</a>
       </div>

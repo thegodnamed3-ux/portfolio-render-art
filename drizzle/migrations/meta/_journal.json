@@ -218,6 +218,13 @@
       "when": 1793192368286,
       "tag": "0030_0030_delivery_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794143436485,
+      "tag": "0031_0031_delivery_cover",
+      "breakpoints": true
     }
   ]
 }

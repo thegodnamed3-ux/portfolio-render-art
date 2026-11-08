@@ -43,7 +43,12 @@ function NotFoundComponent() {
   return (
     <Fallback
       meta={t("nf.meta")} t1={t("nf.t1")} t2={t("nf.t2")} text={t("nf.p")}
-      actions={<Link to="/" className="meta rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90">{t("nf.home")}</Link>}
+      actions={
+        <>
+          <Link to="/" className="meta rounded-full bg-paper px-5 py-3 text-ink transition-opacity hover:opacity-90">{t("nf.home")}</Link>
+          <a href="/#disciplines" className="glass meta rounded-full px-5 py-3 text-paper">{t("nav.explore")}</a>
+        </>
+      }
     />
   );
 }

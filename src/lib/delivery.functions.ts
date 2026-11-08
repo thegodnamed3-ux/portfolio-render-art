@@ -236,9 +236,16 @@ export const getPortal = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<PortalResult> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const sb = supabaseAdmin as any;
-    const p = await sb.from("client_portals").select("email, name").eq("token", data.token).maybeSingle();
-    if (p.error || !p.data?.email) return { state: "missing" };
-    const ds = await sb.from("client_deliveries").select("id, token, title, client_name, created_at, expires_at, password_hash").ilike("client_email", p.data.email).eq("is_active", true).order("created_at", { ascending: false });
+    let p = await sb.from("client_portals").select("email, name, client_id").eq("token", data.token).maybeSingle();
+    if (p.error) p = await sb.from("client_portals").select("email, name").eq("token", data.token).maybeSingle();
+    if (p.error || !p.data || (!p.data.email && !p.data.client_id)) return { state: "missing" };
+    // Galleries tied to the saved client, plus any sent to the same e-mail (merged, newest first).
+    const cols = "id, token, title, client_name, created_at, expires_at, password_hash";
+    const byClient = p.data.client_id ? (await sb.from("client_deliveries").select(cols).eq("client_id", p.data.client_id).eq("is_active", true)).data ?? [] : [];
+    const byMail = p.data.email ? (await sb.from("client_deliveries").select(cols).ilike("client_email", p.data.email).eq("is_active", true)).data ?? [] : [];
+    const merged = new Map<string, any>();
+    [...byClient, ...byMail].forEach((d: any) => merged.set(d.id, d));
+    const ds = { data: [...merged.values()].sort((a: any, b: any) => b.created_at.localeCompare(a.created_at)) };
     const now = Date.now();
     const list = ((ds.data ?? []) as { id: string; token: string; title: string; client_name: string | null; created_at: string; expires_at: string | null; password_hash: string | null }[])
       .filter((d) => !d.expires_at || new Date(d.expires_at).getTime() > now);

@@ -10,12 +10,13 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { ClientPicker, ClientsManager, clientLabel, fillTemplate, toTemplate, useClients, useTemplates, type Client } from "@/components/admin/ClientsPanel";
 import { BRAND_DEFAULT, bakeBrand, brandedPathFor, brandedPreviewFor, placeLogo, type Brand, type Corner } from "@/lib/brand";
 
 type DeliveryRow = {
   id: string; token: string; title: string; client_name: string | null; message: string | null; client_email?: string | null;
   is_active: boolean; created_at: string; client_delivery_files: { count: number }[];
-  password_hash: string | null; expires_at: string | null; watermark?: boolean; brand?: Brand | null; cover_file?: string | null;
+  password_hash: string | null; expires_at: string | null; watermark?: boolean; brand?: Brand | null; cover_file?: string | null; client_id?: string | null;
 };
 type FileRow = {
   id: string; delivery_id: string; storage_path: string; preview_path: string | null;
@@ -98,6 +99,8 @@ async function makePreview(file: File, withMark = false): Promise<{ blob: Blob |
 export function DeliveriesTab() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
+  const [showClients, setShowClients] = useState(false);
+  const clients = useClients();
   const list = useQuery({
     queryKey: ["admin", "deliveries"],
     queryFn: async () => {
@@ -136,19 +139,20 @@ export function DeliveriesTab() {
   return (
     <div className="grid gap-8 lg:grid-cols-[22rem_1fr]">
       <aside className={cn(current && "hidden lg:block")}>
-        <button onClick={create} className={cn(btnPrimary, "mb-2 w-full")}>+ New client delivery</button>
+        <button onClick={() => { setShowClients(false); void create(); }} className={cn(btnPrimary, "mb-2 w-full")}>+ New client delivery</button>
+        <button onClick={() => { setShowClients((v) => !v); setSelected(null); }} className={cn(btn, "mb-2 w-full", showClients && "border-paper/60 text-paper")}>Clients & message templates</button>
         <p className="mb-4 text-xs text-muted-foreground">Each delivery is a private page with its own secret link. It never appears on the website.</p>
         <ul className="space-y-2">
           {rows.map((r) => (
             <li key={r.id}>
               <button
-                onClick={() => setSelected(r.id)}
+                onClick={() => { setShowClients(false); setSelected(r.id); }}
                 className={cn("flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors", selected === r.id ? "border-paper/60 bg-card" : "border-border hover:border-paper/30")}
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-paper">{r.title}</p>
                   <p className="meta truncate text-muted-foreground">
-                    {r.client_name ? `${r.client_name} · ` : ""}{r.client_delivery_files[0]?.count ?? 0} photos
+                    {(() => { const c = clients.data?.find((x) => x.id === r.client_id); return c ? `${clientLabel(c)} · ` : r.client_name ? `${r.client_name} · ` : ""; })()}{r.client_delivery_files[0]?.count ?? 0} photos
                   </p>
                 </div>
                 <span className={cn("meta shrink-0 rounded-full px-2.5 py-1 text-[0.6rem]", r.is_active ? "bg-paper text-ink" : "border border-border text-muted-foreground")}>
@@ -161,7 +165,9 @@ export function DeliveriesTab() {
         {rows.length === 0 && <p className="mt-6 text-sm text-muted-foreground">No deliveries yet.</p>}
       </aside>
 
-      {current ? (
+      {showClients ? (
+        <section className="min-w-0"><ClientsManager /></section>
+      ) : current ? (
         <DeliveryEditor key={current.id} d={current} refresh={refresh} onClose={() => setSelected(null)} />
       ) : (
         <p className="hidden text-sm text-muted-foreground lg:block">Select a delivery or create a new one.</p>
@@ -176,6 +182,16 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
   const [client, setClient] = useState(d.client_name ?? "");
   const [email, setEmail] = useState(d.client_email ?? "");
   const [message, setMessage] = useState(d.message ?? "");
+  const [clientId, setClientId] = useState<string | null>(d.client_id ?? null);
+  const clientsQ = useClients();
+  const clientObj = clientsQ.data?.find((c) => c.id === clientId) ?? null;
+  // Choosing a saved client fills in the name and e-mail and ties the delivery to them.
+  const pickClient = async (c: Client | null) => {
+    setClientId(c?.id ?? null);
+    if (c) { setClient(c.name); if (c.email) setEmail(c.email); }
+    const r = await supabase.from("client_deliveries").update({ client_id: c?.id ?? null } as never).eq("id", d.id);
+    if (r.error) toast.error(r.error.message); else await refresh();
+  };
   const [busy, setBusy] = useState(false);
   const [upload, setUpload] = useState<{ done: number; total: number } | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -254,15 +270,17 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
   // One link for this client: every active gallery sent to the same e-mail, on one page.
   const clientPage = async () => {
     const mail = (latest.current.email || "").trim().toLowerCase();
-    if (!mail) { toast.error("Add the client's e-mail first — the client page collects all galleries sent to it."); return; }
+    if (!mail && !clientId) { toast.error("Choose a saved client or add the client's e-mail first — the client page collects all their galleries."); return; }
     try {
       const sb = supabase as any;
-      const found = await sb.from("client_portals").select("token").eq("email", mail).maybeSingle();
+      const found = clientId
+        ? await sb.from("client_portals").select("token").eq("client_id", clientId).maybeSingle()
+        : await sb.from("client_portals").select("token").eq("email", mail).maybeSingle();
       if (found.error) throw new Error(/client_portals|relation|schema/i.test(found.error.message) ? `The client page needs its database update (migration ${"0032_client_portals"}) — apply it in Lovable first.` : found.error.message);
       let token = found.data?.token as string | undefined;
       if (!token) {
         token = newToken();
-        const ins = await sb.from("client_portals").insert({ token, email: mail, name: latest.current.client.trim() || null });
+        const ins = await sb.from("client_portals").insert({ token, email: mail || null, name: latest.current.client.trim() || null, ...(clientId ? { client_id: clientId } : {}) });
         if (ins.error) throw new Error(ins.error.message);
       }
       const url = `${window.location.origin}/c/${token}`;
@@ -370,11 +388,12 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
 
       <div className="space-y-3">
         <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} onBlur={() => void save()} placeholder="Title shown to the client, e.g. Pärnu mnt 12 — apartment" aria-label="Title" maxLength={120} />
+        <ClientPicker value={clientId} onPick={(c) => void pickClient(c)} />
         <input className={input} value={client} onChange={(e) => setClient(e.target.value)} onBlur={() => void save()} placeholder="Client name (optional)" aria-label="Client name" maxLength={80} />
         <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => void save()} placeholder="Client email — for the review request 3 days after download (optional)" aria-label="Client email" maxLength={200} />
         <textarea className={cn(input, "min-h-24 resize-y")} value={message} onChange={(e) => setMessage(e.target.value)} onBlur={() => void save()} placeholder="Message to the client (optional)" aria-label="Message" maxLength={1000} />
         <div className="flex flex-wrap gap-2">
-          <button className={btn} disabled={!email.trim()} onClick={() => void clientPage()} title="One link with every gallery sent to this e-mail">Copy client page link</button>
+          <button className={btn} disabled={!email.trim() && !clientId} onClick={() => void clientPage()} title="One link with every gallery sent to this e-mail">Copy client page link</button>
           <span className="meta self-center pr-1 text-muted-foreground" aria-live="polite">{saveState === "saving" || dirty ? "Saving…" : saveState === "error" ? "Not saved — check your connection" : "Saved automatically"}</span>
           {d.is_active
             ? <button className={btn} disabled={busy} onClick={() => setActive(false)}>Switch link off</button>
@@ -396,7 +415,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
       </div>
 
       <AccessAndStats d={d} rows={rows} refresh={reload} />
-      <ClientMessage key={d.id} d={d} link={link} />
+      <ClientMessage key={d.id} d={d} link={link} client={clientObj} />
       <BrandPanel d={d} rows={rows} {...(files.data ? { thumbs: files.data.thumbs } : {})} refresh={reload} picked={picked} onPickedDone={() => setPicked(new Set())} />
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
@@ -643,13 +662,14 @@ const MSG: Record<MsgLang, { hi: (n: string) => string; ready: string; pw: strin
 };
 
 /** Ready-to-send message for the client in EN / ET / RU — copy, or open in WhatsApp / Telegram. */
-function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
+function ClientMessage({ d, link, client }: { d: DeliveryRow; link: string; client: Client | null }) {
+  const templates = useTemplates();
   // The chosen language and any edits are kept per delivery (in this browser), so they survive
   // closing the delivery or reloading the studio.
   const key = (k: string) => `delivery-msg:${d.id}:${k}`;
   const read = (k: string) => { try { return typeof window === "undefined" ? null : localStorage.getItem(key(k)); } catch { return null; } };
   const write = (k: string, v: string | null) => { try { if (v === null) localStorage.removeItem(key(k)); else localStorage.setItem(key(k), v); } catch { /* private mode */ } };
-  const [lang, setLangState] = useState<MsgLang>(() => { const l = read("lang"); return l === "et" || l === "ru" || l === "en" ? l : "en"; });
+  const [lang, setLangState] = useState<MsgLang>(() => { const l = read("lang"); return l === "et" || l === "ru" || l === "en" ? l : client?.lang ?? "en"; });
   const [edited, setEditedState] = useState<string | null>(() => read(`text:${(() => { const l = read("lang"); return l === "et" || l === "ru" ? l : "en"; })()}`));
   const setLang = (l: MsgLang) => { setLangState(l); write("lang", l); setEditedState(read(`text:${l}`)); };
   const setEdited = (v: string | null) => { setEditedState(v); write(`text:${lang}`, v); };
@@ -669,7 +689,17 @@ function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
     "",
     m.sign,
   ].filter((l) => l !== null).join("\n");
-  const value = edited ?? text;
+  const vars: Record<string, string> = { name: d.client_name ?? "", company: client?.company ?? "", title: d.title, link: `${link}?lang=${lang}`, password: pw ?? "", until: date ?? "" };
+  // The client's default template is used when nothing was written by hand for this delivery.
+  const clientTpl = client?.template_id ? templates.data?.find((t) => t.id === client.template_id && t.lang === lang) : undefined;
+  const value = edited ?? (clientTpl ? fillTemplate(clientTpl.body, vars) : text);
+  const saveTemplate = async () => {
+    const title = window.prompt("Template name", client ? `${clientLabel(client)} — ${lang.toUpperCase()}` : `Message — ${lang.toUpperCase()}`);
+    if (!title?.trim()) return;
+    const r = await (supabase as any).from("message_templates").insert({ title: title.trim(), lang, body: toTemplate(value, vars) });
+    if (r.error) toast.error(/message_templates|relation|schema/i.test(r.error.message) ? "Templates need their database update (migration “clients_templates”) — apply it in Lovable first." : r.error.message);
+    else { toast.success("Saved as a template"); await templates.refetch(); }
+  };
   const copy = async () => {
     try { await navigator.clipboard.writeText(value); toast.success("Message copied"); } catch { toast.error("Could not copy"); }
   };
@@ -683,11 +713,19 @@ function ClientMessage({ d, link }: { d: DeliveryRow; link: string }) {
           ))}
         </div>
       </div>
+      {!!templates.data?.length && (
+        <select className={cn(input, "w-auto")} value="" aria-label="Use a template"
+          onChange={(e) => { const t = templates.data?.find((x) => x.id === e.target.value); if (t) { const filled = fillTemplate(t.body, { ...vars, link: `${link}?lang=${t.lang}` }); setLangState(t.lang); write("lang", t.lang); setEditedState(filled); write(`text:${t.lang}`, filled); } }}>
+          <option value="">Use a template…</option>
+          {templates.data.map((t) => <option key={t.id} value={t.id}>{t.title} ({t.lang.toUpperCase()})</option>)}
+        </select>
+      )}
       <textarea value={value} onChange={(e) => setEdited(e.target.value)} rows={9} className={cn(input, "resize-y font-sans text-sm leading-relaxed")} aria-label="Message to the client" />
       {d.password_hash && !pw && <p className="text-xs text-muted-foreground">The password isn’t known in this browser — type it in place of “…”, or set it again above.</p>}
       <div className="flex flex-wrap gap-2">
         <button className={btnPrimary} onClick={copy}>Copy message</button>
         {edited !== null && <button className={btn} onClick={() => setEdited(null)} title="Back to the standard text for this language">Reset text</button>}
+        <button className={btn} onClick={() => void saveTemplate()} title="Keep this text for other deliveries (details become placeholders)">Save as template</button>
         <a className={btn} href={`https://wa.me/?text=${encodeURIComponent(value)}`} target="_blank" rel="noopener noreferrer">Send in WhatsApp</a>
         <a className={btn} href={`https://t.me/share/url?url=${encodeURIComponent(value)}`} /* the whole message goes in "url": with url + text Telegram printed the link twice */ target="_blank" rel="noopener noreferrer">Send in Telegram</a>
       </div>

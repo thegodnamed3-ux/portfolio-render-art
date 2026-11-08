@@ -225,6 +225,13 @@
       "when": 1794143436485,
       "tag": "0031_0031_delivery_cover",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794176724281,
+      "tag": "0032_0033_clients_templates",
+      "breakpoints": true
     }
   ]
 }

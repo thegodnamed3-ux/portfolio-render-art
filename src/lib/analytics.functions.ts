@@ -126,3 +126,20 @@ async function maybeSendWeekly(sb: any, origin: string) {
   ].filter((l) => l !== null).join("\n");
   await sendTelegram(html, [{ text: "Open statistics", url: `${origin}/admin` }]);
 }
+
+/**
+ * Where an enquiry came from: the same cookie-free daily visitor id as the page views, looked up in
+ * today's visits ("google", "instagram"… or "direct"). Used to tag enquiries for the statistics.
+ */
+export async function enquirySource(sb: any, req: Request): Promise<string> {
+  try {
+    const ua = req.headers.get("user-agent") ?? "";
+    const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+    const day = new Date().toISOString().slice(0, 10);
+    const visitor = await sha(`${ip}|${ua}|${day}|${process.env["SUPABASE_SERVICE_ROLE_KEY"] ?? "salt"}`);
+    const { data } = await sb.from("page_views").select("referrer").eq("visitor", visitor).gte("created_at", `${day}T00:00:00Z`).not("referrer", "is", null).order("id").limit(1);
+    return data?.[0]?.referrer ?? "direct";
+  } catch {
+    return "direct";
+  }
+}

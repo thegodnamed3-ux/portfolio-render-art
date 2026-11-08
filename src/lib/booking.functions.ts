@@ -27,6 +27,14 @@ export const submitBooking = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const r = await (supabaseAdmin as any).from("booking_requests").insert({ name: data.name, contact: data.contact, shoot_type: data.type, wished_date: data.date || null, message: data.message || null }).select("id").single();
       if (!r.error) id = r.data.id;
+      // Statistics: where this request came from (Google, Instagram… or direct); ignored before its database update.
+      if (id) {
+        try {
+          const { getRequest } = await import("@tanstack/react-start/server");
+          const { enquirySource } = await import("@/lib/analytics.functions");
+          await (supabaseAdmin as any).from("booking_requests").update({ source: await enquirySource(supabaseAdmin, getRequest()) }).eq("id", id);
+        } catch { /* optional */ }
+      }
     } catch { /* table not created yet */ }
     const { sendTelegram, esc, replyButton, siteOrigin } = await import("@/lib/telegram.server");
     const html = [

@@ -224,3 +224,46 @@ export const submitPicks = createServerFn({ method: "POST" })
     await sendTelegram(html, origin ? [{ text: "Open in studio", url: `${origin}/admin` }] : []);
     return { count: picks.length };
   });
+
+/* ---------------- Client page: every gallery of one client (by their e-mail) ---------------- */
+
+export type PortalItem = { title: string; token: string; date: string; count: number; cover: string | null; locked: boolean; expires: string | null };
+export type PortalResult = { state: "missing" } | { state: "ok"; name: string | null; items: PortalItem[] };
+
+/** One link for a regular client (an agent, a brand): all their active galleries, newest first. */
+export const getPortal = createServerFn({ method: "GET" })
+  .inputValidator((input: { token: string }) => ({ token: String(input?.token ?? "").slice(0, 64) }))
+  .handler(async ({ data }): Promise<PortalResult> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const p = await sb.from("client_portals").select("email, name").eq("token", data.token).maybeSingle();
+    if (p.error || !p.data?.email) return { state: "missing" };
+    const ds = await sb.from("client_deliveries").select("id, token, title, client_name, created_at, expires_at, password_hash").ilike("client_email", p.data.email).eq("is_active", true).order("created_at", { ascending: false });
+    const now = Date.now();
+    const list = ((ds.data ?? []) as { id: string; token: string; title: string; client_name: string | null; created_at: string; expires_at: string | null; password_hash: string | null }[])
+      .filter((d) => !d.expires_at || new Date(d.expires_at).getTime() > now);
+    const ids = list.map((d) => d.id);
+    const files = ids.length
+      ? (((await sb.from("client_delivery_files").select("delivery_id, preview_path, storage_path, position").in("delivery_id", ids).order("position")).data ?? []) as { delivery_id: string; preview_path: string | null; storage_path: string }[])
+      : [];
+    const first = new Map<string, string>();
+    const count = new Map<string, number>();
+    files.forEach((f) => { count.set(f.delivery_id, (count.get(f.delivery_id) ?? 0) + 1); if (!first.has(f.delivery_id)) first.set(f.delivery_id, f.preview_path ?? f.storage_path); });
+    // Covers only for galleries without a password (a locked gallery stays locked here too).
+    const coverPaths = list.filter((d) => !d.password_hash && first.has(d.id)).map((d) => first.get(d.id)!);
+    const signed = coverPaths.length ? await supabaseAdmin.storage.from(DELIVERY_BUCKET).createSignedUrls(coverPaths, TTL) : null;
+    const urlBy = new Map((signed?.data ?? []).map((s) => [s.path, s.signedUrl]));
+    return {
+      state: "ok",
+      name: p.data.name || list[0]?.client_name || null,
+      items: list.map((d) => ({
+        title: d.title,
+        token: d.token,
+        date: d.created_at,
+        count: count.get(d.id) ?? 0,
+        cover: d.password_hash ? null : (urlBy.get(first.get(d.id) ?? "") ?? null),
+        locked: !!d.password_hash,
+        expires: d.expires_at,
+      })),
+    };
+  });

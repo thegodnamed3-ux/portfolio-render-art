@@ -53,6 +53,24 @@ export function AnalyticsTab() {
     },
   });
 
+  // Enquiries in the same period, with where each came from (tagged when it arrived).
+  const enq = useQuery({
+    queryKey: ["admin", "analytics-enquiries", days],
+    queryFn: async () => {
+      const since = new Date(Date.now() - days * 86400000).toISOString();
+      const sb = supabase as any;
+      let r = await sb.from("booking_requests").select("created_at, source").gte("created_at", since);
+      if (r.error) r = await sb.from("booking_requests").select("created_at").gte("created_at", since);
+      return (r.data ?? []) as { created_at: string; source?: string | null }[];
+    },
+  });
+  const leads = useMemo(() => {
+    const rows = enq.data ?? [];
+    const m = new Map<string, number>();
+    rows.forEach((r) => { const k = r.source === "direct" ? "direct / typed" : r.source || "not recorded"; m.set(k, (m.get(k) ?? 0) + 1); });
+    return { count: rows.length, sources: [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8) };
+  }, [enq.data]);
+
   const stats = useMemo(() => {
     const rows = q.data ?? [];
     const dayKey = (r: View) => r.created_at.slice(0, 10);
@@ -97,11 +115,13 @@ export function AnalyticsTab() {
         <p className="text-xs text-muted-foreground">No cookies, no stored IP addresses. A summary arrives in Telegram every Monday.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {[
           ["Visitors", stats.visitors],
           ["Page views", stats.views],
           ["Pages per visit", stats.perVisit],
+          ["Requests", leads.count],
+          ["Visitors → request", stats.visitors ? `${((leads.count / stats.visitors) * 100).toFixed(1)}%` : "—"],
         ].map(([label, v]) => (
           <div key={label} className={panel}>
             <p className="meta text-muted-foreground">{label}</p>
@@ -129,6 +149,7 @@ export function AnalyticsTab() {
         <Top title="Where visitors came from" rows={stats.sources} total={stats.views} empty="No visits yet." />
         <Top title="Countries" rows={stats.countries} total={stats.views} empty="No visits yet." />
         <Top title="Devices" rows={stats.devices} total={stats.views} empty="No visits yet." />
+        <Top title="Where requests came from" rows={leads.sources} total={leads.count} empty="No requests in this period." />
       </div>
     </div>
   );

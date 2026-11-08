@@ -243,13 +243,33 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
     } catch (e) { setSaveState("error"); toast.error((e as Error).message); }
   };
   useEffect(() => {
-    const t = setTimeout(() => void save(), 700);
+    const t = setTimeout(() => void save(), 1000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, client, message, email]);
   // Leaving the delivery with a change still pending: write it straight away.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => () => { void save(); }, []);
+
+  // One link for this client: every active gallery sent to the same e-mail, on one page.
+  const clientPage = async () => {
+    const mail = (latest.current.email || "").trim().toLowerCase();
+    if (!mail) { toast.error("Add the client's e-mail first — the client page collects all galleries sent to it."); return; }
+    try {
+      const sb = supabase as any;
+      const found = await sb.from("client_portals").select("token").eq("email", mail).maybeSingle();
+      if (found.error) throw new Error(/client_portals|relation|schema/i.test(found.error.message) ? `The client page needs its database update (migration ${"0032_client_portals"}) — apply it in Lovable first.` : found.error.message);
+      let token = found.data?.token as string | undefined;
+      if (!token) {
+        token = newToken();
+        const ins = await sb.from("client_portals").insert({ token, email: mail, name: latest.current.client.trim() || null });
+        if (ins.error) throw new Error(ins.error.message);
+      }
+      const url = `${window.location.origin}/c/${token}`;
+      try { await navigator.clipboard.writeText(url); toast.success("Client page link copied — all their galleries in one place"); }
+      catch { window.prompt("Client page link", url); }
+    } catch (e) { toast.error((e as Error).message); }
+  };
 
   const setActive = (is_active: boolean) => act(async () => {
     check(await supabase.from("client_deliveries").update({ is_active }).eq("id", d.id));
@@ -354,6 +374,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
         <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => void save()} placeholder="Client email — for the review request 3 days after download (optional)" aria-label="Client email" maxLength={200} />
         <textarea className={cn(input, "min-h-24 resize-y")} value={message} onChange={(e) => setMessage(e.target.value)} onBlur={() => void save()} placeholder="Message to the client (optional)" aria-label="Message" maxLength={1000} />
         <div className="flex flex-wrap gap-2">
+          <button className={btn} disabled={!email.trim()} onClick={() => void clientPage()} title="One link with every gallery sent to this e-mail">Copy client page link</button>
           <span className="meta self-center pr-1 text-muted-foreground" aria-live="polite">{saveState === "saving" || dirty ? "Saving…" : saveState === "error" ? "Not saved — check your connection" : "Saved automatically"}</span>
           {d.is_active
             ? <button className={btn} disabled={busy} onClick={() => setActive(false)}>Switch link off</button>

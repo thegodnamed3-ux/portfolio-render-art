@@ -15,7 +15,7 @@ import { BRAND_DEFAULT, bakeBrand, brandedPathFor, brandedPreviewFor, placeLogo,
 type DeliveryRow = {
   id: string; token: string; title: string; client_name: string | null; message: string | null; client_email?: string | null;
   is_active: boolean; created_at: string; client_delivery_files: { count: number }[];
-  password_hash: string | null; expires_at: string | null; watermark?: boolean; brand?: Brand | null;
+  password_hash: string | null; expires_at: string | null; watermark?: boolean; brand?: Brand | null; cover_file?: string | null;
 };
 type FileRow = {
   id: string; delivery_id: string; storage_path: string; preview_path: string | null;
@@ -368,6 +368,14 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
           </button>
         )}
         {picked.size > 0 && picked.size < rows.length && <button className={btn} onClick={() => setPicked(new Set())}>Clear selection</button>}
+        {picked.size === 1 && (
+          <button className={btn} disabled={busy} onClick={async () => {
+            const id = [...picked][0]!;
+            const r = await supabase.from("client_deliveries").update({ cover_file: id } as never).eq("id", d.id);
+            if (r.error) toast.error(/cover_file|column|schema/i.test(r.error.message) ? "Link preview needs its database update (migration “delivery_cover”) — apply it in Lovable first." : r.error.message);
+            else { toast.success("This photo now shows when the link is shared"); setPicked(new Set()); await reload(); }
+          }}>Use for link preview</button>
+        )}
         {picked.size > 0 && (
           <button className={cn(btn, "text-destructive hover:border-destructive")} disabled={busy} onClick={removePicked}>
             Remove {picked.size}
@@ -404,6 +412,9 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
               <button key={f.id} type="button" onClick={() => toggle(f.id)} aria-pressed={on} title={f.file_name}
                 className={cn("relative aspect-square overflow-hidden rounded-lg bg-charcoal ring-2 transition", on ? "ring-paper" : "ring-transparent")}>
                 {src && <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />}
+                {(d.cover_file ? d.cover_file === f.id : f === rows[0]) && (
+                  <span className="meta pointer-events-none absolute right-1 top-1 rounded-full bg-paper/90 px-1.5 text-[0.6rem] text-ink" title="Shown when the link is shared">Link preview</span>
+                )}
                 {d.brand?.on && f.branded_path && !d.brand.skip?.includes(f.id) && (
                   <span className="meta pointer-events-none absolute left-1 top-1 rounded-full bg-viewer/80 px-1.5 text-[0.6rem] text-paper" title="Downloads with the logo">Logo</span>
                 )}

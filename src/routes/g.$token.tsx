@@ -19,6 +19,15 @@ export const Route = createFileRoute("/g/$token")({
     meta: [
       { title: loaderData?.state === "ok" ? `${loaderData.delivery.title} — thegodnamed` : "Gallery — thegodnamed" },
       { name: "robots", content: "noindex, nofollow" },
+      // Link preview in Telegram / WhatsApp / iMessage: the gallery's title and its cover photo.
+      ...(loaderData?.state === "ok"
+        ? [
+            { property: "og:title", content: loaderData.delivery.title },
+            { property: "og:description", content: `${loaderData.delivery.files.length} photos · thegodnamed` },
+            { property: "og:type", content: "website" },
+            ...(loaderData.delivery.cover ? [{ property: "og:image", content: loaderData.delivery.cover }, { name: "twitter:card", content: "summary_large_image" }, { name: "twitter:image", content: loaderData.delivery.cover }] : []),
+          ]
+        : []),
       { name: "referrer", content: "no-referrer" },
     ],
   }),

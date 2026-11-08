@@ -27,6 +27,8 @@ export type Delivery = {
   /** Watermark until paid: previews only, no downloads. */
   watermark: boolean;
   files: DeliveryFile[];
+  /** Photo shown when the link is shared (Telegram, WhatsApp…): the one picked in the studio, else the first. */
+  cover: string | null;
 };
 
 export type DeliveryResult =
@@ -109,9 +111,13 @@ export const getDelivery = createServerFn({ method: "POST" })
         favorite: !!f.favorite, note: f.client_note,
       });
     }
+    // Link-preview photo (column added later — ignored until its database update is applied).
+    const coverRow = (await supabaseAdmin.from("client_deliveries").select("cover_file" as never).eq("id", d.id).maybeSingle()) as unknown as { data: { cover_file: string | null } | null };
+    const coverFile = out.find((f) => f.id === coverRow.data?.cover_file) ?? out[0];
     return {
       state: "ok",
       delivery: {
+        cover: coverFile?.preview ?? null,
         title: d.title,
         clientName: d.client_name,
         message: d.message,

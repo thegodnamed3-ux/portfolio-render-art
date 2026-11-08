@@ -353,7 +353,7 @@ function DeliveryEditor({ d, refresh, onClose }: { d: DeliveryRow; refresh: () =
       </div>
 
       <AccessAndStats d={d} rows={rows} refresh={reload} />
-      <ClientMessage d={d} link={link} />
+      <ClientMessage key={d.id} d={d} link={link} />
       <BrandPanel d={d} rows={rows} {...(files.data ? { thumbs: files.data.thumbs } : {})} refresh={reload} picked={picked} onPickedDone={() => setPicked(new Set())} />
 
       <div className="mt-8 flex flex-wrap items-center gap-2">

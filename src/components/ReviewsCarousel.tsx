@@ -55,7 +55,27 @@ export function ReviewsCarousel({ reviews, active }: { reviews: PublicReview[]; 
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     el.addEventListener("scroll", measure, { passive: true });
-    return () => { ro.disconnect(); el.removeEventListener("scroll", measure); };
+    // Mouse wheel over the reviews scrolls them sideways; at either end the page scrolls as usual.
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if (max <= 4) return;
+      const dy = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * el.clientWidth : e.deltaY;
+      if ((dy < 0 && el.scrollLeft <= 0) || (dy > 0 && el.scrollLeft >= max - 1)) return;
+      e.preventDefault();
+      el.style.scrollSnapType = "none";
+      el.scrollLeft += dy;
+      window.clearTimeout(snapTimer);
+      snapTimer = window.setTimeout(() => { el.style.scrollSnapType = ""; }, 160);
+    };
+    let snapTimer = 0;
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", measure);
+      el.removeEventListener("wheel", onWheel);
+      window.clearTimeout(snapTimer);
+    };
   }, [reviews.length]);
 
   // The full review opens above everything; Escape or a tap outside closes it.

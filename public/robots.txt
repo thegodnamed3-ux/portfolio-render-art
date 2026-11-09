@@ -1,16 +1,19 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
+# Link previews (Telegram, WhatsApp, Facebook, X, Slack) may read every page,
+# so shared client-gallery links show their cover photo.
+User-agent: TelegramBot
 User-agent: facebookexternalhit
+User-agent: WhatsApp
+User-agent: Twitterbot
+User-agent: Slackbot
 Allow: /
 
 User-agent: *
 Allow: /
+Allow: /api/sitemap
+Disallow: /admin
+Disallow: /auth
+Disallow: /g/
+Disallow: /c/
+Disallow: /api/
 
-Sitemap: https://thegodnamed.ee/api/sitemap
+Sitemap: https://thegodnamed.ee/sitemap.xml

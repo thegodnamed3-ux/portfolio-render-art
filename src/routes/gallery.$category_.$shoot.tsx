@@ -16,7 +16,25 @@ export const Route = createFileRoute("/gallery/$category_/$shoot")({
     if (!s || s.category !== c.slug) throw notFound();
     return { slug: c.slug, shoot: { id: s.id, title: s.title, photos: s.images, cover: s.cover.sm ?? s.cover.src, location: s.location, year: s.year } };
   },
-  head: (ctx) => withLang(ctx, { meta: [{ title: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }, { property: "og:title", content: ctx.loaderData ? `${ctx.loaderData.shoot.title} — thegodnamed` : "thegodnamed" }] }, ctx.loaderData?.shoot.cover ? { image: ctx.loaderData.shoot.cover } : {}),
+  head: (ctx) => {
+    const d = ctx.loaderData;
+    const c = d ? getCategory(d.slug) : undefined;
+    const title = d ? `${d.shoot.title} — thegodnamed` : "thegodnamed";
+    const where = [d?.shoot.location, d?.shoot.year].filter(Boolean).join(", ");
+    const desc = d ? `${d.shoot.title}${c ? ` — ${c.title.toLowerCase()}` : ""} photoshoot by Gor Arsakjan${where ? `, ${where}` : " in Tallinn, Estonia"}. ${d.shoot.photos.length} frames.` : "";
+    const head = withLang(ctx, { meta: [{ title }, { property: "og:title", content: title }, ...(desc ? [{ name: "description", content: desc }, { property: "og:description", content: desc }] : [])] }, d?.shoot.cover ? { image: d.shoot.cover } : {});
+    // Breadcrumb trail for search results: Home › Archive · category › shoot.
+    const crumbs = d && c ? {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "thegodnamed", item: "https://thegodnamed.ee/" },
+        { "@type": "ListItem", position: 2, name: c.title, item: `https://thegodnamed.ee/gallery/${c.slug}` },
+        { "@type": "ListItem", position: 3, name: d.shoot.title, item: `https://thegodnamed.ee/gallery/${c.slug}/${d.shoot.id}` },
+      ],
+    } : null;
+    return crumbs ? { ...head, scripts: [{ type: "application/ld+json", children: JSON.stringify(crumbs) }] } : head;
+  },
   component: Shoot,
 });
 

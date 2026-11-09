@@ -66,6 +66,9 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const moved = redirectToCanonical(request);
     if (moved) return moved;
+    // The usual address crawlers try first: /sitemap.xml serves the sitemap.
+    const u = new URL(request.url);
+    if (u.pathname === "/sitemap.xml") { u.pathname = "/api/sitemap"; request = new Request(u.toString(), request); }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

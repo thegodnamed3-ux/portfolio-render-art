@@ -18,7 +18,8 @@ export const Route = createFileRoute("/gallery/$category")({
   },
   head: (ctx) => {
     const c = ctx.loaderData ? getCategory(ctx.loaderData.slug) : undefined;
-    return withLang(ctx, { meta: [{ title: c ? `Archive · ${c.title} — thegodnamed` : "Archive — thegodnamed" }] }, c ? { categorySlug: c.slug, categoryTitle: c.title, ...(ctx.loaderData?.cover ? { image: ctx.loaderData.cover } : {}) } : {});
+    const desc = c ? `${c.title} by Gor Arsakjan — every ${c.title.toLowerCase()} photoshoot in the archive${ctx.loaderData?.total ? ` (${ctx.loaderData.total} frames)` : ""}. Photographer in Tallinn, Estonia.` : "";
+    return withLang(ctx, { meta: [{ title: c ? `Archive · ${c.title} — thegodnamed` : "Archive — thegodnamed" }, ...(desc ? [{ name: "description", content: desc }, { property: "og:description", content: desc }] : [])] }, c ? { categorySlug: c.slug, categoryTitle: c.title, ...(ctx.loaderData?.cover ? { image: ctx.loaderData.cover } : {}) } : {});
   },
   component: Archive,
 });

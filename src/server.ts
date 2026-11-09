@@ -50,7 +50,8 @@ function isH3SwallowedErrorBody(body: string): boolean {
  * server functions (Telegram webhook, forms) are never redirected.
  */
 const CANONICAL_HOST = "thegodnamed.ee";
-const OLD_HOSTS = new Set(["thegodnamed.lovable.app", "www.thegodnamed.ee"]);
+// www ↔ root is left to Lovable's own domain settings (so the two can never bounce between each other).
+const OLD_HOSTS = new Set(["thegodnamed.lovable.app"]);
 function redirectToCanonical(request: Request): Response | null {
   if (request.method !== "GET" && request.method !== "HEAD") return null;
   const url = new URL(request.url);

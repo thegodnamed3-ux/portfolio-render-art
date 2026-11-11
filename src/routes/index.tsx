@@ -19,7 +19,7 @@ import { WorkGrid } from "@/components/WorkGrid";
 import { Spotlight } from "@/components/Spotlight";
 import { useFadeIn } from "@/components/Frame";
 import { useCategoryTitle, useI18n } from "@/lib/i18n";
-import { HeroSlideshow } from "@/components/HeroSlideshow";
+import { HeroSlideshow, slidesFor } from "@/components/HeroSlideshow";
 import { getApprovedReviews, type PublicReview } from "@/lib/reviews.functions";
 import { contact } from "@/content/contact";
 
@@ -38,7 +38,10 @@ export const Route = createFileRoute("/")({
     // What Google reads about the business: who, where, how to reach, and the approved reviews.
     scripts: [{ type: "application/ld+json", children: JSON.stringify(businessSchema(loaderData?.hero?.[0]?.src ?? photos[10]!.src, loaderData?.reviews ?? [])) }],
     // Start fetching the first hero frame before the bundle runs.
-    links: [{ rel: "preload", as: "image", href: (loaderData?.hero ?? defaultHero)[0]?.src ?? photos[10]!.src, fetchPriority: "high" } as never],
+    links: [
+      { rel: "preload", as: "image", href: slidesFor(loaderData?.hero ?? defaultHero, false)[0]?.src ?? photos[10]!.src, media: "(min-width: 768px)", fetchPriority: "high" } as never,
+      { rel: "preload", as: "image", href: slidesFor(loaderData?.hero ?? defaultHero, true)[0]?.src ?? photos[10]!.src, media: "(max-width: 767px)", fetchPriority: "high" } as never,
+    ],
   }); },
   loader: async () => {
     const [home, reviews] = await Promise.all([getHomeMedia(), getApprovedReviews().catch(() => [] as PublicReview[])]);

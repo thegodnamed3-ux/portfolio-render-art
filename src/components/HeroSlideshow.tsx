@@ -8,8 +8,26 @@ import { useI18n } from "@/lib/i18n";
 const INTERVAL = 5500;
 
 /** Full-bleed crossfading background slides with discreet glass arrows. */
-export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: { slides: HomeImage[]; controlsClassName?: string; controlsContainer?: HTMLElement | null }) {
+/** Slides meant for phones (true) or desktop (false); falls back to all when none are marked for that screen. */
+export const slidesFor = (all: HomeImage[], phone: boolean) => {
+  const l = all.filter((s) => s.show !== (phone ? "desktop" : "mobile"));
+  return l.length ? l : all;
+};
+
+export function HeroSlideshow({ slides: all, controlsClassName, controlsContainer }: { slides: HomeImage[]; controlsClassName?: string; controlsContainer?: HTMLElement | null }) {
   const [i, setI] = useState(0);
+  // Each slide can be limited to desktop or phones in the studio. The server render doesn't know the screen,
+  // so it uses the desktop set and lets the first frame swap to the phone photo through <picture>.
+  const [mobile, setMobile] = useState<boolean | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const on = () => { setMobile(mq.matches); setI(0); };
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const slides = slidesFor(all, mobile === true);
+  const phoneFirst = mobile === null ? slidesFor(all, true)[0] : undefined;
   const [paused, setPaused] = useState(false);
   const [tick, setTick] = useState(0);
   /** Arrow clicks answer quickly; the automatic crossfade stays slow. */
@@ -67,7 +85,7 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
       <div ref={layer} className="absolute inset-0" aria-hidden>
         {slides.map((s, k) => {
           const near = k === i || (warm && k === (i + 1) % n);
-          return (
+          const img = (
             <img
               key={s.src + k}
               src={near || k === 0 ? s.src : undefined}
@@ -83,6 +101,12 @@ export function HeroSlideshow({ slides, controlsClassName, controlsContainer }: 
               )}
             />
           );
+          return k === 0 && phoneFirst && phoneFirst.src !== s.src ? (
+            <picture key={"p" + s.src}>
+              <source media="(max-width: 767px)" srcSet={phoneFirst.src} />
+              {img}
+            </picture>
+          ) : img;
         })}
       </div>
       {n > 1 && (controlsContainer || controlsClassName) && wrap(

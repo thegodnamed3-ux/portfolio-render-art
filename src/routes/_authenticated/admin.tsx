@@ -1168,7 +1168,7 @@ function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
       <section>
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <h2 className="display text-3xl text-paper">Homepage hero</h2>
-          <span className="meta text-muted-foreground">{list.length} slides · drag to reorder · first is shown first</span>
+          <span className="meta text-muted-foreground">{list.length} slides · drag to reorder · first is shown first · All / PC / Ph = where each slide is shown</span>
         </div>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={rectSortingStrategy}>
@@ -1180,6 +1180,21 @@ function HomeTab({ media, refresh }: { media: Media[]; refresh: () => void }) {
                       <img src={s.src} alt="" loading="lazy" className="h-full w-full object-cover" style={{ objectPosition: s.pos }} />
                     </button>
                     <span className="meta pointer-events-none absolute left-1 top-1 rounded-full bg-viewer/70 px-1.5 text-[0.55rem] text-paper">{i === 0 ? "First" : String(i + 1).padStart(2, "0")}</span>
+                    {/* Where this slide is shown: both, desktop only or phones only. */}
+                    <span className="absolute right-1 top-1 flex gap-px rounded-full bg-viewer/80 p-px" role="group" aria-label="Show on">
+                      {([[undefined, "All", "Desktop and phones"], ["desktop", "PC", "Desktop only"], ["mobile", "Ph", "Phones only"]] as const).map(([v, label, title]) => (
+                        <button
+                          key={label}
+                          type="button"
+                          title={title}
+                          aria-pressed={s.show === v}
+                          onClick={() => setSlides(list.map((x, k) => { if (k !== i) return x; const { show: _, ...rest } = x; return v ? { ...rest, show: v } : rest; }))}
+                          className={cn("meta rounded-full px-1.5 py-0.5 text-[0.55rem] transition-colors", s.show === v ? "bg-paper text-viewer" : "text-paper/60 hover:text-paper")}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </span>
                     <div className="absolute inset-x-1 bottom-1 flex justify-between gap-1">
                       {i > 0 && <button type="button" onClick={() => { setSlides([s, ...list.filter((_, k) => k !== i)]); setSel(0); }} className="meta rounded-full bg-viewer/75 px-1.5 py-0.5 text-[0.55rem] text-paper">Make first</button>}
                       <button type="button" onClick={() => { setSlides(list.filter((_, k) => k !== i)); setSel(0); }} className="meta ml-auto rounded-full bg-viewer/75 px-1.5 py-0.5 text-[0.55rem] text-paper" aria-label="Remove slide">✕</button>

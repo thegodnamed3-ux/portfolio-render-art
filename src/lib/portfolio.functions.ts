@@ -153,7 +153,7 @@ export const getSiteSettings = createServerFn({ method: "GET" }).handler(async (
   return { whatsapp: data?.whatsapp_url?.trim() || null };
 });
 
-export type HomeImage = { src: string; w: number; h: number; pos?: string; /** ~600px copy for grids on phones. */ sm?: string };
+export type HomeImage = { src: string; w: number; h: number; pos?: string; /** ~600px copy for grids on phones. */ sm?: string; /** Hero slides only: shown just on "desktop" or "mobile" (missing = both). */ show?: "desktop" | "mobile" };
 
 /** Homepage hero slides and About portrait chosen in the studio (null = site defaults). */
 export const getHomeMedia = createServerFn({ method: "GET" }).handler(async () => {

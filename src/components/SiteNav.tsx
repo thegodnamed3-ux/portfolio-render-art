@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LangSwitch, useI18n, type Key } from "@/lib/i18n";
 import { internalCategories } from "@/content/categories";
 import { QrCardButton } from "@/components/QrCard";
+import { glideAfterClose } from "@/lib/glide";
 
 /** `hash` items scroll the homepage; the Archive item opens the full-screen gallery. */
 const ARCHIVE = "archive";
@@ -63,7 +64,7 @@ export function SiteNav() {
           <Link
             to="/"
             hash="top"
-            onClick={() => setMenu(false)}
+            onClick={(e) => glideAfterClose(e, "top", () => setMenu(false))}
             aria-label="thegodnamed"
             className="inline-flex flex-col items-center whitespace-nowrap transition-opacity hover:opacity-60"
           >
@@ -111,7 +112,7 @@ export function SiteNav() {
                 const cls = "flex items-baseline justify-between py-5 text-paper";
                 return l.hash === ARCHIVE
                   ? <Link to="/gallery/$category" params={{ category: archiveSlug }} onClick={() => setMenu(false)} className={cls} tabIndex={menu ? 0 : -1}>{inner}</Link>
-                  : <Link to="/" hash={l.hash} onClick={() => setMenu(false)} className={cls} tabIndex={menu ? 0 : -1}>{inner}</Link>;
+                  : <Link to="/" hash={l.hash} onClick={(e) => glideAfterClose(e, l.hash, () => setMenu(false))} className={cls} tabIndex={menu ? 0 : -1}>{inner}</Link>;
               })()}
             </li>
           ))}
@@ -172,7 +173,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
     );
     return l.hash === ARCHIVE
       ? <Link to="/gallery/$category" params={{ category: archiveSlug }} onClick={() => setOpen(false)} className={cls}>{label}</Link>
-      : <Link to="/" hash={l.hash} onClick={() => setOpen(false)} className={cls}>{label}</Link>;
+      : <Link to="/" hash={l.hash} onClick={(e) => glideAfterClose(e, l.hash, () => setOpen(false))} className={cls}>{label}</Link>;
   };
 
   return (

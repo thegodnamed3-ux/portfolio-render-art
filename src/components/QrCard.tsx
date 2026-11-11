@@ -1,11 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-/** QR for https://thegodnamed.ee/ (version 2, error correction M), drawn as one SVG path on a 25-module grid. */
-const QR_SIZE = 25;
-const QR_PATH = "M0 0h7v1h-7zM9 0h2v1h-2zM12 0h1v1h-1zM16 0h1v1h-1zM18 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM9 1h1v1h-1zM14 1h3v1h-3zM18 1h1v1h-1zM24 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM8 2h1v1h-1zM10 2h1v1h-1zM14 2h3v1h-3zM18 2h1v1h-1zM20 2h3v1h-3zM24 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM8 3h1v1h-1zM10 3h5v1h-5zM18 3h1v1h-1zM20 3h3v1h-3zM24 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM8 4h5v1h-5zM16 4h1v1h-1zM18 4h1v1h-1zM20 4h3v1h-3zM24 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h2v1h-2zM11 5h1v1h-1zM14 5h3v1h-3zM18 5h1v1h-1zM24 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h7v1h-7zM8 7h1v1h-1zM10 7h2v1h-2zM15 7h1v1h-1zM0 8h1v1h-1zM2 8h5v1h-5zM11 8h1v1h-1zM13 8h1v1h-1zM15 8h1v1h-1zM18 8h5v1h-5zM1 9h4v1h-4zM10 9h1v1h-1zM13 9h1v1h-1zM16 9h1v1h-1zM19 9h1v1h-1zM23 9h1v1h-1zM1 10h2v1h-2zM5 10h2v1h-2zM9 10h1v1h-1zM11 10h1v1h-1zM13 10h3v1h-3zM21 10h1v1h-1zM23 10h2v1h-2zM0 11h1v1h-1zM3 11h1v1h-1zM7 11h1v1h-1zM11 11h2v1h-2zM16 11h1v1h-1zM18 11h2v1h-2zM24 11h1v1h-1zM0 12h1v1h-1zM2 12h5v1h-5zM8 12h1v1h-1zM10 12h5v1h-5zM17 12h4v1h-4zM22 12h3v1h-3zM0 13h2v1h-2zM3 13h1v1h-1zM5 13h1v1h-1zM8 13h3v1h-3zM16 13h1v1h-1zM19 13h1v1h-1zM21 13h1v1h-1zM23 13h1v1h-1zM0 14h1v1h-1zM2 14h1v1h-1zM4 14h6v1h-6zM11 14h2v1h-2zM14 14h2v1h-2zM17 14h5v1h-5zM23 14h2v1h-2zM0 15h1v1h-1zM4 15h2v1h-2zM8 15h4v1h-4zM14 15h7v1h-7zM24 15h1v1h-1zM0 16h1v1h-1zM3 16h1v1h-1zM6 16h3v1h-3zM11 16h1v1h-1zM13 16h8v1h-8zM22 16h1v1h-1zM8 17h2v1h-2zM12 17h1v1h-1zM15 17h2v1h-2zM20 17h2v1h-2zM0 18h7v1h-7zM14 18h1v1h-1zM16 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM22 18h3v1h-3zM0 19h1v1h-1zM6 19h1v1h-1zM8 19h1v1h-1zM10 19h1v1h-1zM12 19h1v1h-1zM14 19h1v1h-1zM16 19h1v1h-1zM20 19h2v1h-2zM23 19h1v1h-1zM0 20h1v1h-1zM2 20h3v1h-3zM6 20h1v1h-1zM8 20h3v1h-3zM12 20h2v1h-2zM15 20h6v1h-6zM22 20h3v1h-3zM0 21h1v1h-1zM2 21h3v1h-3zM6 21h1v1h-1zM8 21h2v1h-2zM13 21h1v1h-1zM16 21h3v1h-3zM20 21h5v1h-5zM0 22h1v1h-1zM2 22h3v1h-3zM6 22h1v1h-1zM8 22h2v1h-2zM11 22h4v1h-4zM16 22h1v1h-1zM21 22h2v1h-2zM24 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM9 23h3v1h-3zM14 23h8v1h-8zM24 23h1v1h-1zM0 24h7v1h-7zM8 24h2v1h-2zM11 24h2v1h-2zM17 24h1v1h-1zM19 24h6v1h-6z";
+/** QR for https://thegodnamed.ee/ (version 2, error correction M): 25 rows of modules, 1 = dark. */
+const QR_ROWS = "1111111001101000101111111,1000001001000011101000001,1011101010100011101011101,1011101010111110001011101,1011101011111000101011101,1000001011010011101000001,1111111010101010101111111,0000000010110001000000000,1011111000010101001111100,0111100000100100100100010,0110011001010111000001011,1001000100011000101100001,1011111010111110011110111,1101010011100000100101010,1010111111011011011111011,1000110011110011111110001,1001001110010111111110100,0000000011001001100011000,1111111000000010101010111,1000001010101010100011010,1011101011101101111110111,1011101011000100111011111,1011101011011110100001101,1000001001110011111111001,1111111011011000010111111".split(",");
+const QR_N = QR_ROWS.length;
+
+/**
+ * Soft QR: rounded modules and rounded corner squares, light on the dark card. The rounding stays
+ * moderate (checked with a decoder) so phone cameras still read it; the quiet zone is 4 modules.
+ */
+function SoftQr() {
+  const inFinder = (r: number, c: number) => (r < 7 && c < 7) || (r < 7 && c >= QR_N - 7) || (r >= QR_N - 7 && c < 7);
+  const cells: ReactNode[] = [];
+  QR_ROWS.forEach((row, r) => {
+    for (let c = 0; c < QR_N; c++) {
+      if (row[c] === "1" && !inFinder(r, c)) cells.push(<rect key={`${r}-${c}`} x={c + 0.06} y={r + 0.06} width={0.88} height={0.88} rx={0.3} />);
+    }
+  });
+  const finder = (x: number, y: number) => (
+    <g key={`f${x}-${y}`}>
+      <path fillRule="evenodd" d={`M${x + 1.5} ${y}h4a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5v-4a1.5 1.5 0 0 1 1.5-1.5zM${x + 2} ${y + 1}h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1z`} />
+      <rect x={x + 2} y={y + 2} width={3} height={3} rx={0.6} />
+    </g>
+  );
+  return (
+    <svg viewBox={`-4 -4 ${QR_N + 8} ${QR_N + 8}`} role="img" aria-label="QR code: thegodnamed.ee" className="aspect-square w-full fill-paper/90">
+      {cells}
+      {finder(0, 0)}{finder(QR_N - 7, 0)}{finder(0, QR_N - 7)}
+    </svg>
+  );
+}
 
 function QrGlyph({ className }: { className?: string }) {
   // Small QR mark for the button: three corner squares and a few dots.
@@ -64,19 +90,17 @@ export function QrCardButton({ className }: { className?: string }) {
             >
               <motion.figure
                 onClick={(e) => e.stopPropagation()}
-                className="flex w-[min(20rem,100%)] flex-col items-center gap-5 rounded-[28px] bg-paper px-8 pb-7 pt-8 text-ink shadow-[0_30px_80px_-20px_rgb(0_0_0/0.45)]"
+                className="flex w-[min(20rem,100%)] flex-col items-center gap-4 rounded-[28px] border border-white/10 bg-[#1c1c1c]/85 px-6 pb-7 pt-6 text-paper shadow-[0_30px_80px_-20px_rgb(0_0_0/0.6)] backdrop-blur-xl"
                 initial={{ opacity: 0, y: 24, scale: 0.94 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 12, scale: 0.97 }}
                 transition={{ duration: reduce ? 0 : 0.5, ease }}
               >
-                <svg viewBox={`-2 -2 ${QR_SIZE + 4} ${QR_SIZE + 4}`} role="img" aria-label="QR code: thegodnamed.ee" className="aspect-square w-full" shapeRendering="crispEdges">
-                  <path d={QR_PATH} className="fill-ink" />
-                </svg>
+                <SoftQr />
                 <figcaption className="flex flex-col items-center gap-1.5 text-center">
                   <span className="wordmark text-xl">thegodnamed</span>
-                  <span className="meta text-[0.6875rem] tracking-[0.2em] text-ink/60">PHOTOGRAPHY · VISUALS</span>
-                  <span className="meta mt-1 text-[0.75rem] text-ink/75">thegodnamed.ee</span>
+                  <span className="meta text-[0.6875rem] tracking-[0.2em] text-paper/55">PHOTOGRAPHY · VISUALS</span>
+                  <span className="meta mt-1 text-[0.75rem] text-paper/70">thegodnamed.ee</span>
                 </figcaption>
               </motion.figure>
             </motion.div>

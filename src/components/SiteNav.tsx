@@ -24,7 +24,10 @@ export function SiteNav() {
   useEffect(() => {
     const update = () => {
       const bands = Array.from(document.querySelectorAll<HTMLElement>("[data-nav-light]"));
-      setOverLight(bands.some((el) => { const r = el.getBoundingClientRect(); return r.top < 112 && r.bottom > 0; }));
+      // Decide by what sits under the line of text in the bar, not by anything within the bar's height:
+      // otherwise a light band just entering from below flipped the bar while it still covered a dark one.
+      const y = window.innerWidth >= 768 ? 44 : 36;
+      setOverLight(bands.some((el) => { const r = el.getBoundingClientRect(); return r.top <= y && r.bottom > y; }));
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
@@ -44,14 +47,18 @@ export function SiteNav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-28 md:h-32">
-        {/* Only one wash exists at a time (no cross-faded layers): iOS Safari could leave a faded
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-24 md:h-28">
+        {/* Frosted strip: blurs whatever is underneath and fades out downwards, so it never paints a
+            colour that doesn't match the section below (the old coloured wash turned grey over the
+            dark/light borders). A light tint on top keeps the words readable over photos. */}
+        <div className="header-frost absolute inset-0" />
+        {/* Only one tint exists at a time (no cross-faded layers): iOS Safari could leave a faded
             layer half-painted, which showed as a grey band over the paper sections. */}
-        {!light && <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/55 via-45% to-transparent" />}
-        {/* On paper the wash stays short, so section titles under the bar are not bleached. */}
-        {light && <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-paper via-paper/80 via-45% to-transparent md:h-28" />}
+        {light
+          ? <div key="l" className="header-frost-mask absolute inset-0 bg-paper/60" />
+          : <div key="d" className="header-frost-mask absolute inset-0 bg-background/55" />}
       </div>
-      <nav className={`meta relative px-5 py-4 transition-colors duration-500 md:px-10 md:py-6 ${light ? "text-ink" : "text-paper"}`}>
+      <nav className={`meta relative px-5 py-4 transition-colors duration-200 md:px-10 md:py-6 ${light ? "text-ink" : "text-paper"}`}>
         <div className="flex items-center justify-between gap-4 md:items-baseline">
           <Link
             to="/"
@@ -62,7 +69,7 @@ export function SiteNav() {
           >
             <span className="wordmark">thegodnamed</span>
             <span
-              className={`-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
+              className={`-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-200 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
             >
               PHOTOGRAPHY · VISUALS
             </span>
@@ -176,7 +183,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
           // The QR card button on the left, the word Menu on its right; both appear together.
           <motion.div
             key="dock"
-            className={`flex items-center gap-3 transition-colors duration-700 ${light ? "text-ink" : "text-paper"}`}
+            className={`flex items-center gap-3 transition-colors duration-200 ${light ? "text-ink" : "text-paper"}`}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}

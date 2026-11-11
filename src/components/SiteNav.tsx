@@ -70,6 +70,7 @@ export function SiteNav() {
           <DockMenu light={light} pathname={pathname} />
           <div className="flex items-center gap-4 md:hidden">
           <LangSwitch className="whitespace-nowrap text-[0.6875rem]" />
+          <QrCardButton className="text-[0.6875rem]" />
           <button
             type="button"
             onClick={() => setMenu((m) => !m)}
@@ -82,7 +83,6 @@ export function SiteNav() {
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
           </button>
-          <QrCardButton className="text-[0.6875rem]" />
           </div>
         </div>
       </nav>
@@ -173,7 +173,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
       {/* The round button the column flows into. */}
       <AnimatePresence initial={false}>
         {!resting && (
-          // The word Menu on the left, the QR card button on its right; both appear together.
+          // The QR card button on the left, the word Menu on its right; both appear together.
           <motion.div
             key="dock"
             className={`flex items-center gap-3 transition-colors duration-700 ${light ? "text-ink" : "text-paper"}`}
@@ -182,6 +182,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : 0.18, ease }}
           >
+          <QrCardButton className="text-[0.75rem]" />
           <button
             key="dock"
             type="button"
@@ -197,7 +198,6 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
           </button>
-          <QrCardButton className="text-[0.75rem]" />
           </motion.div>
         )}
       </AnimatePresence>

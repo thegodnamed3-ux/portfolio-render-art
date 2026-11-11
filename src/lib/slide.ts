@@ -3,11 +3,28 @@
  * in from the right over it (CSS: `html.slide-in::view-transition-*` in styles.css). Works with
  * the router's View Transitions; browsers without them change the page as before.
  */
+type R = { options: { defaultViewTransition?: unknown } };
+const routerOf = () => (window as Window & { __tgnRouter?: R }).__tgnRouter;
+let slideTimer = 0;
+
 export function slideIn() {
   const root = document.documentElement;
   root.classList.add('slide-in');
-  window.setTimeout(() => root.classList.remove("slide-in"), 1400);
+  // Only this page change runs as a View Transition; Back/Forward and swipes stay instant.
+  const router = routerOf();
+  if (router) router.options.defaultViewTransition = true;
+  window.clearTimeout(slideTimer);
+  slideTimer = window.setTimeout(() => {
+    root.classList.remove("slide-in");
+    if (router) router.options.defaultViewTransition = false;
+  }, 1400);
 }
+
+if (typeof window !== 'undefined') window.addEventListener('popstate', () => {
+  document.documentElement.classList.remove('slide-in');
+  const router = routerOf();
+  if (router) router.options.defaultViewTransition = false;
+});
 
 /** Every link to another page of the public site slides; skips admin, client galleries, new tabs, external and same-page links. */
 export function installSlideLinks() {

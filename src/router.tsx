@@ -10,9 +10,11 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
-    // Page changes run as View Transitions; links to another page slide in (src/lib/slide.ts).
-    defaultViewTransition: true,
+    // Off by default so Back/Forward and Safari's edge swipe change pages instantly; a link click
+    // switches the View Transition on for that one page change (slideIn in src/lib/slide.ts).
+    defaultViewTransition: false,
   });
+  if (typeof window !== "undefined") (window as Window & { __tgnRouter?: typeof router }).__tgnRouter = router;
 
   return router;
 };

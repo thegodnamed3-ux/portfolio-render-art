@@ -43,11 +43,17 @@ export function SocialRail() {
   }, [shown]);
   useEffect(() => {
     let frame = 0;
+    let lastY = window.scrollY;
     const check = () => {
       frame = 0;
       const vh = window.innerHeight;
-      const top = window.scrollY < 8;
-      setShown(top); // first screen only — the contact block has its own links
+      // First screen only (the contact block has its own links). It leaves at the very first pixels
+      // of scrolling down, before the next block's text can reach it, and on the way back up it
+      // returns a little before the very top (while that text is still below the screen edge).
+      const y = window.scrollY;
+      const goingUp = y < lastY;
+      lastY = y;
+      setShown((was) => (was ? y <= 2 : y < 8 || (goingUp && y < 48)));
       const anchor = document.querySelector("[data-rail-anchor]");
       const nav = navRef.current;
       if (anchor && nav) {

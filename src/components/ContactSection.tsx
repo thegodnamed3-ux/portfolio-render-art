@@ -57,6 +57,19 @@ export function ContactSection({ id, reviews: withReviews = true }: { id?: strin
   const section = useRef<HTMLElement>(null);
   const toggle = () => setView(onReviews ? "contact" : "reviews");
 
+  // Reviews are a short detour: once the band has left the screen (scrolled away, another page
+  // or another tab) it quietly slides back to the contact side, so coming back shows Contact.
+  useEffect(() => {
+    if (!onReviews) return;
+    const el = section.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => { if (e && !e.isIntersecting) setView("contact"); });
+    io.observe(el);
+    const onHide = () => { if (document.hidden) setView("contact"); };
+    document.addEventListener("visibilitychange", onHide);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", onHide); };
+  }, [onReviews]);
+
   return (
     <section ref={section} {...(id ? { id } : {})} data-nav-light className="bg-paper px-5 pb-10 pt-14 text-ink md:px-10 md:pt-20">
       <div className="flex items-center justify-between gap-4">

@@ -54,11 +54,11 @@ export function SiteNav() {
         <div className="header-frost absolute inset-0" />
         {/* Only one tint exists at a time (no cross-faded layers): iOS Safari could leave a faded
             layer half-painted, which showed as a grey band over the paper sections. */}
-        {light
-          ? <div key="l" className="header-frost-mask absolute inset-0 bg-paper/60" />
-          : <div key="d" className="header-frost-mask absolute inset-0 bg-background/55" />}
+        {/* One tint layer whose colour eases between paper and dark (a single element, so iOS Safari
+            has no half-painted second layer to leave behind). */}
+        <div className={`header-frost-mask absolute inset-0 transition-colors duration-500 ease-in-out ${light ? "bg-paper/60" : "bg-background/55"}`} />
       </div>
-      <nav className={`meta relative px-5 py-4 transition-colors duration-200 md:px-10 md:py-6 ${light ? "text-ink" : "text-paper"}`}>
+      <nav className={`meta relative px-5 py-4 transition-colors duration-500 ease-in-out md:px-10 md:py-6 ${light ? "text-ink" : "text-paper"}`}>
         <div className="flex items-center justify-between gap-4 md:items-baseline">
           <Link
             to="/"
@@ -69,7 +69,7 @@ export function SiteNav() {
           >
             <span className="wordmark">thegodnamed</span>
             <span
-              className={`-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-200 md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
+              className={`-mr-[0.3em] mt-[3px] whitespace-nowrap text-[0.5rem] tracking-[0.3em] transition-colors duration-500 ease-in-out md:mt-1 md:text-[0.5625rem] ${light ? "text-ink/75" : "text-paper/85"}`}
             >
               PHOTOGRAPHY · VISUALS
             </span>
@@ -183,7 +183,7 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
           // The QR card button on the left, the word Menu on its right; both appear together.
           <motion.div
             key="dock"
-            className={`flex items-center gap-3 transition-colors duration-200 ${light ? "text-ink" : "text-paper"}`}
+            className={`flex items-center gap-3 transition-colors duration-500 ease-in-out ${light ? "text-ink" : "text-paper"}`}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}

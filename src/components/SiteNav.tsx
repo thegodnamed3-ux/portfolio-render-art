@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LangSwitch, useI18n, type Key } from "@/lib/i18n";
 import { internalCategories } from "@/content/categories";
+import { QrCardButton } from "@/components/QrCard";
 
 /** `hash` items scroll the homepage; the Archive item opens the full-screen gallery. */
 const ARCHIVE = "archive";
@@ -81,6 +82,7 @@ export function SiteNav() {
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${menu ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
           </button>
+          <QrCardButton className="text-[0.6875rem]" />
           </div>
         </div>
       </nav>
@@ -171,7 +173,16 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
       {/* The round button the column flows into. */}
       <AnimatePresence initial={false}>
         {!resting && (
-          <motion.button
+          // The word Menu on the left, the QR card button on its right; both appear together.
+          <motion.div
+            key="dock"
+            className={`flex items-center gap-3 transition-colors duration-700 ${light ? "text-ink" : "text-paper"}`}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : 0.18, ease }}
+          >
+          <button
             key="dock"
             type="button"
             onClick={() => setOpen((o) => !o)}
@@ -180,16 +191,14 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
             // The button never swaps classes: glass and solid-ink layers (and their shades) cross-fade
             // slowly, and the lines stay paper-coloured, so passing a light band is a soft fade, not a blink.
             // No frame: just the word, no shade.
-            className={`hit relative isolate inline-grid place-items-end px-1 py-2 text-[0.75rem] transition-colors duration-700 hover:opacity-60 ${light ? "text-ink" : "text-paper"}`}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : 0.18, ease }}
+            className="hit relative isolate inline-grid place-items-end px-1 py-2 text-[0.75rem] hover:opacity-60"
           >
             {/* Both words share one cell, so swapping Menu ↔ Close never shifts the layout. */}
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-0 blur-[3px]" : "opacity-100 blur-0"}`}>{t("nav.menu")}</span>
             <span aria-hidden className={`col-start-1 row-start-1 transition-[opacity,filter] duration-500 ease-out ${open ? "opacity-100 blur-0" : "opacity-0 blur-[3px]"}`}>{t("nav.close")}</span>
-          </motion.button>
+          </button>
+          <QrCardButton className="text-[0.75rem]" />
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -228,6 +237,15 @@ function DockMenu({ light, pathname }: { light: boolean; pathname: string }) {
               
               <LangSwitch className="whitespace-nowrap px-1 py-1.5" />
             </motion.li>
+            {resting && (
+              <motion.li
+                style={{ transformOrigin: "100% 0%" }}
+                variants={{ shown: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }, tucked: { opacity: 0, y: -80, scale: 0.55, filter: "blur(4px)" } }}
+                transition={{ duration: reduce ? 0 : 0.5, ease }}
+              >
+                <QrCardButton />
+              </motion.li>
+            )}
             {resting && (
               <motion.li
                 variants={{ shown: { opacity: 1 }, tucked: { opacity: 0 } }}

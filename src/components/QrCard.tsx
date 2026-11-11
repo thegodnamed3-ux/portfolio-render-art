@@ -48,6 +48,8 @@ function QrGlyph({ className }: { className?: string }) {
 /** A small button that blurs the whole screen like liquid glass and brings up a business card with a QR code. */
 export function QrCardButton({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
+  // Where the button sits relative to the screen centre: the card grows out of it and shrinks back into it.
+  const [from, setFrom] = useState({ x: 0, y: 0 });
   const reduce = useReducedMotion();
 
   useEffect(() => {
@@ -66,10 +68,14 @@ export function QrCardButton({ className }: { className?: string }) {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          setFrom({ x: r.left + r.width / 2 - window.innerWidth / 2, y: r.top + r.height / 2 - window.innerHeight / 2 });
+          setOpen(true);
+        }}
         aria-label="Business card with QR code"
         title="QR"
-        className={cn("hit inline-grid place-items-center px-1 py-1.5 transition-opacity hover:opacity-60", className)}
+        className={cn("hit inline-grid place-items-center px-1 py-1.5 transition-[opacity,transform] duration-150 ease-out hover:opacity-60 active:scale-[0.82]", className)}
       >
         <QrGlyph className="size-[0.9rem]" />
       </button>
@@ -91,10 +97,10 @@ export function QrCardButton({ className }: { className?: string }) {
               <motion.figure
                 onClick={(e) => e.stopPropagation()}
                 className="flex w-[min(20rem,100%)] flex-col items-center gap-4 rounded-[28px] border border-white/10 bg-[#1c1c1c]/85 px-6 pb-7 pt-6 text-paper shadow-[0_30px_80px_-20px_rgb(0_0_0/0.6)] backdrop-blur-xl"
-                initial={{ opacity: 0, y: 24, scale: 0.94 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 12, scale: 0.97 }}
-                transition={{ duration: reduce ? 0 : 0.5, ease }}
+                initial={{ opacity: 0, x: from.x, y: from.y, scale: 0.08, borderRadius: 80 }}
+                animate={{ opacity: 1, x: 0, y: 0, scale: 1, borderRadius: 28 }}
+                exit={{ opacity: 0, x: from.x, y: from.y, scale: 0.08, borderRadius: 80 }}
+                transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 26, mass: 0.9, opacity: { duration: 0.25 } }}
               >
                 <SoftQr />
                 <figcaption className="flex flex-col items-center gap-1.5 text-center">

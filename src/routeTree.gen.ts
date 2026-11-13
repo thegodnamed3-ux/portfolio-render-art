@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CategoryRouteImport } from './routes/$category'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as LinksRouteImport } from './routes/links'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiSitemapRouteImport } from './routes/api/sitemap'
@@ -39,6 +40,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinksRoute = LinksRouteImport.update({
+  id: '/links',
+  path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
+  '/links': typeof LinksRoute
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/sitemap': typeof ApiSitemapRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
+  '/links': typeof LinksRoute
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/sitemap': typeof ApiSitemapRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
+  '/links': typeof LinksRoute
   '/privacy': typeof PrivacyRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/api/sitemap': typeof ApiSitemapRoute
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$category'
     | '/auth'
+    | '/links'
     | '/privacy'
     | '/admin'
     | '/api/sitemap'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$category'
     | '/auth'
+    | '/links'
     | '/privacy'
     | '/admin'
     | '/api/sitemap'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$category'
     | '/auth'
+    | '/links'
     | '/privacy'
     | '/_authenticated/admin'
     | '/api/sitemap'
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CategoryRoute: typeof CategoryRoute
   AuthRoute: typeof AuthRoute
+  LinksRoute: typeof LinksRoute
   PrivacyRoute: typeof PrivacyRoute
   ApiSitemapRoute: typeof ApiSitemapRoute
   ApiTelegramRoute: typeof ApiTelegramRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/links': {
+      id: '/links'
+      path: '/links'
+      fullPath: '/links'
+      preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CategoryRoute: CategoryRoute,
   AuthRoute: AuthRoute,
+  LinksRoute: LinksRoute,
   PrivacyRoute: PrivacyRoute,
   ApiSitemapRoute: ApiSitemapRoute,
   ApiTelegramRoute: ApiTelegramRoute,

@@ -15,10 +15,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as ApiTelegramRouteImport } from './routes/api/telegram'
 import { Route as ApiSitemapRouteImport } from './routes/api/sitemap'
-import { Route as GTokenRouteImport } from './routes/g.$token'
+import { Route as ApiTelegramRouteImport } from './routes/api/telegram'
 import { Route as CTokenRouteImport } from './routes/c.$token'
+import { Route as GTokenRouteImport } from './routes/g.$token'
 import { Route as GalleryCategoryRouteImport } from './routes/gallery.$category'
 import { Route as GalleryCategoryShootRouteImport } from './routes/gallery.$category_.$shoot'
 
@@ -88,10 +88,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/api/telegram': typeof ApiTelegramRoute
   '/api/sitemap': typeof ApiSitemapRoute
-  '/g/$token': typeof GTokenRoute
+  '/api/telegram': typeof ApiTelegramRoute
   '/c/$token': typeof CTokenRoute
+  '/g/$token': typeof GTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
   '/gallery/$category/$shoot': typeof GalleryCategoryShootRoute
 }
@@ -101,10 +101,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/api/telegram': typeof ApiTelegramRoute
   '/api/sitemap': typeof ApiSitemapRoute
-  '/g/$token': typeof GTokenRoute
+  '/api/telegram': typeof ApiTelegramRoute
   '/c/$token': typeof CTokenRoute
+  '/g/$token': typeof GTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
   '/gallery/$category/$shoot': typeof GalleryCategoryShootRoute
 }
@@ -116,10 +116,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/api/telegram': typeof ApiTelegramRoute
   '/api/sitemap': typeof ApiSitemapRoute
-  '/g/$token': typeof GTokenRoute
+  '/api/telegram': typeof ApiTelegramRoute
   '/c/$token': typeof CTokenRoute
+  '/g/$token': typeof GTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
   '/gallery/$category_/$shoot': typeof GalleryCategoryShootRoute
 }
@@ -131,10 +131,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/admin'
-    | '/api/telegram'
     | '/api/sitemap'
-    | '/g/$token'
+    | '/api/telegram'
     | '/c/$token'
+    | '/g/$token'
     | '/gallery/$category'
     | '/gallery/$category/$shoot'
   fileRoutesByTo: FileRoutesByTo
@@ -144,10 +144,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/admin'
-    | '/api/telegram'
     | '/api/sitemap'
-    | '/g/$token'
+    | '/api/telegram'
     | '/c/$token'
+    | '/g/$token'
     | '/gallery/$category'
     | '/gallery/$category/$shoot'
   id:
@@ -158,10 +158,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/_authenticated/admin'
-    | '/api/telegram'
     | '/api/sitemap'
-    | '/g/$token'
+    | '/api/telegram'
     | '/c/$token'
+    | '/g/$token'
     | '/gallery/$category'
     | '/gallery/$category_/$shoot'
   fileRoutesById: FileRoutesById
@@ -172,10 +172,10 @@ export interface RootRouteChildren {
   CategoryRoute: typeof CategoryRoute
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
-  ApiTelegramRoute: typeof ApiTelegramRoute
   ApiSitemapRoute: typeof ApiSitemapRoute
-  GTokenRoute: typeof GTokenRoute
+  ApiTelegramRoute: typeof ApiTelegramRoute
   CTokenRoute: typeof CTokenRoute
+  GTokenRoute: typeof GTokenRoute
   GalleryCategoryRoute: typeof GalleryCategoryRoute
   GalleryCategoryShootRoute: typeof GalleryCategoryShootRoute
 }
@@ -286,10 +286,10 @@ const rootRouteChildren: RootRouteChildren = {
   CategoryRoute: CategoryRoute,
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
-  ApiTelegramRoute: ApiTelegramRoute,
   ApiSitemapRoute: ApiSitemapRoute,
-  GTokenRoute: GTokenRoute,
+  ApiTelegramRoute: ApiTelegramRoute,
   CTokenRoute: CTokenRoute,
+  GTokenRoute: GTokenRoute,
   GalleryCategoryRoute: GalleryCategoryRoute,
   GalleryCategoryShootRoute: GalleryCategoryShootRoute,
 }

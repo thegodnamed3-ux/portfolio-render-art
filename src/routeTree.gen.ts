@@ -13,12 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CategoryRouteImport } from './routes/$category'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as LinksRouteImport } from './routes/links'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as ApiTelegramRouteImport } from './routes/api/telegram'
 import { Route as ApiSitemapRouteImport } from './routes/api/sitemap'
-import { Route as GTokenRouteImport } from './routes/g.$token'
+import { Route as ApiTelegramRouteImport } from './routes/api/telegram'
 import { Route as CTokenRouteImport } from './routes/c.$token'
+import { Route as GTokenRouteImport } from './routes/g.$token'
 import { Route as GalleryCategoryRouteImport } from './routes/gallery.$category'
 import { Route as GalleryCategoryShootRouteImport } from './routes/gallery.$category_.$shoot'
 
@@ -39,6 +40,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinksRoute = LinksRouteImport.update({
+  id: '/links',
+  path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -86,12 +92,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
+  '/links': typeof LinksRoute
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/api/telegram': typeof ApiTelegramRoute
   '/api/sitemap': typeof ApiSitemapRoute
-  '/g/$token': typeof GTokenRoute
+  '/api/telegram': typeof ApiTelegramRoute
   '/c/$token': typeof CTokenRoute
+  '/g/$token': typeof GTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
   '/gallery/$category/$shoot': typeof GalleryCategoryShootRoute
 }
@@ -99,12 +106,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
+  '/links': typeof LinksRoute
   '/privacy': typeof PrivacyRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/api/telegram': typeof ApiTelegramRoute
   '/api/sitemap': typeof ApiSitemapRoute
-  '/g/$token': typeof GTokenRoute
+  '/api/telegram': typeof ApiTelegramRoute
   '/c/$token': typeof CTokenRoute
+  '/g/$token': typeof GTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
   '/gallery/$category/$shoot': typeof GalleryCategoryShootRoute
 }
@@ -114,12 +122,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$category': typeof CategoryRoute
   '/auth': typeof AuthRoute
+  '/links': typeof LinksRoute
   '/privacy': typeof PrivacyRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/api/telegram': typeof ApiTelegramRoute
   '/api/sitemap': typeof ApiSitemapRoute
-  '/g/$token': typeof GTokenRoute
+  '/api/telegram': typeof ApiTelegramRoute
   '/c/$token': typeof CTokenRoute
+  '/g/$token': typeof GTokenRoute
   '/gallery/$category': typeof GalleryCategoryRoute
   '/gallery/$category_/$shoot': typeof GalleryCategoryShootRoute
 }
@@ -129,12 +138,13 @@ export interface FileRouteTypes {
     | '/'
     | '/$category'
     | '/auth'
+    | '/links'
     | '/privacy'
     | '/admin'
-    | '/api/telegram'
     | '/api/sitemap'
-    | '/g/$token'
+    | '/api/telegram'
     | '/c/$token'
+    | '/g/$token'
     | '/gallery/$category'
     | '/gallery/$category/$shoot'
   fileRoutesByTo: FileRoutesByTo
@@ -142,12 +152,13 @@ export interface FileRouteTypes {
     | '/'
     | '/$category'
     | '/auth'
+    | '/links'
     | '/privacy'
     | '/admin'
-    | '/api/telegram'
     | '/api/sitemap'
-    | '/g/$token'
+    | '/api/telegram'
     | '/c/$token'
+    | '/g/$token'
     | '/gallery/$category'
     | '/gallery/$category/$shoot'
   id:
@@ -156,12 +167,13 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$category'
     | '/auth'
+    | '/links'
     | '/privacy'
     | '/_authenticated/admin'
-    | '/api/telegram'
     | '/api/sitemap'
-    | '/g/$token'
+    | '/api/telegram'
     | '/c/$token'
+    | '/g/$token'
     | '/gallery/$category'
     | '/gallery/$category_/$shoot'
   fileRoutesById: FileRoutesById
@@ -171,11 +183,12 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CategoryRoute: typeof CategoryRoute
   AuthRoute: typeof AuthRoute
+  LinksRoute: typeof LinksRoute
   PrivacyRoute: typeof PrivacyRoute
-  ApiTelegramRoute: typeof ApiTelegramRoute
   ApiSitemapRoute: typeof ApiSitemapRoute
-  GTokenRoute: typeof GTokenRoute
+  ApiTelegramRoute: typeof ApiTelegramRoute
   CTokenRoute: typeof CTokenRoute
+  GTokenRoute: typeof GTokenRoute
   GalleryCategoryRoute: typeof GalleryCategoryRoute
   GalleryCategoryShootRoute: typeof GalleryCategoryShootRoute
 }
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/links': {
+      id: '/links'
+      path: '/links'
+      fullPath: '/links'
+      preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -285,11 +305,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CategoryRoute: CategoryRoute,
   AuthRoute: AuthRoute,
+  LinksRoute: LinksRoute,
   PrivacyRoute: PrivacyRoute,
-  ApiTelegramRoute: ApiTelegramRoute,
   ApiSitemapRoute: ApiSitemapRoute,
-  GTokenRoute: GTokenRoute,
+  ApiTelegramRoute: ApiTelegramRoute,
   CTokenRoute: CTokenRoute,
+  GTokenRoute: GTokenRoute,
   GalleryCategoryRoute: GalleryCategoryRoute,
   GalleryCategoryShootRoute: GalleryCategoryShootRoute,
 }

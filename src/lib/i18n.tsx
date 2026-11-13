@@ -31,6 +31,14 @@ export const getLang = createServerFn({ method: "GET" }).handler(async (): Promi
 
 type Entry = Record<Lang, string>;
 const D = {
+  // Standalone link-in-bio page
+  "links.name": { en: "Gor Arsakjan.", et: "Gor Arsakjan.", ru: "Gor Arsakjan." },
+  "links.portfolio": { en: "Portfolio", et: "Portfoolio", ru: "Портфолио" },
+  "links.selected": { en: "selected work", et: "valitud tööd", ru: "избранные работы" },
+  "links.realEstate": { en: "Real estate", et: "Kinnisvara", ru: "Недвижимость" },
+  "links.property": { en: "property photo, video & staging", et: "kinnisvara foto, video ja kodulavastus", ru: "фото, видео и хоумстейджинг" },
+  "links.telegram": { en: "write in RU / EE / EN", et: "kirjuta RU / EE / EN", ru: "пишите на RU / EE / EN" },
+  "links.whatsapp": { en: "the fastest way to book a shoot", et: "kiireim viis pildistamise broneerimiseks", ru: "самый быстрый способ записаться на съёмку" },
   // Navigation
   "nav.work": { en: "Work", et: "Tööd", ru: "Работы" },
   "nav.explore": { en: "Explore", et: "Suunad", ru: "Направления" },

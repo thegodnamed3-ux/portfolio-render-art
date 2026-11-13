@@ -133,6 +133,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const standalone = useRouterState({ select: (s) => s.location.pathname.replace(/\/$/, "") === "/links" });
   const lang = Route.useLoaderData()?.lang ?? "en";
   // Tells the safety-net script in <head> that scripts are running and animations are in charge.
   useEffect(() => { document.documentElement.dataset["hydrated"] = "1"; }, []);
@@ -144,7 +145,7 @@ function RootComponent() {
       <LightboxProvider><PortfolioProvider>
         <Outlet />
       </PortfolioProvider></LightboxProvider>
-      <SocialRail />
+      {!standalone && <SocialRail />}
       <Toaster position="bottom-center" />
       <ViewTracker />
       </I18nProvider>

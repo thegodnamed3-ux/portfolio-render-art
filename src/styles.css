@@ -425,3 +425,39 @@ html:not(.slide-in)::view-transition-old(root), html:not(.slide-in)::view-transi
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
   backdrop-filter: blur(14px) saturate(1.2);
 }
+
+/* Standalone bio page: existing typefaces and paper hairlines, no site chrome. */
+.bio-page .display, .bio-page .meta, .bio-page .wordmark { letter-spacing: 0; }
+.bio-heading { font-size: clamp(54px, 16vw, 76px); line-height: 1.02; overflow-wrap: normal; }
+.bio-inline-wordmark { font-size: inherit; line-height: inherit; }
+.bio-row {
+  position: relative; display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; width: 100%; padding: 16px 2px;
+  border-bottom: 1px solid color-mix(in oklab, var(--paper) 14%, transparent);
+}
+.bio-row::after {
+  content: ""; position: absolute; bottom: -1px; left: 0; width: 100%; height: 1px;
+  background: var(--paper); transform: scaleX(0); transform-origin: left;
+  transition: transform .5s ease;
+}
+.bio-title, .bio-arrow { transition: transform .5s ease, color .5s ease; }
+.bio-row:focus-visible { outline: 1px solid var(--paper); outline-offset: 4px; }
+.bio-row:focus-visible .bio-title { transform: translateX(6px); font-style: italic; }
+.bio-row:focus-visible .bio-arrow { transform: translateX(4px); color: var(--paper); }
+.bio-row:focus-visible::after { transform: scaleX(1); }
+.bio-cursor {
+  position: fixed; left: 0; top: 0; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--paper); box-shadow: 0 0 0 5px color-mix(in oklab, var(--paper) 22%, transparent);
+  pointer-events: none; z-index: 100;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bio-row:hover .bio-title { transform: translateX(6px); font-style: italic; }
+  .bio-row:hover .bio-arrow { transform: translateX(4px); color: var(--paper); }
+  .bio-row:hover::after { transform: scaleX(1); }
+}
+@media (hover: none), (pointer: coarse) { .bio-cursor { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .bio-cursor { display: none; }
+  .bio-row::after, .bio-title, .bio-arrow { transition: none; }
+  .bio-row:is(:hover, :focus-visible) .bio-title, .bio-row:is(:hover, :focus-visible) .bio-arrow { transform: none; }
+}

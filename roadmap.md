@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Add and verify the standalone /links page with shared contact settings and desktop cursor interactions
+- [x] Add and verify the standalone /links page with shared contact settings and desktop cursor interactions — eight tests passed; desktop, 390px and 320px checked
 
 - [x] Apply 0023_featured_spotlight (homepage spotlight storage) — applied, studio controls live
 - [x] Apply 0021_featured_columns_mobile — already in the database, nothing to do

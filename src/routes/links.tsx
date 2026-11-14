@@ -78,7 +78,7 @@ function LinksPage() {
         <span className="meta">{t("footer.city")}</span>
       </header>
       <h1 className="bio-heading display mt-11 text-center not-italic">{t("links.name")}</h1>
-      <div className="meta mt-[22px] flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-paper/25 pt-3">
+      <div className="meta mt-[10px] flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-paper/25 pt-3">
         <span>{t("hero.tag")}</span><span>{t("hero.place")}</span>
       </div>
       <nav aria-label={t("links.portfolio")} className="mt-[34px]">
